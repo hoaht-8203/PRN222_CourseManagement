@@ -10,7 +10,7 @@ using Swashbuckle.AspNetCore.Filters;
 var builder = WebApplication.CreateBuilder(args);
 
 var configuration = builder.Configuration;
-builder.Services.AddDbContext<CourseManagement.DataAccess.Data.CourseManagementDb>(options =>
+builder.Services.AddDbContext<CourseManagementDb>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DBContext"));
 });
