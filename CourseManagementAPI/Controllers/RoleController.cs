@@ -1,7 +1,7 @@
-﻿using CourseManagementAPI.Model;
-using CourseManagementAPI.Services;
+﻿using CourseManagement.Business.Services.IService;
+using CourseManagement.Model.Constant;
+using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -18,7 +18,7 @@ namespace CourseManagementAPI.Controllers
             _roleService = roleService;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("GetRoles")]
         public async Task<IActionResult> GetRoles()
         {
@@ -36,7 +36,7 @@ namespace CourseManagementAPI.Controllers
 
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("addRoles")]
         public async Task<ActionResult> AddRole(string[] roles)
         {
@@ -48,9 +48,9 @@ namespace CourseManagementAPI.Controllers
             return Ok(userrole);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("addUserRoles")]
-        public async Task<ActionResult> AddUserRole([FromBody] AddUserModel addUser)
+        public async Task<ActionResult> AddUserRole([FromBody] AddUserVm addUser)
         {
             var result = await _roleService.AddUserRoleAsync(addUser.UserEmail, addUser.Roles);
 

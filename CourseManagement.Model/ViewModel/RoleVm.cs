@@ -1,6 +1,6 @@
-﻿namespace CourseManagementAPI.Model
+﻿namespace CourseManagement.Model.ViewModel
 {
-    public class RoleModel
+    public class RoleVm
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

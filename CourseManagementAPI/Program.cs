@@ -1,4 +1,6 @@
-using CourseManagementAPI.Data;
+using CourseManagement.Business.Services.IService;
+using CourseManagement.DataAccess.Data;
+using CourseManagement.Model.Model;
 using CourseManagementAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -7,15 +9,15 @@ using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var configuration = builder.Configuration;
+builder.Services.AddDbContext<CourseManagement.DataAccess.Data.CourseManagementDb>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DBContext"));
+});
 
-builder.Services.AddDbContext<IdentityDbContext>(option =>
-option.UseSqlServer(builder.Configuration.GetConnectionString("idenitycs")));
-
-
-builder.Services.AddIdentityApiEndpoints<IdentityUser>().
+builder.Services.AddIdentityApiEndpoints<AppUser>().
     AddRoles<IdentityRole>().
-    AddEntityFrameworkStores<IdentityDbContext>();
+    AddEntityFrameworkStores<CourseManagementDb>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -45,7 +47,7 @@ builder.Services.AddCors(option => option.AddPolicy("wasm",
 
 var app = builder.Build();
 
-app.MapIdentityApi<IdentityUser>();
+app.MapIdentityApi<AppUser>();
 
 app.UseCors("wasm");
 // Configure the HTTP request pipeline.

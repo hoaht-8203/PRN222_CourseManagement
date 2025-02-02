@@ -1,4 +1,6 @@
-﻿using CourseManagementAPI.Model;
+﻿using CourseManagement.Business.Services.IService;
+using CourseManagement.Model.Model;
+using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Identity;
 
 namespace CourseManagementAPI.Services
@@ -6,18 +8,18 @@ namespace CourseManagementAPI.Services
     public class RoleService : IRoleService
     {
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<AppUser> _userManager;
 
         public RoleService(RoleManager<IdentityRole> roleManager, 
-            UserManager<IdentityUser> userManager)
+            UserManager<AppUser> userManager)
         {
             _roleManager = roleManager;
             _userManager = userManager;
         }
-        public async Task<List<RoleModel>> GetRolesAsync()
+        public async Task<List<RoleVm>> GetRolesAsync()
         {
             var roleList = _roleManager.Roles.Select(x => 
-            new RoleModel { Id = Guid.Parse(x.Id), Name = x.Name }).ToList();
+            new RoleVm { Id = Guid.Parse(x.Id), Name = x.Name }).ToList();
             return roleList;
         }
 
