@@ -1,10 +1,12 @@
-﻿using CourseManagementAPI.Model;
+﻿
 
-namespace CourseManagementAPI.Services
+using CourseManagement.Model.ViewModel;
+
+namespace CourseManagement.Business.Services.IService
 {
     public interface IRoleService
     {
-        Task<List<RoleModel>> GetRolesAsync();
+        Task<List<RoleVm>> GetRolesAsync();
 
         Task<List<string>> GetUserRolesAsync(string emailId);
 

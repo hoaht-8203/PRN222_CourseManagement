@@ -1,7 +1,8 @@
-﻿using CourseManagementAPI.Model;
-using CourseManagementAPI.Services;
+﻿using CourseManagement.Business.Services.IService;
+using CourseManagement.Model.Constant;
+using CourseManagement.Model.Model;
+using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,16 +13,16 @@ namespace CourseManagementAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<AppUser> _signInManager;
         private readonly IUserService _userService;
 
-        public UserController(SignInManager<IdentityUser> signInManager, IUserService userService)
+        public UserController(SignInManager<AppUser> signInManager, IUserService userService)
         {
             _signInManager = signInManager;
             _userService = userService;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -29,7 +30,7 @@ namespace CourseManagementAPI.Controllers
             return Ok(userList);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("{emailId}")]
         public async Task<IActionResult> Get(string emailId)
         {
@@ -37,9 +38,9 @@ namespace CourseManagementAPI.Controllers
             return Ok(userList);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPut("{emailId}")]
-        public async Task<IActionResult> UpdateUser(string emailId, [FromBody] UserModel userModel)
+        public async Task<IActionResult> UpdateUser(string emailId, [FromBody] AppUserVm userModel)
         {
             var result = await _userService.UpdateUser(emailId, userModel);
             if (!result)
@@ -49,7 +50,7 @@ namespace CourseManagementAPI.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpDelete("{emailId}")]
         public async Task<IActionResult> Delete(string emailId)
         {
@@ -60,6 +61,7 @@ namespace CourseManagementAPI.Controllers
             }
             return NoContent();
         }
+
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] object empty)
@@ -72,5 +74,7 @@ namespace CourseManagementAPI.Controllers
             return Ok();
         }
 
+
     }
 }
+

@@ -1,6 +1,6 @@
-﻿namespace CourseManagementAPI.Model
+﻿namespace CourseManagement.Model.ViewModel
 {
-    public class AddUserModel
+    public class AddUserVm
     {
         public string UserEmail { get; set; }
         public string[] Roles { get; set; }
