@@ -1,6 +1,7 @@
 ﻿@page "/logout"
 @using BlazorAppSecure.Sevices
 @inject IAccountManagement Acct
+@inject NavigationManager Navigation
 
 <h3>Logout</h3>
 <AuthorizeView @ref="authView">
@@ -22,6 +23,8 @@
         if(await  Acct.CheckAuthenticatedAsync())
         {
             await Acct.LogoutAsync();
+            Navigation.NavigateTo("/");
+
         }
         await base.OnInitializedAsync();
     }

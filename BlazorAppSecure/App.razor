@@ -1,15 +1,49 @@
-﻿<CascadingAuthenticationState>
+﻿@using AntDesign
 
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+@inject NavigationManager Navigation
+
+<CascadingAuthenticationState>
+    <link href="_content/AntDesign/css/ant-design-blazor.css" rel="stylesheet"> <!-- introduced here automatically -->
+    <link antblazor-css />
+
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <PageTitle>Access Denied</PageTitle>
+                    <Result Status="ResultStatus.Http403"
+                            Title="Access Denied - 403"
+                            SubTitle="Sorry, you are not authorized to access this page.">
+                        <Extra>
+                            <Button Type="ButtonType.Primary" OnClick="HandleGoToHomepage">Back Home</Button>
+                        </Extra>
+                    </Result>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <Result Status="ResultStatus.Http404"
+                        Title="404"
+                        SubTitle="Sorry, the page you visited does not exist.">
+                    <Extra>
+                        <Button Type="ButtonType.Primary" OnClick="HandleGoToHomepage">Back Home</Button>
+                    </Extra>        
+                </Result>
+            </LayoutView>
+        </NotFound>
+    </Router>
+
+    <AntContainer />
+
+    <script src="_content/AntDesign/js/ant-design-blazor.js"></script> <!-- introduced here automatically -->
+    <script antblazor-js></script>
 </CascadingAuthenticationState>
+
+@code {
+    public void HandleGoToHomepage() {
+        Navigation.NavigateTo("/");
+    }
+}

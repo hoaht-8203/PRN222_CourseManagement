@@ -1,7 +1,44 @@
 ﻿@page "/"
+@using AntDesign
+@inject IMessageService _message
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Hello, world! OK</h1>
 
 Welcome to your new app.
+
+<Button Type="ButtonType.Primary">Hello World!</Button>
+
+<Space>
+    <SpaceItem>
+        <Button Type="ButtonType.Default" OnClick="Success">
+            Success
+        </Button>
+    </SpaceItem>
+    <SpaceItem>
+        <Button Type="ButtonType.Default" OnClick="Error">
+            Error
+        </Button>
+    </SpaceItem>
+    <SpaceItem>
+        <Button Type="ButtonType.Default" OnClick="Warning">
+            Warning
+        </Button>
+    </SpaceItem>
+</Space>
+
+@code {
+    private async Task Success() {
+        await _message.Success("This is a success message");
+    }
+
+    private async Task Error() {
+        await _message.Error("This is an error message");
+
+    }
+
+    private async Task Warning() {
+        await _message.Warning("This is a warning message");
+    }
+}

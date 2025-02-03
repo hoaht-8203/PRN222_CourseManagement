@@ -1,77 +1,99 @@
 ﻿@page "/login"
+
+@using AntDesign
 @using BlazorAppSecure.Sevices
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+
 @inject IAccountManagement Acct
-<h3>login</h3>
+@inject NavigationManager Navigation
+@inject IMessageService _message
+
+@layout EmptyLayout
 
 <AuthorizeView>
     <Authorized>
-        <div class="alert alert-success">You're logged in as @context.User.Identity?.Name.</div>
+        <Result Status="ResultStatus.Warning" Title="@($"You're already logged in as {context.User.Identity?.Name}.")">
+            <Extra>
+                <Button Type="ButtonType.Primary" OnClick="HandleGoToHomepage">Go To Homapage</Button>
+            </Extra>
+        </Result>
     </Authorized>
     <NotAuthorized>
-        @if (errors)
-        {
-            @foreach (var error in errorList)
-            {
-                <div class="alert alert-danger">@error</div>
-            }
-        }
-        <div class="flex-outer">
-            <div>
-                <label for="email">
-                    Email:
-                </label>
-                <input required id="email" name="emailInput" placeholder="Enter your email address" type="email" @bind-value="email" />
-            </div>
-            <div>
-                <label for="password">
-                    Password:
-                </label>
-                <input required id="password" name="passwordInput" placeholder="Enter your password" type="password" @bind-value="password" />
-            </div>
-            <div>
-                <button class="btn btn-primary" @onclick="DoLoginAsync">Login</button>
-            </div>
+        <div class="login-page">
+            <Card Style="width: 500px">
+                <ChildContent>
+                    <Form Model="@loginModel" OnFinish="OnFinish" LabelColSpan="10" Context="formContext" class="login-form">
+                        <FormItem Label="Email">
+                            <Input @bind-Value="@formContext.Email" />
+                        </FormItem>
+                        <FormItem Label="Password">
+                            <InputPassword @bind-Value="@formContext.Password" />
+                        </FormItem>
+                        <FormItem WrapperColOffset="10">
+                            <Button Type="ButtonType.Primary" HtmlType="submit">
+                                Login
+                            </Button>
+                        </FormItem>
+                        <p>
+                            Not has an account?
+                            <NavLink href="register">
+                                Register
+                            </NavLink>
+                        </p>
+                    </Form>
+                </ChildContent>
+            </Card>
         </div>
     </NotAuthorized>
 </AuthorizeView>
 @code {
-    private bool success, errors;
-    private string email = string.Empty;
-    private string password = string.Empty;
-    private string[] errorList = [];
+    public class LoginModel {
+        [Required]
+        public string Email { get; set; }
+        [Required]
+        public string Password { get; set; }
+    }
+
+    private LoginModel loginModel = new LoginModel();
+
+    private async void OnFinish() {
+        await DoLoginAsync();
+    }
+
 
     public async Task DoLoginAsync()
     {
-        success = errors = false;
-        errorList = [];
 
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            errors = true;
-            errorList = ["Email is required."];
-
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            errors = true;
-            errorList = ["Password is required."];
-
-            return;
-        }
-
-        var result = await Acct.LoginAsync(email, password);
+        var result = await Acct.LoginAsync(loginModel.Email, loginModel.Password);
 
         if (result.Succeeded)
         {
-            success = true;
-            email = password = string.Empty;
+            loginModel = new LoginModel();
+            Navigation.NavigateTo("/");
         }
         else
         {
-            errors = true;
-            errorList = result.ErrorList;
+            result.ErrorList.ForEach((err) => {
+                _message.Error(err);
+            });
+            
         }
     }
+
+    public void HandleGoToHomepage() {
+        Navigation.NavigateTo("/");
+    }
 }
+
+<style>
+    .login-page {
+        padding-top: 100px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .login-form .ant-form-item-label {
+        text-align: left
+    }
+</style>
