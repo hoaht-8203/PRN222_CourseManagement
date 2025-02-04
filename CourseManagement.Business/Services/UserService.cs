@@ -33,6 +33,8 @@ namespace CourseManagementAPI.Services
                 PhoneNumber = user.PhoneNumber,
                 Roles = _userManager.GetRolesAsync(user).Result.ToList(),
                 Status = user.LockoutEnd == null,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
                 //Enrollments = (List<Enrollment>)user.Enrollments,
                 //Comments = (List<Comment>)user.Comments
             }).ToList();

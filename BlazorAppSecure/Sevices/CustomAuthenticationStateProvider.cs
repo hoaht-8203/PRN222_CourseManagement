@@ -136,6 +136,41 @@ namespace BlazorAppSecure.Sevices
             }
         }
 
+        public async Task<FormResult> RegisterV1Async(string fullName, string email, string password) {
+            string[] defaultDetail = ["An unknown error prevented registration from succeeding."];
+            try {
+                var result = await _httpClient.PostAsJsonAsync("api/Auth/register/v1",
+                      new { email, password });
+                if (result.IsSuccessStatusCode) {
+                    return new FormResult { Succeeded = true };
+                }
+
+                var details = await result.Content.ReadAsStringAsync();
+                var problemDetails = JsonDocument.Parse(details);
+                var errors = new List<string>();
+
+                // Kiểm tra xem có thuộc tính "errors" trong phản hồi không
+                if (problemDetails.RootElement.TryGetProperty("errors", out var errorList)) {
+                    // Duyệt qua từng lỗi và thêm vào danh sách
+                    foreach (var error in errorList.EnumerateArray()) {
+                        errors.Add(error.ToString());
+                    }
+                } else {
+                    // Nếu không có thuộc tính "errors", sử dụng thông báo lỗi mặc định
+                    errors.AddRange(defaultDetail);
+                }
+
+                return new FormResult {
+                    Succeeded = false,
+                    ErrorList = errors.ToArray()
+                };
+
+            } catch (Exception ex) {
+
+                throw;
+            }
+        }
+
         public async Task<FormResult> LoginAsync(string email, string password)
         {
             try

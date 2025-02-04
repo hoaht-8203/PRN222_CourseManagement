@@ -7,6 +7,8 @@ namespace BlazorAppSecure.Sevices
     {
         public Task<FormResult> RegisterAsync(string email, string password);
 
+        public Task<FormResult> RegisterV1Async(string fullName, string email, string password);
+
         public Task<FormResult> LoginAsync(string email, string password);
 
         public Task LogoutAsync();

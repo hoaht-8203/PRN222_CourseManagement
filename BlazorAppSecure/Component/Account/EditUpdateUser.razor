@@ -1,43 +1,59 @@
 ﻿@page "/editUpdateUser/{emailId}"
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices
+@using AntDesign
 
 @inject IAccountManagement Acct
 @inject NavigationManager navManger
-<h3>EditUpdateUser</h3>
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            <Icon Type="@IconType.Outline.Home" />
+        </BreadcrumbItem>
+        <BreadcrumbItem Href="users">
+            User Management
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            Edit User
+        </BreadcrumbItem>
+    </Breadcrumb>
+</div>
 
 @if (userModel != null)
 {
-    <EditForm Model="@userModel" OnValidSubmit="@UpdateUser">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <InputText id="name" class="form-control disabled" @bind-Value="@userModel.UserName" />
-        </div>
-
-        <div class="form-group">
-            <label for="description">Email:</label>
-            <InputText id="description" class="form-control" @bind-Value="@userModel.Email" />
-        </div>
-
-        <div class="form-group">
-            <label for="description">PhoneNumber:</label>
-            <InputText id="description" class="form-control" @bind-Value="@userModel.PhoneNumber" />
-        </div>
-        <div class="form-group">
-            <label for="userRole">UserRole:</label>
-            <InputSelect id="userrole" class="form-control" @bind-Value="@SelectedRoles" multiple>
-                @foreach (var role in userModel.Roles)
-                {
-                    <option value="@role">@role</option>
-                }
-
-            </InputSelect>
-        </div>
-        <button type="submit" class="btn btn-primary">Update</button>
-    </EditForm>
+    <Space>
+        <Form Model="@userModel"
+              OnFinish="OnFinish"
+              LabelColSpan="10"
+              Context="FormContext" Class="edit-user-form">
+            <FormItem Label="Name">
+                <Input @bind-Value="@FormContext.UserName">
+            </FormItem>
+            <FormItem Label="Email">
+                <Input @bind-Value="@FormContext.Email" />
+            </FormItem>
+            <FormItem Label="Phone number">
+                <Input @bind-Value="@FormContext.PhoneNumber" />
+            </FormItem>
+            <FormItem Label="Roles">
+                <Select Mode="SelectMode.Multiple"
+                        DataSource="@FormContext.Roles"
+                        Placeholder="Please select"
+                        @bind-Values="@_selectedValues1"
+                        TItemValue="string"
+                        TItem="string"
+                        Style="width: 100%; margin-bottom: 8px;"
+                        EnableSearch>
+                </Select>
+            </FormItem>
+            <FormItem WrapperColOffset="10">
+                <Button Type="ButtonType.Primary" HtmlType="submit">
+                    Update
+                </Button>
+            </FormItem>
+        </Form>
+    </Space>
 }
 else
 {
@@ -48,21 +64,20 @@ else
     [Parameter]
     public string emailId { get; set; }
     private UserViewModel userModel = new UserViewModel();
-
-    private string[] SelectedRoles = new string[] { };
+    IEnumerable<string> _selectedValues1;
 
     protected async override Task OnInitializedAsync()
     {
         userModel = await Acct.GetUserByEmail(emailId);
-        SelectedRoles = userModel.Roles.ToArray();
+        _selectedValues1 = userModel.Roles.ToArray();
         var roles = await Acct.GetRoles();
         userModel.Roles = roles.Select(x => x.Name).ToList();
-        base.OnInitializedAsync();
+        await base.OnInitializedAsync();
     }
-
+    
     private async Task UpdateUser()
     {
-        userModel.Roles = SelectedRoles.ToList();
+        userModel.Roles = _selectedValues1.ToList();
         if(await Acct.UserUpdate(emailId, userModel))
         {
             navManger.NavigateTo("/users");
@@ -71,4 +86,18 @@ else
         var roles = await Acct.GetRoles();
         userModel.Roles = roles.Select(x => x.Name).ToList();
     }
+
+    private async void OnFinish(EditContext editContext) {
+        await UpdateUser();
+    }
 }
+
+<style>
+    .edit-user-form .ant-form-item-label {
+        text-align: left
+    }
+
+    .edit-user-form {
+        width: 500px
+    }
+</style>

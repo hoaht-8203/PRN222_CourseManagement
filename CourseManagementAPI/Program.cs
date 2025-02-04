@@ -1,4 +1,4 @@
-using CourseManagement.Business.Services.IService;
+﻿using CourseManagement.Business.Services.IService;
 using CourseManagement.DataAccess.Data;
 using CourseManagement.Model.Model;
 using CourseManagementAPI.Services;
@@ -8,6 +8,15 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<IdentityOptions>(options => {
+    options.Password.RequireDigit = false; // Không yêu cầu số
+    options.Password.RequireLowercase = false; // Không yêu cầu chữ thường
+    options.Password.RequireUppercase = false; // Không yêu cầu chữ hoa
+    options.Password.RequireNonAlphanumeric = false; // Không yêu cầu ký tự đặc biệt
+    options.Password.RequiredLength = 6; // Độ dài tối thiểu (có thể thay đổi)
+    options.Password.RequiredUniqueChars = 0; // Không yêu cầu ký tự duysnhất
+});
 
 var configuration = builder.Configuration;
 builder.Services.AddDbContext<CourseManagementDb>(options =>

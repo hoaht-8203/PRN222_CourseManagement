@@ -1,4 +1,4 @@
-html, body {
+﻿html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -122,3 +122,26 @@ code {
             flex: 1 0 120px;
         }
 
+
+/* Áp dụng cho tất cả thanh cuộn */
+::-webkit-scrollbar {
+    width: 3px; /* Độ rộng của scrollbar dọc */
+    height: 10px; /* Độ cao của scrollbar ngang */
+}
+
+/* Màu nền của thanh cuộn */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+/* Màu của thanh cuộn */
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+/* Hover vào thanh cuộn */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

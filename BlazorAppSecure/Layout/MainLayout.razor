@@ -1,25 +1,138 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<Layout Class="layout">
+    <Header>
+        <div class="app-header">
+            <div class="d-flex align-items-center">
+                <h5 class="m-0">ELearning</h5>
+            </div>
 
-    <main>
-
-        <div class="top-row px-4">
             <AuthorizeView>
                 <Authorized>
-                    Logged in as @context.User.Identity?.Name. <a href="logout"><span class="bi bi-door-closed-fill" aria-hidden="true" style="vertical-align:middle"></span> Logout</a>
+                    <div class="d-flex align-items-center gap-2">
+                        <span>@context.User.Identity?.Name</span>
+                        <Dropdown Trigger="@(new Trigger[] { Trigger.Click })">
+                            <Overlay>
+                                <Menu>
+                                    <MenuItem>
+                                        <NavLink href="">
+                                            My Profile
+                                        </NavLink>
+                                    </MenuItem>
+                                    <MenuItem>
+                                        <NavLink href="logout">
+                                            Logout
+                                        </NavLink>
+                                    </MenuItem>
+                                </Menu>
+                            </Overlay>
+                            <ChildContent>
+                                <Avatar Icon="user" />
+                            </ChildContent>
+                        </Dropdown>
+                    </div>
                 </Authorized>
-          <NotAuthorized>
-            <a href="login"><span class="bi bi-door-open" aria-hidden="true" style="vertical-align:middle"></span> Login</a>
-            <a href="register"><span class="bi bi-pencil-square" aria-hidden="true" style="vertical-align:middle"></span> Register</a>
+                <NotAuthorized>
+                    <div class="d-flex align-items-center gap-2">
+                        <NavLink href="register">
+                            Register
+                        </NavLink>
+                        <NavLink href="login">
+                            Login
+                        </NavLink>
+                    </div>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
+    </Header>
+    <Sider Width="230" Class="site-layout-background">
+        <Menu Mode="MenuMode.Inline"
+              DefaultSelectedKeys=@(new[] {"1"})
+              Style="height: 100%; border-right: 0;">
+            <MenuItem Key="1">
+                <Icon Type="@IconType.Outline.Home" />
+                <NavLink href="" Match="NavLinkMatch.All">
+                    Home
+                </NavLink>
+            </MenuItem>
+            <MenuItem Key="2">
+                <Icon Type="@IconType.Outline.Calculator" />
+                <NavLink href="counter">
+                    Counter
+                </NavLink>
+            </MenuItem>
+            <AuthorizeView>
+                <Authorized>
+                    <MenuItem Key="3">
+                        <Icon Type="@IconType.Outline.Cloud" />
+                        <NavLink href="weather">
+                            Weather
+                        </NavLink>
+                    </MenuItem>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <MenuItem Key="4">
+                        <Icon Type="@IconType.Outline.User" />
+                        <NavLink href="users">
+                            User Management
+                        </NavLink>
+                    </MenuItem>
+                    @* <MenuItem Key="5">
+                        <Icon Type="@IconType.Outline.Cloud" />
+                        <NavLink href="addroles">
+                            Role Management
+                        </NavLink>
+                    </MenuItem> *@
+                </Authorized>
+            </AuthorizeView>
+        </Menu>
+    </Sider>
+    <Content Class="site-layout-background" Style=" padding: 8px; margin: 0; min-height: 280px;">
+        @Body
+    </Content>
+</Layout>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+<style>
+    .ant-layout-has-sider {
+        padding-top: 50px;
+        min-height: 100vh
+    }
+
+    .ant-layout {
+        height: auto
+    }
+
+    .ant-layout-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        height: 50px;
+        background: white;
+        padding: 0;
+    }
+
+    .menu-end {
+        display: flex;
+        justify-content: flex-end
+    }
+
+    .menu-start {
+        display: flex;
+        justify-content: flex-start
+    }
+
+    .app-header {
+        display: flex;
+        padding-left: 24px;
+        padding-right: 24px;
+        height: 100%;
+        justify-content: space-between
+    }
+
+    .ant-menu-item {
+        margin: 0 !important
+    }
+</style>

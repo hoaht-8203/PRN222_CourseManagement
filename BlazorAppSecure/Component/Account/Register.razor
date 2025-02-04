@@ -59,6 +59,7 @@
 @code {
     public class RegisterModel {
         [Required]
+        [EmailAddress]
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
@@ -75,7 +76,7 @@
 
     public async Task DoRegisterAsync()
     {
-        var result = await Acct.RegisterAsync(registerModel.Email, registerModel.Password);
+        var result = await Acct.RegisterV1Async("Username", registerModel.Email, registerModel.Password);
 
         if (result.Succeeded)
         {

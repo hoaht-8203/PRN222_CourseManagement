@@ -11,6 +11,8 @@ namespace CourseManagement.Model.ViewModel
         public string Email { get; set; }
         public string? PhoneNumber { get; set; }
         public bool Status { get; set; }
+        public bool EmailConfirmed { get; set; }
+        public bool PhoneNumberConfirmed { get; set; }
         public List<string> Roles { get; set; }
         public List<Enrollment>? Enrollments { get; set; }
         public List<Comment>? Comments { get; set; }
