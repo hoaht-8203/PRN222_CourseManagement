@@ -96,7 +96,7 @@ else
     {
         sumbitMesssage = string.Empty;
 
-        var response =  await Acct.AddRole(Roles.ToArray());
+        var response =  await Acct.AddRoles(Roles.ToArray());
 
         if(response.Succeeded)
         {

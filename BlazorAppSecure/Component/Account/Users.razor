@@ -3,13 +3,15 @@
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices
 @using Microsoft.AspNetCore.Authorization
-@using AntDesign
 @using System.ComponentModel
+@using System.ComponentModel.DataAnnotations;
+@using AntDesign
 
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IAccountManagement Acct
 @inject NavigationManager Navigation
+@inject IMessageService _mess
 
 <div class="mb-2">
     <Breadcrumb>
@@ -17,98 +19,123 @@
             <Icon Type="@IconType.Outline.Home" />
         </BreadcrumbItem>
         <BreadcrumbItem>
-            User Management
+            Users & Roles Management
         </BreadcrumbItem>
     </Breadcrumb>
 </div>
 
-<Table DataSource="userList" PageSize="12" ScrollX="1000" ScrollY="400">
-    <PropertyColumn Property="u=>u.Email" Width="200" Fixed="ColumnFixPlacement.Left" />
-    <PropertyColumn Property="u=>u.FullName" Width="200" Title="FullName" >
-        @if (context.FullName != null) {
-            @context.FullName
-        } else {
-            <Tag Color="TagColor.Orange">Null</Tag>
-        }
-    </PropertyColumn>
-    <PropertyColumn Property="c=>c.UserName" Width="200" Title="UserName" />
-    <PropertyColumn Property="c=>c.Roles" Width="200" Title="Roles">
-        @if (context.Roles != null && context.Roles?.Count > 0) {
-            @foreach (var item in context.Roles) {
-                <Tag>@item</Tag>
-            }
-        } else {
-            <Tag Color="TagColor.Orange">Null</Tag>
-        }
-    </PropertyColumn>
-    <PropertyColumn Property="c=>c.EmailConfirmed" Width="150" Title="Email Confirmed">
-        <Switch Checked="@context.EmailConfirmed" Disabled />
-    </PropertyColumn>
-    <PropertyColumn Property="c=>c.PhoneNumber" Width="150" Title="Phone Number">
-        @if (context.PhoneNumber != null) {
-            @context.PhoneNumber
-        } else {
-            <Tag Color="TagColor.Orange">Null</Tag>
-        }
-    </PropertyColumn>
-    <PropertyColumn Property="c=>c.PhoneNumberConfirmed" Width="200" Title="Phone Number Confirmed">
-        <Switch Checked="@context.PhoneNumberConfirmed" Disabled />
-    </PropertyColumn>
-    <ActionColumn Title="Action" Width="100" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
-        <CellRender Context="cellData">
-            <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))"></Button>
-            <Button Danger Type="ButtonType.Text" Icon="@IconType.Outline.Delete"></Button>
-        </CellRender>
-    </ActionColumn>
-</Table>
-
-@* <div class="grid" tabindex="-1">
-    <QuickGrid Items="@userList">
-        <PropertyColumn Property="@(p => p.UserName)" Sortable="true" />
-        <PropertyColumn Property="@(p => p.Email)" Sortable="true" />
-        <TemplateColumn Title="Roles" Sortable="false">
-            <div class="flex items-center">
-                <nobr>
-                    @if (context.Roles != null && context.Roles?.Count > 0 )
-                    {
-                        <ul>
-                    @foreach (var item in context.Roles)
-                    {
-                        <li>
-                        <strong>@item</strong>
-                                </li>
+<GridRow Gutter="12">
+    <GridCol Span="18">
+        <div class="table-control">
+            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadListUser()" Loading="loadingUserList"></Button>
+        </div>
+        <Table DataSource="userList" PageSize="12" ScrollX="1000" ScrollY="400" Loading="loadingUserList" Bordered>
+            <PropertyColumn Property="u=>u.Email" Width="200" Fixed="ColumnFixPlacement.Left" />
+            <PropertyColumn Property="u=>u.FullName" Width="200" Title="FullName">
+                @if (context.FullName != null) {
+                    @context.FullName
+                } else {
+                    <Tag Color="TagColor.Orange">Null</Tag>
+                }
+            </PropertyColumn>
+            <PropertyColumn Property="c=>c.UserName" Width="200" Title="UserName" />
+            <PropertyColumn Property="c=>c.Roles" Width="200" Title="Roles">
+                <div class="roles-tag">
+                    @if (context.Roles != null && context.Roles?.Count > 0) {
+                        @foreach (var item in context.Roles) {
+                            <Tag Style="margin-right: 0px">@item</Tag>
                         }
-                        </ul>
+                    } else {
+                        <Tag Color="TagColor.Orange">Null</Tag>
                     }
-               
-                    else
-                    {
-                        <strong>------</strong>
-                    }
-                </nobr>
-            </div>
-        </TemplateColumn>
-        <PropertyColumn Property="@(p => p.PhoneNumber)"  Sortable="true" />
-             <TemplateColumn Title="Actions">
+                </div>
+            </PropertyColumn>
+            <PropertyColumn Property="c=>c.EmailConfirmed" Width="150" Title="Email Confirmed">
+                <Switch Checked="@context.EmailConfirmed" Disabled />
+            </PropertyColumn>
+            <PropertyColumn Property="c=>c.PhoneNumber" Width="150" Title="Phone Number">
+                @if (context.PhoneNumber != null) {
+                    @context.PhoneNumber
+                } else {
+                    <Tag Color="TagColor.Orange">Null</Tag>
+                }
+            </PropertyColumn>
+            <PropertyColumn Property="c=>c.PhoneNumberConfirmed" Width="230" Title="Phone Number Confirmed">
+                <Switch Checked="@context.PhoneNumberConfirmed" Disabled />
+            </PropertyColumn>
+            <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
+                <CellRender Context="cellData">
+                    <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))"></Button>
+                    <Button Danger Type="ButtonType.Text" Icon="@IconType.Outline.Delete"></Button>
+                </CellRender>
+            </ActionColumn>
+        </Table>
+    </GridCol>
+    <GridCol Span="6">
+        <div class="table-control">
+            <Button Icon="@IconType.Outline.Plus" Type="ButtonType.Primary" @onclick="_=>OpenAddRoleDrawer()">Add Role</Button>
+            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadRoles()" Loading="loadingRoleList"></Button>
+        </div>
+        <Table DataSource="roleList" HidePagination Loading="loadingRoleList" ScrollY="400" Bordered>
+            <ColumnDefinitions>
+                <PropertyColumn Property="r=>r.Name" Title="Role Name" />
+            </ColumnDefinitions>
+        </Table>
+    </GridCol>
+</GridRow>
 
-                <button class="btn btn-primary" @onclick="@(() => Edit(context))"> 
-                   Edit
-                </button>
-                <button class="btn p-1 btn-danger" @onclick="@(() => Delete(context))">
-                   Delete
-                </button>
-            </TemplateColumn>
-    </QuickGrid>
-</div> *@
+<Drawer Closable="true" Width="400" Visible="addRoleVisiable" Title='("Add new role")' OnClose="_=>CloseAddRoleDrawer()">
+    <Template style="height:90%">
+        <Form Model="@addNewRoleModel" OnFinish="SubmitNewRole">
+            <Row Gutter="16">
+                <AntDesign.Col Span="24">
+                    <Text>Role name</Text>
+                    <FormItem>
+                        <Input Placeholder="Please enter role name" TValue="string" @bind-Value="@context.RoleName"></Input>
+                    </FormItem>
+                </AntDesign.Col>
+            </Row>
+            <Row Class="mt-3">
+                <AntDesign.Col Span="24" Class="d-flex justify-content-end gap-2">
+                    <Button Type="ButtonType.Default">Cancel</Button>
+                    <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
+                </AntDesign.Col>
+            </Row>
+        </Form>
+    </Template>
+</Drawer>
 
 @code {
     private IQueryable<UserViewModel> userList;
+    private List<Role> roleList;
+
+    private bool loadingUserList = false;
+    private bool loadingRoleList = false;
+    bool addRoleVisiable = false;
+
+    private AddNewRoleModel addNewRoleModel = new();
+
+    void OpenAddRoleDrawer()
+    {
+        addNewRoleModel = new();
+        this.addRoleVisiable = true;
+    }
+
+    void CloseAddRoleDrawer() {
+        this.addRoleVisiable = false;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        var users = await Acct.GetUsers();
-        userList = users.ToList().AsQueryable();
+        loadingUserList = true;
+        loadingRoleList = true;
+        var usersRes = await Acct.GetUsers();
+        var rolesRes = await Acct.GetRoles();
+        userList = usersRes.ToList().AsQueryable();
+        roleList = rolesRes.ToList();
         await base.OnInitializedAsync();
+        loadingUserList = false;
+        loadingRoleList = false;
     }
 
     void Edit(UserViewModel p)
@@ -125,4 +152,56 @@
             StateHasChanged();
         }
     }
+
+    async void HandleReloadListUser() {
+        loadingUserList = true;
+        var usersRes = await Acct.GetUsers();
+        userList = usersRes.ToList().AsQueryable();
+        loadingUserList = false;
+        StateHasChanged();
+    }
+
+    async void HandleReloadRoles() {
+        loadingRoleList = true;
+        var rolesRes = await Acct.GetRoles();
+        roleList = rolesRes.ToList();
+        loadingRoleList = false;
+        StateHasChanged();
+    }
+
+    async void SubmitNewRole() {
+        var response = await Acct.AddRole(addNewRoleModel.RoleName);
+
+        if (response.Succeeded) {
+            addRoleVisiable = false;
+            StateHasChanged();
+            HandleReloadRoles();
+            await _mess.Success("Add new role success");
+        } else {
+            response.ErrorList.ForEach((err) =>
+            {
+                _mess.Error(err);
+            });
+        }
+    }
+
+    public class AddNewRoleModel {
+        [Required(ErrorMessage = "Role name is required")]
+        public string RoleName { get; set; }
+    }
 }
+
+<style>
+    .roles-tag {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .table-control {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: end;
+        margin-bottom: 10px;
+    }
+</style>

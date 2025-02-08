@@ -17,7 +17,9 @@ namespace BlazorAppSecure.Sevices
 
         public Task<List<Role>> GetRoles();
 
-        public Task<FormResult> AddRole(string[] roles);
+        public Task<FormResult> AddRoles(string[] roles);
+
+        public Task<FormResult> AddRole(string role);
 
         public Task<UserViewModel[]> GetUsers();
 

@@ -16,4 +16,8 @@ namespace CourseManagement.Model.DTOs
         [Required]
         public string Password { get; set; }
     }
+
+    public class RoleRequest {
+        public string RoleName { get; set; }
+    }
 }

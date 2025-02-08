@@ -1,4 +1,5 @@
 ﻿using CourseManagement.Business.Services.IService;
+using CourseManagement.Model.DTOs;
 using CourseManagement.Model.Model;
 using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Identity;
@@ -44,6 +45,16 @@ namespace CourseManagementAPI.Services
             return rolesList;
         }
 
+        public async Task<ApiRes> AddRoleAsync(string role) {
+            var result = await _roleManager.CreateAsync(new IdentityRole(role));
+
+            if (!result.Succeeded) {
+                return new ApiRes { Success = false, Errors = result.Errors.Select(p => p.Description).ToList() };
+            }
+
+            return new ApiRes { Success = true, Message = "Create new role success" };
+        }
+
         public async Task<bool> AddUserRoleAsync(string userEmail, string[] roles)
         {
             var user = await _userManager.FindByEmailAsync(userEmail);
@@ -74,7 +85,5 @@ namespace CourseManagementAPI.Services
             return rolesList;
 
         }
-
-
-        }
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using CourseManagement.Business.Services.IService;
 using CourseManagement.Model.Constant;
+using CourseManagement.Model.DTOs;
 using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,7 @@ namespace CourseManagementAPI.Controllers
 
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("addRoles")]
-        public async Task<ActionResult> AddRole(string[] roles)
+        public async Task<ActionResult> AddRoles(string[] roles)
         {
             var userrole = await _roleService.AddRolesAsync(roles);
             if (userrole.Count == 0)
@@ -46,6 +47,22 @@ namespace CourseManagementAPI.Controllers
                 return BadRequest();
             }
             return Ok(userrole);
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("addRole")]
+        public async Task<ActionResult> AddRole([FromBody] RoleRequest request) {
+            var result = await _roleService.AddRoleAsync(request.RoleName);
+            
+            if (!result.Success) {
+                return BadRequest(new {
+                    Errors = result.Errors
+                });
+            }
+
+            return Ok(new {
+                Message = result.Message
+            });
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]

@@ -1,5 +1,6 @@
 ﻿
 
+using CourseManagement.Model.DTOs;
 using CourseManagement.Model.ViewModel;
 
 namespace CourseManagement.Business.Services.IService
@@ -11,6 +12,8 @@ namespace CourseManagement.Business.Services.IService
         Task<List<string>> GetUserRolesAsync(string emailId);
 
         Task<List<string>> AddRolesAsync(string[] roles);
+
+        Task<ApiRes> AddRoleAsync(string role);
 
         Task<bool> AddUserRoleAsync(string userEmail, string[] roles);
 

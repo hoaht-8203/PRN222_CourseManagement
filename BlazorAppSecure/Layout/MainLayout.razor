@@ -54,28 +54,12 @@
                     Home
                 </NavLink>
             </MenuItem>
-            <MenuItem Key="2">
-                <Icon Type="@IconType.Outline.Calculator" />
-                <NavLink href="counter">
-                    Counter
-                </NavLink>
-            </MenuItem>
-            <AuthorizeView>
-                <Authorized>
-                    <MenuItem Key="3">
-                        <Icon Type="@IconType.Outline.Cloud" />
-                        <NavLink href="weather">
-                            Weather
-                        </NavLink>
-                    </MenuItem>
-                </Authorized>
-            </AuthorizeView>
             <AuthorizeView Roles="Admin">
                 <Authorized>
                     <MenuItem Key="4">
                         <Icon Type="@IconType.Outline.User" />
                         <NavLink href="users">
-                            User Management
+                            Users & Roles Management
                         </NavLink>
                     </MenuItem>
                     @* <MenuItem Key="5">

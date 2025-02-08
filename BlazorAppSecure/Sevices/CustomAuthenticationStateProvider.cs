@@ -149,14 +149,11 @@ namespace BlazorAppSecure.Sevices
                 var problemDetails = JsonDocument.Parse(details);
                 var errors = new List<string>();
 
-                // Kiểm tra xem có thuộc tính "errors" trong phản hồi không
                 if (problemDetails.RootElement.TryGetProperty("errors", out var errorList)) {
-                    // Duyệt qua từng lỗi và thêm vào danh sách
                     foreach (var error in errorList.EnumerateArray()) {
                         errors.Add(error.ToString());
                     }
                 } else {
-                    // Nếu không có thuộc tính "errors", sử dụng thông báo lỗi mặc định
                     errors.AddRange(defaultDetail);
                 }
 
@@ -239,7 +236,7 @@ namespace BlazorAppSecure.Sevices
 
         }
 
-        public async Task<FormResult> AddRole(string[] roles)
+        public async Task<FormResult> AddRoles(string[] roles)
         {
             try
             {
@@ -262,6 +259,45 @@ namespace BlazorAppSecure.Sevices
             {
                 Succeeded = false,
                 ErrorList = ["api has some issue"]
+            };
+        }
+
+        public async Task<FormResult> AddRole(string roleName) {
+            string[] defaultDetail = ["An unknown error prevented registration from succeeding."];
+            try {
+                var payload = JsonSerializer.Serialize(new { roleName = roleName });
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                var result = await _httpClient.PostAsync("api/Role/addRole", content);
+
+                if (result.IsSuccessStatusCode) {
+                    return new FormResult { Succeeded = true };
+                }
+
+                var details = await result.Content.ReadAsStringAsync();
+                var problemDetails = JsonDocument.Parse(details);
+                var errors = new List<string>();
+
+                if (problemDetails.RootElement.TryGetProperty("errors", out var errorList)) {
+                    foreach (var error in errorList.EnumerateArray()) {
+                        errors.Add(error.ToString());
+                    }
+                } else {
+                    errors.AddRange(defaultDetail);
+                }
+
+                return new FormResult {
+                    Succeeded = false,
+                    ErrorList = errors.ToArray()
+                };
+
+            } catch (Exception ex) {
+                await Console.Out.WriteLineAsync($"ERROR {ex}");
+            }
+
+            return new FormResult {
+                Succeeded = false,
+                ErrorList = defaultDetail
             };
         }
 
