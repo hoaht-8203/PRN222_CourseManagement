@@ -13,6 +13,7 @@ namespace CourseManagement.DataAccess.Data
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Category> Categories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,6 +43,11 @@ namespace CourseManagement.DataAccess.Data
                 .HasOne(e => e.Course)
                 .WithMany(c => c.Enrollments)
                 .HasForeignKey(e => e.CourseId);
+
+            modelBuilder.Entity<Category>()
+                .HasMany(c => c.Courses)
+                .WithOne(c => c.Category)
+                .HasForeignKey(c => c.CategoryId);
 
             DataSeed.InsertData(modelBuilder);
         }

@@ -145,3 +145,21 @@ code {
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+.ant-btn-edit {
+    color: #0d6efd !important;
+    background: transparent !important;
+}
+
+.ant-btn-edit:hover, .ant-btn-edit:focus {
+    color: #0d6efd !important;
+}
+
+.ant-btn-delete {
+    color: #dc3545 !important;
+    background: transparent !important;
+}
+
+.ant-btn-delete:hover, .ant-btn-delete:focus {
+    color: #dc3545 !important;
+}

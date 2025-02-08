@@ -18,7 +18,7 @@ namespace CourseManagement.DataAccess.Data
                 new IdentityRole { Id = customerRoleId, Name = Role.Role_User_Customer, ConcurrencyStamp = "2", NormalizedName = Role.Role_User_Customer.ToUpper() }
             );
 
-            
+
             var adminUserId = Guid.NewGuid().ToString();
             var customerUserId = Guid.NewGuid().ToString();
 

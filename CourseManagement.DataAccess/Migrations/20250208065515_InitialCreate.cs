@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CourseManagement.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDatabase : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,7 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -57,8 +57,7 @@ namespace CourseManagement.DataAccess.Migrations
                 name: "Courses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PreviewImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -177,31 +176,11 @@ namespace CourseManagement.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Comments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Comments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Comments_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Enrollment",
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EnrollmentDate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -228,7 +207,7 @@ namespace CourseManagement.DataAccess.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CourseId = table.Column<int>(type: "int", nullable: false)
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,6 +244,33 @@ namespace CourseManagement.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LessonId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comments_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Comments_Lessons_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lessons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Documents",
                 columns: table => new
                 {
@@ -291,8 +297,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "5ed4fedf-599e-4472-9d34-ff2169fd9b3d", "2", "User", "USER" },
-                    { "e7cde99f-b48f-46c9-9614-00173d1e4097", "1", "Admin", "ADMIN" }
+                    { "885a9ef1-6867-4eed-96ea-e8d44c4a8083", "2", "User", "USER" },
+                    { "f61d7250-8526-449e-b601-f0b744178284", "1", "Admin", "ADMIN" }
                 });
 
             migrationBuilder.InsertData(
@@ -300,8 +306,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FullName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "a55ebcc4-f99c-4952-aa76-c50a294fe195", 0, "fbcf926d-74a9-4cb8-a6a0-b507189b8ccd", "admin@admin.com", true, "Admin", true, null, "ADMIN@ADMIN.COM", "ADMIN@ADMIN.COM", "AQAAAAIAAYagAAAAEEPLHgbk143fw6OglbBfQxBeXsGQbORI6vLN4Dto9vqpV7Ex+XsEXehOapnujMHBPg==", null, false, "1b6550d7-e2a6-4ce4-893b-1cb022c4f0f9", false, "admin@admin.com" },
-                    { "c8552719-4914-4198-b6ba-6aa8f7abc9ac", 0, "a35db251-1d49-4491-b7d1-795753919f88", "user@user.com", true, "User", true, null, "USER@USER.COM", "USER@USER.COM", "AQAAAAIAAYagAAAAEKgzh4j4d/EM2iKaTzHjxQItcM4xAp7as1hQtbJ+gYBHXkD5uv1sWZ1dMva7gdvqEg==", null, false, "3dfd1274-3a24-4457-af82-61ed9df62a37", false, "user@user.com" }
+                    { "bf39c843-6bec-4d08-ae35-5fa5ad90ba5f", 0, "8c8f9b67-91e8-40f4-bf4f-f16827b828e2", "user@user.com", true, "User", true, null, "USER@USER.COM", "USER@USER.COM", "AQAAAAIAAYagAAAAEGAsLhjagAj32w6CTGsFSySt2RLZx+8re/n3tm2Z0rYrtdQSO+oOuZomh24gSXB2nA==", null, false, "bc61610e-3080-4b8f-908e-b14ea34a1a79", false, "user@user.com" },
+                    { "f048ac45-c890-4e0e-bc9a-f619e4fc1323", 0, "def9f211-d384-450c-80f6-714ed86354b9", "admin@admin.com", true, "Admin", true, null, "ADMIN@ADMIN.COM", "ADMIN@ADMIN.COM", "AQAAAAIAAYagAAAAEKnDneNtomWnz4BKBFgELyqlclGOzFHmeVCl4lanERjTMH6dvb6xsVSYQBzWM9oaRg==", null, false, "060ea66d-5377-469e-a209-b081a6034a61", false, "admin@admin.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -309,8 +315,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
-                    { "e7cde99f-b48f-46c9-9614-00173d1e4097", "a55ebcc4-f99c-4952-aa76-c50a294fe195" },
-                    { "5ed4fedf-599e-4472-9d34-ff2169fd9b3d", "c8552719-4914-4198-b6ba-6aa8f7abc9ac" }
+                    { "885a9ef1-6867-4eed-96ea-e8d44c4a8083", "bf39c843-6bec-4d08-ae35-5fa5ad90ba5f" },
+                    { "f61d7250-8526-449e-b601-f0b744178284", "f048ac45-c890-4e0e-bc9a-f619e4fc1323" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -351,6 +357,11 @@ namespace CourseManagement.DataAccess.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_LessonId",
+                table: "Comments",
+                column: "LessonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Comments_UserId",

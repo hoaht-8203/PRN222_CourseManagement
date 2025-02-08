@@ -65,8 +65,8 @@
             </PropertyColumn>
             <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
                 <CellRender Context="cellData">
-                    <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))"></Button>
-                    <Button Danger Type="ButtonType.Text" Icon="@IconType.Outline.Delete"></Button>
+                    <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))" Class="ant-btn-edit"></Button>
+                    <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
                 </CellRender>
             </ActionColumn>
         </Table>
@@ -97,7 +97,7 @@
             </Row>
             <Row Class="mt-3">
                 <AntDesign.Col Span="24" Class="d-flex justify-content-end gap-2">
-                    <Button Type="ButtonType.Default">Cancel</Button>
+                    <Button Type="ButtonType.Default" @onclick="CloseAddRoleDrawer">Cancel</Button>
                     <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
                 </AntDesign.Col>
             </Row>
