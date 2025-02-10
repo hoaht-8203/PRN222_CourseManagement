@@ -33,4 +33,25 @@ namespace BlazorAppSecure.Model {
         [Required(ErrorMessage = "Is pro course is required")]
         public bool IsProCourse { get; set; }
     }
+
+    public class CourseSearchModel {
+        public string? Title { get; set; }
+        public IEnumerable<int>? Levels { get; set; }
+        public IEnumerable<int>? Statuss { get; set; }
+        public IEnumerable<int>? CategoryIds { get; set; }
+    }
+
+    public enum CourseLevel {
+        Beginner = 0,
+        Intermediate = 1,
+        Advanced = 2,
+        Expert = 3
+    }
+
+    public enum CourseStatus {
+        Available = 1,
+        UnAvailable = 0,
+        InProgress = 2,
+        Pro = 3
+    }
 }

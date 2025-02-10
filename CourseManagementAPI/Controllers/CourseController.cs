@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace CourseManagementAPI.Controllers {
     [Route("api/[controller]")]
@@ -47,7 +48,7 @@ namespace CourseManagementAPI.Controllers {
 
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("search")]
-        public IActionResult Search() {
+        public IActionResult Search([FromQuery] SearchCourseRequest req) {
             var res = _db.Courses
                 .Select(c => new {
                     c.Id,
@@ -65,6 +66,22 @@ namespace CourseManagementAPI.Controllers {
                     CategoryName = c.Category.Name,
                 })
                 .ToList();
+
+            if (!string.IsNullOrEmpty(req.Title)) {
+                res = res.Where((c) => c.Title.ToLower().Contains(req.Title.ToLower())).ToList();
+            }
+
+            if (req.Levels != null && req.Levels.Any()) {
+                res = res.Where((c) => req.Levels.Contains(c.Level)).ToList();
+            }
+
+            if (req.Statuss != null && req.Statuss.Any()) {
+                res = res.Where((c) => req.Statuss.Contains(c.Status)).ToList();
+            }
+
+            if (req.CategoryIds != null && req.CategoryIds.Any()) {
+                res = res.Where((c) => req.CategoryIds.Contains(c.CategoryId)).ToList();
+            }
 
             return Ok(res);
         }
