@@ -3,5 +3,42 @@
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
-  "configurations": []
+  "configurations": [
+    {
+      "name": "Launch API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-api",
+      "program": "dotnet",
+      "args": ["watch", "run"],
+      "cwd": "${workspaceFolder}/CourseManagementAPI",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Launch Blazor",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-blazor",
+      "program": "dotnet",
+      "args": ["run"],
+      "cwd": "${workspaceFolder}/BlazorAppSecure",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch Both",
+      "configurations": ["Launch API", "Launch Blazor"]
+    }
+  ]
 }
