@@ -12,5 +12,6 @@ namespace CourseManagement.Model.Model {
         public string Name { get; set; }
         public string Description { get; set; }
         public ICollection<Course> Courses { get; set; }
+        public virtual ICollection<BlogCategory> BlogCategories { get; set; }
     }
 }
