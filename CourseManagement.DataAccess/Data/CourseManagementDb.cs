@@ -14,6 +14,8 @@ namespace CourseManagement.DataAccess.Data
         public DbSet<Document> Documents { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Blog> Blogs { get; set; }
+        public DbSet<BlogCategory> BlogCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,6 +50,21 @@ namespace CourseManagement.DataAccess.Data
                 .HasMany(c => c.Courses)
                 .WithOne(c => c.Category)
                 .HasForeignKey(c => c.CategoryId);
+            modelBuilder.Entity<BlogCategory>()
+               .HasKey(bc => new { bc.BlogId, bc.CategoryId });
+
+            // Quan hệ Blog - BlogCategory - Category (N-N)
+            modelBuilder.Entity<BlogCategory>()
+                .HasOne(bc => bc.Blog)
+                .WithMany(b => b.BlogCategories)
+                .HasForeignKey(bc => bc.BlogId);
+
+            modelBuilder.Entity<BlogCategory>()
+                .HasOne(bc => bc.Category)
+                .WithMany(c => c.BlogCategories)
+                .HasForeignKey(bc => bc.CategoryId);
+
+
 
             DataSeed.InsertData(modelBuilder);
         }

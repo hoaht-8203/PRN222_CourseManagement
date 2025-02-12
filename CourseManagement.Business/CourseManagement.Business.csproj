@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CourseManagement.DataAccess\CourseManagement.DataAccess.csproj" />
     <ProjectReference Include="..\CourseManagement.Model\CourseManagement.Model.csproj" />
   </ItemGroup>
 
