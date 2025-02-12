@@ -1,0 +1,229 @@
+﻿@page "/courses/detail/{Id}"
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            Home
+        </BreadcrumbItem>
+        <BreadcrumbItem Href="/courses">
+            Course Management
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            Course Detail
+        </BreadcrumbItem>
+    </Breadcrumb>
+</div>
+
+<div class="course-detail">
+    <GridRow Gutter="12">
+        <GridCol Span="6">
+            <div>
+                <Collapse DefaultActiveKey="@(new[] { "1" })"
+                          OnChange="Callback"
+                          ExpandIconPosition="@expandIconPosition"
+                          ExpandIcon="@IconType.Outline.CaretRight">
+                    <Panel Header="Mở đầu" Key="1">
+                        <ExtraTemplate>
+                            <div @onclick:stopPropagation><Icon Type="@IconType.Outline.Setting" /></div>
+                        </ExtraTemplate>
+                        <ChildContent>
+                            @if (data == null) {
+                                <Empty class="mt-3" />
+                            } else {
+                                <AntList DataSource="@data">
+                                    <ChildContent Context="item">
+                                        <ListItem Class="@(item.Title == CurrentModel?.Title ? "active" : "")" OnClick="() => HandleClick(item)">
+                                            <div class="course-detail-lesson" @onclick="() => HandleClick(item)">
+                                                <div>
+                                                    <Icon Type="@IconType.Outline.PlayCircle" /> @item.Title
+                                                </div>
+
+                                                <Icon Type="@IconType.Outline.CheckCircle" Style="color: #52c41a" />
+                                            </div>
+                                        </ListItem>
+                                    </ChildContent>
+                                </AntList>
+                            }
+                        </ChildContent>
+                    </Panel>
+                    <Panel Header="Ôn tập kiến thức JavaScript cần thiết" Key="2">
+                        <ExtraTemplate>
+                            <div @onclick:stopPropagation><Icon Type="@IconType.Outline.Setting" /></div>
+                        </ExtraTemplate>
+                        <ChildContent>
+                            @if (data2 == null) {
+                                <Empty class="mt-3" />
+                            } else {
+                                <AntList DataSource="@data2">
+                                    <ChildContent Context="item">
+                                        <ListItem Class="@(item.Title == CurrentModel?.Title ? "active" : "")" OnClick="() => HandleClick(item)">
+                                            <div class="course-detail-lesson" @onclick="() => HandleClick(item)">
+                                                <div>
+                                                    <Icon Type="@IconType.Outline.PlayCircle" /> @item.Title
+                                                </div>
+
+                                                <Icon Type="@IconType.Outline.CheckCircle" Style="color: #52c41a" />
+                                            </div>
+                                        </ListItem>
+                                    </ChildContent>
+                                </AntList>
+                            }
+                        </ChildContent>
+                    </Panel>
+                    <Panel Header="Object trong Javascript" Key="3">
+                        <ExtraTemplate>
+                            <div @onclick:stopPropagation><Icon Type="@IconType.Outline.Setting" /></div>
+                        </ExtraTemplate>
+                        <ChildContent>
+                            @if (data3 == null) {
+                                <Empty class="mt-3" />
+                            } else {
+                                <AntList DataSource="@data3">
+                                    <ChildContent Context="item">
+                                        <ListItem>
+                                            <div class="course-detail-lesson">
+                                                <div>
+                                                    <Icon Type="@IconType.Outline.PlayCircle" /> @item
+                                                </div>
+                                            </div>
+                                        </ListItem>
+                                    </ChildContent>
+                                </AntList>
+                            }
+                        </ChildContent>
+                    </Panel>
+                </Collapse>
+            </div>
+        </GridCol>
+        <GridCol Span="18">
+            <Card Bordered="true">
+                @if (CurrentModel == null) {
+                    <Empty/>
+                } else {
+                    <div style="position: relative; padding-bottom: 525px; height: 0; overflow: hidden;">
+                        <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 525px; border: 0; border-radius: 0.5rem"
+                                src="@GetYouTubeEmbedUrl(CurrentModel.VideoURL)"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+
+                    <div class="mt-3">
+                        <GridRow Gutter="32">
+                            <GridCol Span="4">
+                                <div class="d-flex">
+                                    <Button Icon="@IconType.Outline.CaretLeft">Previous lesson</Button>
+                                </div>
+                            </GridCol>
+                            <GridCol Span="16">
+                                <h5>@CurrentModel.Title</h5>
+                                <span>
+                                    Module: Ôn tập kiến thức JavaScript cần thiết
+                                </span>
+                            </GridCol>
+                            <GridCol Span="4">
+                                <div class="d-flex justify-content-end">
+                                    <Button Icon="@IconType.Outline.CaretRight">Next lesson</Button>
+                                </div>
+                            </GridCol>
+                        </GridRow>
+                    </div>
+                }
+            </Card>
+        </GridCol>
+    </GridRow>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    public class Model {
+        public string Title { get; set; }
+        public string VideoURL { get; set; }
+    }
+
+    CollapseExpandIconPosition expandIconPosition = CollapseExpandIconPosition.Left;
+
+    void Callback(string[] keys) {
+        Console.WriteLine(string.Join(',', keys));
+    }
+
+    public List<Model> data = new List<Model>
+    {
+        new Model() { Title = "Bài 1: [Phải xem] Hướng dẫn cách học đúng hướng", VideoURL = "https://www.youtube.com/watch?v=Ihy0QziLDf0&list=PLZPZq0r_RZOO1zkgO4bIdfuLpizCeHYKv"}
+    };
+
+    public List<Model>? data2 = new List<Model> {
+        new Model() { Title = "Bài 2: Destructuring, Rest parameter và Spread Syntax", VideoURL = "https://www.youtube.com/watch?v=FyGIKD2fxIo&list=PLZPZq0r_RZOO1zkgO4bIdfuLpizCeHYKv&index=3"},
+        new Model() { Title = "Bài 3: Tham trị và tham chiếu", VideoURL = "https://www.youtube.com/watch?v=nbX0MIV7-Ek&list=PLZPZq0r_RZOO1zkgO4bIdfuLpizCeHYKv&index=2"},
+        new Model() { Title = "Bài 4: Toán tử logic và Template string", VideoURL = "https://www.youtube.com/watch?v=jLRnuVHwHKk&list=PLZPZq0r_RZOO1zkgO4bIdfuLpizCeHYKv&index=5"}
+    };
+
+    public Model? CurrentModel = null;
+
+    public List<string>? data3 = null;
+
+    void HandleClick(Model item) {
+        CurrentModel = item;
+    }
+
+    private string GetYouTubeEmbedUrl(string url) {
+        if (string.IsNullOrEmpty(url)) return "";
+
+        string videoId = "";
+
+        if (url.Contains("youtube.com/watch")) {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            videoId = query["v"];
+        } else if (url.Contains("youtu.be")) {
+            videoId = url.Split('/').Last();
+        } else if (url.Length == 11) {
+            videoId = url;
+        }
+
+        return $"https://www.youtube.com/embed/{videoId}";
+    }
+}
+
+<style>
+    .ant-collapse-content-box {
+        padding: 0px !important;
+    }
+
+    .ant-list-item {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .course-detail .ant-card {
+        border-radius: 0.5rem;
+    }
+
+    .course-detail .ant-card-body {
+        padding: 0.5rem;
+    }
+
+    .course-detail .ant-list-item:hover {
+        cursor: pointer;
+    }
+
+    .course-detail .course-detail-lesson {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
+        gap: 5px;
+        user-select: none;
+    }
+
+    .course-detail .ant-collapse-header-text {
+        user-select: none;
+    }
+
+    .course-detail .active {
+        background: #0061ba;
+        color: white;
+    }
+</style>

@@ -15,6 +15,7 @@ namespace CourseManagement.Model.Model
         public string PreviewVideoUrl { get; set; }
         public CourseLevel Level { get; set; } = CourseLevel.Beginner;
         public CourseStatus Status { get; set; } = CourseStatus.InProgress;
+        public CourseType CourseType { get; set; } = CourseType.FreeCourse;
 
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]

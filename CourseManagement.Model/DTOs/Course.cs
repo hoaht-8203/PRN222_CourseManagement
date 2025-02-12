@@ -38,6 +38,7 @@ namespace CourseManagement.Model.DTOs {
         public string? Title { get; set; }
         public List<CourseLevel>? Levels { get; set; }
         public List<CourseStatus>? Statuss { get; set; }
+        public List<CourseType>? CourseTypes { get; set; }
         public List<int>? CategoryIds { get; set; }
     }
 }

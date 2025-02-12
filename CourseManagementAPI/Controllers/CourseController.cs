@@ -36,7 +36,8 @@ namespace CourseManagementAPI.Controllers {
                 PreviewVideoUrl = req.PreviewVideoUrl,
                 Description = req.Description,
                 Level = req.Level,
-                Status = req.IsProCourse ? CourseStatus.Pro : CourseStatus.InProgress,
+                Status = CourseStatus.InProgress,
+                CourseType = req.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse,
                 CategoryId = req.CategoryId,
             };
 
@@ -60,9 +61,9 @@ namespace CourseManagementAPI.Controllers {
                     LevelName = c.Level.ToString(),
                     c.Status,
                     StatusName = c.Status.ToString(),
-                    c.Enrollments,
-                    c.Modules,
                     c.CategoryId,
+                    c.CourseType,
+                    typeName = c.CourseType.ToString(),
                     CategoryName = c.Category.Name,
                 })
                 .ToList();
@@ -77,6 +78,10 @@ namespace CourseManagementAPI.Controllers {
 
             if (req.Statuss != null && req.Statuss.Any()) {
                 res = res.Where((c) => req.Statuss.Contains(c.Status)).ToList();
+            }
+
+            if (req.CourseTypes != null && req.CourseTypes.Any()) {
+                res = res.Where((c) => req.CourseTypes.Contains(c.CourseType)).ToList();
             }
 
             if (req.CategoryIds != null && req.CategoryIds.Any()) {

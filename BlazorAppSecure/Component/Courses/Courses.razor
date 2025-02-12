@@ -7,12 +7,13 @@
 
 @inject IHttpClientFactory HttpClientFactory
 @inject IMessageService _mess
-@inject ModalService ModelService;
+@inject ModalService ModelService
+@inject NavigationManager _nav
 
 <div class="mb-2">
     <Breadcrumb>
         <BreadcrumbItem Href="">
-            <Icon Type="@IconType.Outline.Home" />
+            Home
         </BreadcrumbItem>
         <BreadcrumbItem>
             Courses Management
@@ -59,12 +60,28 @@
                             AllowClear>
                         <SelectOptions>
                             @foreach (var status in Enum.GetValues(typeof(CourseStatus))) {
-                                if ((int) status == 0) {
-                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="Un Available" />
-                                } else if ((int) status == 2) {
-                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="In Progress" />
-                                } else {
-                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="@status.ToString()" />                                    
+                                <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="@status.ToString()" />
+                            }
+                        </SelectOptions>
+                    </Select>
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="6">
+                <Text>Status</Text>
+                <FormItem>
+                    <Select Mode="SelectMode.Multiple"
+                            Placeholder="Please select course type"
+                            @bind-Values="@context.CourseTypes"
+                            TItemValue="int"
+                            TItem="string"
+                            EnableSearch
+                            AllowClear>
+                        <SelectOptions>
+                            @foreach (var type in Enum.GetValues(typeof(CourseType))) {
+                                if ((int) type == 0) {
+                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)type)" Label="Free Course" />
+                                } else if ((int) type == 1) {
+                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)type)" Label="Pro Course" />
                                 }
                             }
                         </SelectOptions>
@@ -74,19 +91,6 @@
             <AntDesign.Col Span="6">
                 <Text>Category</Text>
                 <FormItem>
-                    @* <Select Mode="SelectMode.Multiple"
-                            Placeholder="Please select category"
-                            @bind-Values="@context.Statuss"
-                            TItemValue="int"
-                            TItem="string"
-                            EnableSearch
-                            AllowClear>
-                        <SelectOptions>
-                            @foreach (var c in categoryList) {
-                                <SelectOption TItemValue="int" TItem="string" Value="@c.Id" Label="@c.Name" />
-                            }
-                        </SelectOptions>
-                    </Select> *@
                     <Select Mode="SelectMode.Multiple"
                             Placeholder="Please select category"
                             @bind-Values="@context.CategoryIds"
@@ -104,9 +108,11 @@
                     </Select>
                 </FormItem>
             </AntDesign.Col>
-            <AntDesign.Col Span="24">
-                <Button Icon="@IconType.Outline.Clear" @onclick="HandleResetSearchForm">Clear</Button>
-                <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Search" @onclick="HandleSearchCourse">Search</Button>
+            <AntDesign.Col Span="18">
+                <div style="margin-top: 22px">
+                    <Button Icon="@IconType.Outline.Clear" @onclick="HandleResetSearchForm">Clear</Button>
+                    <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Search" @onclick="HandleSearchCourse">Search</Button>
+                </div>
             </AntDesign.Col>
         </Row>
     </Form>
@@ -124,7 +130,14 @@
     </div>
 </div>
 
-<Table DataSource="courseList" PageSize="12" ScrollX="1000" AutoHeight Loading="loadingCourseList" Bordered Striped="false">
+<Table DataSource="courseList" 
+    PageSize="12" 
+    ScrollX="1000" 
+    AutoHeight 
+    Loading="loadingCourseList" 
+    Bordered 
+    Striped="false"
+    class="table-list-course">
     <ColumnDefinitions>
         <PropertyColumn Property="c=>c.Index"
                         Title="#"
@@ -166,16 +179,14 @@
         <PropertyColumn Property="c=>c.Level" Title="Total Enrolled" Width="150" Align="ColumnAlign.Center">
             0
         </PropertyColumn>
-        <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
+        <ActionColumn Title="Action" Width="140" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
             <CellRender Context="cellData">
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Eye" @onclick="@(() => HandleNavigateToDetail(context))"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
             </CellRender>
         </ActionColumn>
     </ColumnDefinitions>
-    <ExpandTemplate>
-        Expanded value
-    </ExpandTemplate>
 </Table>
 
 <Drawer Closable="true" 
@@ -296,7 +307,7 @@
     private List<CategoiesModel> categoryList = new List<CategoiesModel>();
 
     CourseModel courseModel = new();
-    CategoyModel categoryModel = new();
+    CategoryModel categoryModel = new();
     CourseSearchModel courseSearchModel = new();
 
     bool loadingCourseList = false;
@@ -305,7 +316,7 @@
     bool visibleAddNewCourseDrawer = false;
     bool visibleAddNewCategoryModal = false;
 
-    private Form<CategoyModel> _form;
+    private Form<CategoryModel> _form;
 
     RenderFragment FormTemplate() {
         return
@@ -350,6 +361,10 @@
     void close() {
         this.visibleAddNewCourseDrawer = false;
         StateHasChanged();
+    }
+
+    void HandleNavigateToDetail(CoursesModel model) {
+        _nav.NavigateTo($"/courses/detail/{model.Id}");
     }
 
     async void FetchListCourse() {
@@ -546,32 +561,7 @@
 }
 
 <style>
-    .total-course {
-        h6 {
-            color: darkorange
-        }
-    }
-
-    thead .ant-table-row-expand-icon-cell {
-        position: sticky !important;
-        left: 0px !important;
-        z-index: 2 !important;
-    }
-
-    tbody .ant-table-row-expand-icon-cell {
-        position: sticky !important;
-        left: 0px !important;
-        background: #fff !important;
-        z-index: 2 !important;
-    }
-
-    .index-col {
-        position: sticky !important;
-        left: 48px !important;
-    }
-
-    .title-col {
-        position: sticky !important;
-        left: 98px !important;
+    .total-course h6 {
+        color: darkorange
     }
 </style>

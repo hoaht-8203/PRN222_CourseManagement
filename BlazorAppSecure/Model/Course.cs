@@ -14,6 +14,7 @@ namespace BlazorAppSecure.Model {
         public string StatusName { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; }
+        public List<ModuleModel> ListModule { get; set; }
     }
 
     public class CourseModel {
@@ -39,6 +40,7 @@ namespace BlazorAppSecure.Model {
         public IEnumerable<int>? Levels { get; set; }
         public IEnumerable<int>? Statuss { get; set; }
         public IEnumerable<int>? CategoryIds { get; set; }
+        public IEnumerable<int>? CourseTypes { get; set; }
     }
 
     public enum CourseLevel {
@@ -51,7 +53,11 @@ namespace BlazorAppSecure.Model {
     public enum CourseStatus {
         Available = 1,
         UnAvailable = 0,
-        InProgress = 2,
-        Pro = 3
+        InProgress = 2
+    }
+
+    public enum CourseType {
+        FreeCourse = 0,
+        ProCourse = 1,
     }
 }
