@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250215173832_AddLessonProgressModel")]
+    partial class AddLessonProgressModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,35 +95,35 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f1ec4ba7-9f74-4105-97c1-807f5f535bbd",
+                            Id = "4528b912-0717-4253-9262-516237e8ff11",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "83a46b83-6055-4a95-8331-73ae44673304",
+                            ConcurrencyStamp = "85a4c523-78a6-4b66-b492-c3e2e9610341",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             FullName = "Admin",
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN@ADMIN.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIrxdoad7qbdzox0ry5YcTLMb/H5fLJp3FjYkSm0UqxysXJ6EiepvmtnhHp1JL53lA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIUzbpbkCWgbJkMBU6Vz8ldunt8pwlj+7L7O3ecGIaLFfy1bjd3gbCprSKqUb3M65Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bf2aac96-38e5-42aa-9119-892eee3c3353",
+                            SecurityStamp = "84296fbc-f99e-406a-a81d-ce777463919c",
                             TwoFactorEnabled = false,
                             UserName = "admin@admin.com"
                         },
                         new
                         {
-                            Id = "a425fb05-3b10-4722-afb4-a7c144fe2acd",
+                            Id = "2eea696b-761b-4cde-9cad-4025e5fe11c0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5fa1a3ec-1a9b-443e-bcfe-015b8e60c5fa",
+                            ConcurrencyStamp = "01109bfd-640d-4381-b4ee-30764d98173c",
                             Email = "user@user.com",
                             EmailConfirmed = true,
                             FullName = "User",
                             LockoutEnabled = true,
                             NormalizedEmail = "USER@USER.COM",
                             NormalizedUserName = "USER@USER.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPZ6KdZ4DKWUaw1Uyw9A7US05HrfAmBOPgpoVQgv1uA7CricaIePN1xhYEQjsSJ3aw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOvp48svxJLH21ZDbcYcbHBEXj8L4tktK/eoSkZ0WwRWk7u1hy6uc84kqU3i2vu5YA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b7db5d62-1808-4488-8fbd-f32dc13b40c2",
+                            SecurityStamp = "24d0eb1f-fc41-4d83-9d19-d842cf5b3129",
                             TwoFactorEnabled = false,
                             UserName = "user@user.com"
                         });
@@ -331,12 +334,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.Property<int>("ModuleId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("NextLessonId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PrevLessonId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -427,14 +424,14 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "3241193b-a48c-4587-b1aa-9dc79ade7984",
+                            Id = "ca0ad912-c58a-4091-add8-8bcb9e711446",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "e1d2fe0f-9e1a-46c6-89b3-0d28fa3f26d7",
+                            Id = "daafbb51-7b07-4bcc-910f-112824294724",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "USER"
@@ -530,13 +527,13 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "f1ec4ba7-9f74-4105-97c1-807f5f535bbd",
-                            RoleId = "3241193b-a48c-4587-b1aa-9dc79ade7984"
+                            UserId = "4528b912-0717-4253-9262-516237e8ff11",
+                            RoleId = "ca0ad912-c58a-4091-add8-8bcb9e711446"
                         },
                         new
                         {
-                            UserId = "a425fb05-3b10-4722-afb4-a7c144fe2acd",
-                            RoleId = "e1d2fe0f-9e1a-46c6-89b3-0d28fa3f26d7"
+                            UserId = "2eea696b-761b-4cde-9cad-4025e5fe11c0",
+                            RoleId = "daafbb51-7b07-4bcc-910f-112824294724"
                         });
                 });
 

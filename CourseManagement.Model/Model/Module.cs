@@ -12,5 +12,8 @@ namespace CourseManagement.Model.Model
         public Course Course { get; set; }
 
         public ICollection<Lesson> Lessons { get; set; }
+
+        public int? PreModuleId { get; set; }
+        public int? NextModuleId { get; set; }
     }
 }

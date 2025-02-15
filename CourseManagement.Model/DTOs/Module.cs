@@ -12,6 +12,8 @@ namespace CourseManagement.Model.DTOs {
         public string Title { get; set; }
         [Required]
         public string CourseId { get; set; }
+        public int? PrevModuleId { get; set; }
+        public int? NextModuleId { get; set; }
     }
 
     public class SearchModuleRequest {
@@ -29,5 +31,7 @@ namespace CourseManagement.Model.DTOs {
         public string ModuleId { get; set; }
         [Required]
         public string Title { get; set; }
+        public int? PrevModuleId { get; set; }
+        public int? NextModuleId { get; set; }
     }
 }

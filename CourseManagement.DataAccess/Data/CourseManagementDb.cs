@@ -46,6 +46,19 @@ namespace CourseManagement.DataAccess.Data
                 .WithMany(c => c.Enrollments)
                 .HasForeignKey(e => e.CourseId);
 
+            modelBuilder.Entity<LessonProgress>()
+                .HasKey(e => new { e.UserId, e.LessonId });
+
+            modelBuilder.Entity<LessonProgress>()
+                .HasOne(e => e.User)
+                .WithMany(u => u.LessonProgresses)
+                .HasForeignKey(e => e.UserId);
+
+            modelBuilder.Entity<LessonProgress>()
+                .HasOne(e => e.Lesson)
+                .WithMany(c => c.LessonProgresses)
+                .HasForeignKey(e => e.LessonId);
+
             modelBuilder.Entity<Category>()
                 .HasMany(c => c.Courses)
                 .WithOne(c => c.Category)

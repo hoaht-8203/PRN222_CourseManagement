@@ -9,5 +9,6 @@ namespace CourseManagement.Model.Model
         public ICollection<Enrollment>? Enrollments { get; set; }
         public ICollection<Comment>? Comments { get; set; }
         public ICollection<Blog> Blogs { get; set; }
+        public ICollection<LessonProgress> LessonProgresses { get; set; }
     }
 }
