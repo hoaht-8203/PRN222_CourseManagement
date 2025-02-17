@@ -1,5 +1,7 @@
 ﻿using CourseManagement.Business.Services.IService;
 using CourseManagement.DataAccess.Data;
+using CourseManagement.DataAccess.Repositorys.IRepositorys;
+using CourseManagement.DataAccess.Repositorys;
 using CourseManagement.Model.Model;
 using CourseManagementAPI.Services;
 using Microsoft.AspNetCore.Identity;
@@ -27,6 +29,11 @@ builder.Services.AddDbContext<CourseManagementDb>(options =>
 builder.Services.AddIdentityApiEndpoints<AppUser>().
     AddRoles<IdentityRole>().
     AddEntityFrameworkStores<CourseManagementDb>();
+
+builder.Services.AddScoped<IModuleRepository, ModuleRepository>();
+builder.Services.AddScoped<ModuleRepository>();
+builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+builder.Services.AddScoped<LessonRepository>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserService, UserService>();

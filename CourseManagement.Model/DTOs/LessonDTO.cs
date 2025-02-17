@@ -15,12 +15,9 @@ namespace CourseManagement.Model.DTOs {
         public string UrlVideo { get; set; }
         [Required]
         public int ModuleId { get; set; }
-        public int? PrevLessonId { get; set; }
-        public int? NextLessonId { get; set; }
     }
 
-    public class  SearchLessonRequest
-    {
+    public class SearchLessonRequest {
         public int ModuleId { get; set; }
     }
 
@@ -33,8 +30,8 @@ namespace CourseManagement.Model.DTOs {
         public string Description { get; set; }
         [Required]
         public string UrlVideo { get; set; }
-        public int? PrevLessonId { get; set; }
-        public int? NextLessonId { get; set; }
+        [Required]
+        public int NewOrder {  get; set; }
     }
 
     public class RemoveLessonRequest {
