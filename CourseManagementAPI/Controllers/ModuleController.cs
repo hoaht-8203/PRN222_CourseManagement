@@ -52,6 +52,19 @@ namespace CourseManagementAPI.Controllers {
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpGet("detail")]
+        public async Task<IActionResult> Detail([FromQuery] DetailModuleRequest req) {
+            try {
+                var res = await moduleRepository.DetailModule(req);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while get detail the module" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] UpdateModuleRequest req) {
             try {

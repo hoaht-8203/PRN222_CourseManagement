@@ -19,6 +19,27 @@ namespace CourseManagement.Model.DTOs {
             public string CourseId { get; set; }
         }
 
+        public class SearchModuleResponse {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public int Order { get; set; }
+            public int Status { get; set; }
+            public string CourseId { get; set; }
+        }
+
+        public class DetailModuleRequest {
+            [Required]
+            public int ModuleId { get; set; }
+        }
+
+        public class DetailModuleResponse {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public int Order { get; set; }
+            public int Status { get; set; }
+            public string CourseId { get; set; }
+        }
+
         public class RemoveModuleRequest {
             [Required]
             public int ModuleId { get; set; }

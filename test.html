@@ -1,100 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
+    <title>Random Moving Box</title>
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            padding: 20px;
-            background: linear-gradient(to right, #6a11cb, #2575fc);
-            color: #fff;
-            text-align: center;
-        }
-        h2 {
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-        .sortable-list {
-            list-style: none;
-            padding: 0;
-            width: 350px;
-            margin: auto;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-        .sortable-item {
-            padding: 15px 20px;
-            margin: 8px 0;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 5px;
-            font-size: 1.1em;
-            color: #333;
-            font-weight: bold;
-            cursor: grab;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background 0.2s, transform 0.2s;
-        }
-        .sortable-item:hover {
-            background: #e8f0ff;
-            transform: scale(1.03);
-        }
-        .dragging {
-            opacity: 0.7;
-            transform: rotate(-2deg);
-        }
-        .over {
-            border: 2px dashed #ff8c42;
-            background: #fff3e0;
-        }
+      .container {
+        height: 100vh;
+        width: 100%;
+        background: white;
+        position: relative;
+      }
+
+      .box {
+        width: 200px;
+        height: 200px;
+        background-color: red;
+        position: absolute;
+        right: 0;
+        transition: all 0.3s ease;
+        color: white;
+      }
     </style>
-</head>
-<body>
-    <h2>Drag and Drop Sortable List</h2>
-    <ul class="sortable-list">
-        <li class="sortable-item" draggable="true">Item 1</li>
-        <li class="sortable-item" draggable="true">Item 2</li>
-        <li class="sortable-item" draggable="true">Item 3</li>
-        <li class="sortable-item" draggable="true">Item 4</li>
-        <li class="sortable-item" draggable="true">Item 5</li>
-    </ul>
+  </head>
+  <body>
+    <div class="container">
+      <div class="box">Em đồng ý</div>
+    </div>
+
     <script>
-        const list = document.querySelector('.sortable-list');
-        let draggingItem = null;
-        list.addEventListener('dragstart', (e) => {
-            draggingItem = e.target;
-            e.target.classList.add('dragging');
-        });
-        list.addEventListener('dragend', (e) => {
-            e.target.classList.remove('dragging');
-            document.querySelectorAll('.sortable-item')
-                .forEach(item => item.classList.remove('over'));
-            draggingItem = null;
-        });
-        list.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const draggingOverItem = getDragAfterElement(list, e.clientY);
-            document.querySelectorAll('.sortable-item').forEach
-                (item => item.classList.remove('over'));
-            if (draggingOverItem) {
-                draggingOverItem.classList.add('over');
-                list.insertBefore(draggingItem, draggingOverItem);
-            } else {
-                list.appendChild(draggingItem); 
-            }
-        });
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll
-                ('.sortable-item:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
+      const box = document.querySelector(".box");
+      const container = document.querySelector(".container");
+
+      box.addEventListener("mouseover", () => {
+        // Get container dimensions
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate maximum positions
+        const maxX = containerRect.width - box.offsetWidth;
+        const maxY = containerRect.height - box.offsetHeight;
+
+        // Generate random positions
+        const randomX = Math.floor(Math.random() * maxX);
+        const randomY = Math.floor(Math.random() * maxY);
+
+        // Apply new position
+        box.style.right = "auto"; // Remove right: 0
+        box.style.left = randomX + "px";
+        box.style.top = randomY + "px";
+      });
     </script>
-</body>
+  </body>
 </html>

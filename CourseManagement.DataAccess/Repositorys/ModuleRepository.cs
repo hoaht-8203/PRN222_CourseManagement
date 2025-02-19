@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace CourseManagement.DataAccess.Repositorys {
     public class ModuleRepository : IModuleRepository {
@@ -95,7 +96,7 @@ namespace CourseManagement.DataAccess.Repositorys {
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Module>> SearchModule(ModuleDTO.SearchModuleRequest req) {
+        public async Task<List<SearchModuleResponse>> SearchModule(ModuleDTO.SearchModuleRequest req) {
             if (!Guid.TryParse(req.CourseId, out Guid courseGuid)) {
                 throw new ArgumentException("Invalid Course ID format");
             }
@@ -106,10 +107,35 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             var modules = await _context.Modules
                 .Where(m => m.CourseId == courseGuid && m.Status == ModuleStatus.Active)
+                .Select(m => new SearchModuleResponse {
+                    Id = m.Id,
+                    Title = m.Title,
+                    Order = m.Order ?? 0,
+                    Status = (int) m.Status,
+                    CourseId = m.CourseId.ToString()
+                })
                 .OrderBy(m => m.Order)
                 .ToListAsync();
 
             return modules;
+        }
+
+        public async Task<DetailModuleResponse> DetailModule(ModuleDTO.DetailModuleRequest req) {
+            var moduleDetail = await _context.Modules.FindAsync(req.ModuleId);
+
+            if (moduleDetail == null) {
+                throw new ArgumentException($"Module with id {req.ModuleId} not found or removed");
+            }
+
+            DetailModuleResponse res = new() {
+                Id = moduleDetail.Id,
+                Title = moduleDetail.Title,
+                Order = moduleDetail.Order ?? 0,
+                Status = (int) moduleDetail.Status,
+                CourseId = moduleDetail.CourseId.ToString()
+            };
+
+            return res;
         }
 
         public async Task RemoveModule(ModuleDTO.RemoveModuleRequest req) {

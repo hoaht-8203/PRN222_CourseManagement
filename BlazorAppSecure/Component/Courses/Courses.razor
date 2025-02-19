@@ -4,6 +4,8 @@
 @using AntDesign.TableModels
 @using BlazorAppSecure.Model
 @using System.ComponentModel
+@using CourseManagement.Model.Constant
+@using CourseManagement.Model.DTOs
 
 @inject IHttpClientFactory HttpClientFactory
 @inject IMessageService _mess
@@ -170,7 +172,7 @@
         <PropertyColumn Property="c=>c.Status" Width="200" Title="Status">
             @if (context.Status == 0) {
                 <Tag Color="TagColor.Red">Un Available</Tag>
-            } else if (context.Status == 2) {
+            } else if ((int) context.Status == 2) {
                 <Tag Color="TagColor.Gold">In Progress</Tag>
             } else {
                 <Tag>@context.StatusName</Tag>
@@ -238,10 +240,10 @@
                 <Text>Level</Text>
                 <FormItem>
                     <Segmented @bind-Value="context.Level">
-                        <SegmentedItem Label="Beginner" Value=@(1) />
-                        <SegmentedItem Label="Intermediate" Value=@(2) />
-                        <SegmentedItem Label="Advanced" Value=@(3) />
-                        <SegmentedItem Label="Expert" Value=@(4) />
+                        <SegmentedItem Label="Beginner" Value=@(CourseLevel.Beginner) />
+                        <SegmentedItem Label="Intermediate" Value=@(CourseLevel.Intermediate) />
+                        <SegmentedItem Label="Advanced" Value=@(CourseLevel.Advanced) />
+                        <SegmentedItem Label="Expert" Value=@(CourseLevel.Expert) />
                     </Segmented>
                 </FormItem>
             </AntDesign.Col>
@@ -303,10 +305,10 @@
     string errorImageUrl = "https://placehold.co/1920x1080?text=This%20Image%20Is%20Error&font=roboto";
     HttpClient httpClient;
 
-    private IQueryable<CoursesModel> courseList;
+    private IQueryable<SearchCourseResponse> courseList;
     private List<CategoiesModel> categoryList = new List<CategoiesModel>();
 
-    CourseModel courseModel = new();
+    AddCourseRequest courseModel = new();
     CategoryModel categoryModel = new();
     CourseSearchModel courseSearchModel = new();
 
@@ -363,7 +365,7 @@
         StateHasChanged();
     }
 
-    void HandleNavigateToDetail(CoursesModel model) {
+    void HandleNavigateToDetail(SearchCourseResponse model) {
         _nav.NavigateTo($"/courses/detail/{model.Id}");
     }
 
@@ -374,12 +376,9 @@
 
             if (result.IsSuccessStatusCode) {
                 var resposne = await result.Content.ReadAsStringAsync();
-                var values = JsonSerializer.Deserialize<CoursesModel[]>(resposne, jsonSerializerOptions);
+                var values = JsonSerializer.Deserialize<SearchCourseResponse[]>(resposne, jsonSerializerOptions);
                 if (values != null) {
-                    courseList = values.Select((item, index) => {
-                        item.Index = index;
-                        return item;
-                    }).ToList().AsQueryable();
+                    courseList = values.ToList().AsQueryable();
                 }
             } else {
                 await _mess.Error("Internal server error when load list course");
@@ -463,6 +462,12 @@
                     }
                 }
 
+                if (courseSearchModel.CourseTypes != null && courseSearchModel.CourseTypes.Any()) {
+                    foreach (var courseType in courseSearchModel.CourseTypes) {
+                        queryParams.Add($"CourseTypes={courseType}");
+                    }
+                }
+
                 if (courseSearchModel.Statuss != null && courseSearchModel.Statuss.Any()) {
                     foreach (var status in courseSearchModel.Statuss) {
                         queryParams.Add($"Statuss={status}");
@@ -485,12 +490,9 @@
 
             if (result.IsSuccessStatusCode) {
                 var response = await result.Content.ReadAsStringAsync();
-                var values = JsonSerializer.Deserialize<CoursesModel[]>(response, jsonSerializerOptions);
+                var values = JsonSerializer.Deserialize<SearchCourseResponse[]>(response, jsonSerializerOptions);
                 if (values != null) {
-                    courseList = values.Select((item, index) => {
-                        item.Index = index;
-                        return item;
-                    }).ToList().AsQueryable();
+                    courseList = values.ToList().AsQueryable();
                 }
             } else {
                 await _mess.Error("Internal server error when load list course");
@@ -557,6 +559,14 @@
         }
 
         return $"https://www.youtube.com/embed/{videoId}";
+    }
+
+    public class CourseSearchModel {
+        public string? Title { get; set; }
+        public IEnumerable<int>? Levels { get; set; }
+        public IEnumerable<int>? Statuss { get; set; }
+        public IEnumerable<int>? CategoryIds { get; set; }
+        public IEnumerable<int>? CourseTypes { get; set; }
     }
 }
 
