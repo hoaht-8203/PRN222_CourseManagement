@@ -10,8 +10,8 @@ namespace CourseManagement.DataAccess.Data
         public static void InsertData(ModelBuilder modelBuilder)
         {
           
-            var adminRoleId = Guid.NewGuid().ToString();
-            var customerRoleId = Guid.NewGuid().ToString();
+            var adminRoleId = "11ea7f26-3a0b-4ee8-88ec-0bee65ad975d";
+            var customerRoleId = "394e5930-426c-440d-a9f1-fc3a6c59ccf6";
 
             modelBuilder.Entity<IdentityRole>().HasData(
                 new IdentityRole { Id = adminRoleId, Name = Role.Role_User_Admin, ConcurrencyStamp = "1", NormalizedName = Role.Role_User_Admin.ToUpper() },
@@ -19,8 +19,8 @@ namespace CourseManagement.DataAccess.Data
             );
 
 
-            var adminUserId = Guid.NewGuid().ToString();
-            var customerUserId = Guid.NewGuid().ToString();
+            var adminUserId = "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2";
+            var customerUserId = "e404e498-c930-4a45-9b22-c35d2f333d37";
 
             modelBuilder.Entity<AppUser>().HasData(
                 new AppUser
