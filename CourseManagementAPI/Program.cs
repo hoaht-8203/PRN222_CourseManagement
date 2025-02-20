@@ -1,5 +1,8 @@
-﻿using CourseManagement.Business.Services.IService;
+﻿using CourseManagement.Business.Services;
+using CourseManagement.Business.Services.IService;
 using CourseManagement.DataAccess.Data;
+using CourseManagement.DataAccess.Repositorys.IRepositorys;
+using CourseManagement.DataAccess.Repositorys;
 using CourseManagement.Model.Model;
 using CourseManagementAPI.Services;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +33,10 @@ builder.Services.AddIdentityApiEndpoints<AppUser>().
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IBlogService, BlogService>();
+
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

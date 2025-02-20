@@ -68,24 +68,24 @@ namespace CourseManagement.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BlogCategories",
+                name: "BlogCategory",
                 columns: table => new
                 {
-                    BlogId = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    BlogsId = table.Column<int>(type: "int", nullable: false),
+                    CategoriesId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BlogCategories", x => new { x.BlogId, x.CategoryId });
+                    table.PrimaryKey("PK_BlogCategory", x => new { x.BlogsId, x.CategoriesId });
                     table.ForeignKey(
-                        name: "FK_BlogCategories_Blogs_BlogId",
-                        column: x => x.BlogId,
+                        name: "FK_BlogCategory_Blogs_BlogsId",
+                        column: x => x.BlogsId,
                         principalTable: "Blogs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BlogCategories_Categories_CategoryId",
-                        column: x => x.CategoryId,
+                        name: "FK_BlogCategory_Categories_CategoriesId",
+                        column: x => x.CategoriesId,
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -96,8 +96,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "1c0cc469-7d9a-4d19-9308-7dd6efb453c0", "2", "User", "USER" },
-                    { "bb2c8336-b590-43d0-8f50-d86c48a25ee5", "1", "Admin", "ADMIN" }
+                    { "872d8b9e-f131-4b05-b414-9877ead63ec2", "1", "Admin", "ADMIN" },
+                    { "c5ca0b18-66be-4784-b545-1673abae0928", "2", "User", "USER" }
                 });
 
             migrationBuilder.InsertData(
@@ -105,8 +105,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FullName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "23a1d2ca-a7d5-4e4d-a0d4-4412645058fe", 0, "813bb97b-75f9-4245-8732-d7512d643030", "admin@admin.com", true, "Admin", true, null, "ADMIN@ADMIN.COM", "ADMIN@ADMIN.COM", "AQAAAAIAAYagAAAAEC9PG0vCyvPCnMo2EZK9ASfOlWIBlyX1IXQxRKLC4b3MYEQVCPJ61n7PweujT7WS6g==", null, false, "50d159a1-0ed8-4df6-a1e9-200d47ac61c4", false, "admin@admin.com" },
-                    { "67fba672-1703-403a-8e8c-22b2dba4aaf6", 0, "0cec020f-d581-4603-9fc9-df9290820edd", "user@user.com", true, "User", true, null, "USER@USER.COM", "USER@USER.COM", "AQAAAAIAAYagAAAAEHsT1nBXwtLADC9k9Dqq8xvj6tXISUoSYNeaAotNxCgrQ5ed7Vyg0zdFnMPShjBCVA==", null, false, "08fe2f2f-681b-4ff6-bb01-466ec1212ac1", false, "user@user.com" }
+                    { "19b04c72-0c3f-4cc6-93b9-87b463bd50ed", 0, "3b9d6f7a-6777-4f16-8db9-35193c07ef84", "admin@admin.com", true, "Admin", true, null, "ADMIN@ADMIN.COM", "ADMIN@ADMIN.COM", "AQAAAAIAAYagAAAAED4AxGWL7I4W91nv5Ud9BjuU74pkO5JqOuO/vK4dMkZmS6ur+0yaMn22PFTebuXJCg==", null, false, "36f04fd5-20fa-4204-80b1-890750b2c3e1", false, "admin@admin.com" },
+                    { "8b5ab08f-0fb6-471e-adbf-1d492257e658", 0, "2645b3d5-0bf1-4aa4-8462-f314faed0841", "user@user.com", true, "User", true, null, "USER@USER.COM", "USER@USER.COM", "AQAAAAIAAYagAAAAEIN+g0NL6lu0IfKAqH5TSc55e28IdX68DJSG+pXBwoPOIVO2A0cMpCY9hN2xtjiiWA==", null, false, "59f10ee5-9fe1-44a6-ae91-08926a5a0850", false, "user@user.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -114,14 +114,14 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
-                    { "bb2c8336-b590-43d0-8f50-d86c48a25ee5", "23a1d2ca-a7d5-4e4d-a0d4-4412645058fe" },
-                    { "1c0cc469-7d9a-4d19-9308-7dd6efb453c0", "67fba672-1703-403a-8e8c-22b2dba4aaf6" }
+                    { "872d8b9e-f131-4b05-b414-9877ead63ec2", "19b04c72-0c3f-4cc6-93b9-87b463bd50ed" },
+                    { "c5ca0b18-66be-4784-b545-1673abae0928", "8b5ab08f-0fb6-471e-adbf-1d492257e658" }
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlogCategories_CategoryId",
-                table: "BlogCategories",
-                column: "CategoryId");
+                name: "IX_BlogCategory_CategoriesId",
+                table: "BlogCategory",
+                column: "CategoriesId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Blogs_UserId",
@@ -133,7 +133,7 @@ namespace CourseManagement.DataAccess.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BlogCategories");
+                name: "BlogCategory");
 
             migrationBuilder.DropTable(
                 name: "Blogs");
@@ -141,32 +141,32 @@ namespace CourseManagement.DataAccess.Migrations
             migrationBuilder.DeleteData(
                 table: "AspNetUserRoles",
                 keyColumns: new[] { "RoleId", "UserId" },
-                keyValues: new object[] { "bb2c8336-b590-43d0-8f50-d86c48a25ee5", "23a1d2ca-a7d5-4e4d-a0d4-4412645058fe" });
+                keyValues: new object[] { "872d8b9e-f131-4b05-b414-9877ead63ec2", "19b04c72-0c3f-4cc6-93b9-87b463bd50ed" });
 
             migrationBuilder.DeleteData(
                 table: "AspNetUserRoles",
                 keyColumns: new[] { "RoleId", "UserId" },
-                keyValues: new object[] { "1c0cc469-7d9a-4d19-9308-7dd6efb453c0", "67fba672-1703-403a-8e8c-22b2dba4aaf6" });
+                keyValues: new object[] { "c5ca0b18-66be-4784-b545-1673abae0928", "8b5ab08f-0fb6-471e-adbf-1d492257e658" });
 
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "1c0cc469-7d9a-4d19-9308-7dd6efb453c0");
+                keyValue: "872d8b9e-f131-4b05-b414-9877ead63ec2");
 
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "bb2c8336-b590-43d0-8f50-d86c48a25ee5");
+                keyValue: "c5ca0b18-66be-4784-b545-1673abae0928");
 
             migrationBuilder.DeleteData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
-                keyValue: "23a1d2ca-a7d5-4e4d-a0d4-4412645058fe");
+                keyValue: "19b04c72-0c3f-4cc6-93b9-87b463bd50ed");
 
             migrationBuilder.DeleteData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
-                keyValue: "67fba672-1703-403a-8e8c-22b2dba4aaf6");
+                keyValue: "8b5ab08f-0fb6-471e-adbf-1d492257e658");
 
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
