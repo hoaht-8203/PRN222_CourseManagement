@@ -1,28 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <title>Global Load</title>
-    <link
-      href="https://unpkg.com/md-editor-v3@5.2.2/lib/style.css"
-      rel="stylesheet"
-    />
+    <title>Random Moving Box</title>
+    <style>
+      .container {
+        height: 100vh;
+        width: 100%;
+        background: white;
+        position: relative;
+      }
+
+      .box {
+        width: 200px;
+        height: 200px;
+        background-color: red;
+        position: absolute;
+        right: 0;
+        transition: all 0.3s ease;
+        color: white;
+      }
+    </style>
   </head>
   <body>
-    <div id="md-editor-v3">
-      <md-editor-v3 v-model="text" />
+    <div class="container">
+      <div class="box">Em đồng ý</div>
     </div>
-    <script src="https://unpkg.com/vue@3.5.12/dist/vue.global.prod.js"></script>
-    <script src="https://unpkg.com/md-editor-v3@5.2.2/lib/umd/index.js"></script>
+
     <script>
-      const App = {
-        data() {
-          return {
-            text: "Hello Editor!!",
-          };
-        },
-      };
-      Vue.createApp(App).use(MdEditorV3.MdEditor).mount("#md-editor-v3");
+      const box = document.querySelector(".box");
+      const container = document.querySelector(".container");
+
+      box.addEventListener("mouseover", () => {
+        // Get container dimensions
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate maximum positions
+        const maxX = containerRect.width - box.offsetWidth;
+        const maxY = containerRect.height - box.offsetHeight;
+
+        // Generate random positions
+        const randomX = Math.floor(Math.random() * maxX);
+        const randomY = Math.floor(Math.random() * maxY);
+
+        // Apply new position
+        box.style.right = "auto"; // Remove right: 0
+        box.style.left = randomX + "px";
+        box.style.top = randomY + "px";
+      });
     </script>
   </body>
 </html>

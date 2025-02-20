@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250217181953_FixModuleAndLessonModel")]
+    partial class FixModuleAndLessonModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace CourseManagement.DataAccess.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BlogCategory", b =>
-                {
-                    b.Property<int>("BlogsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoriesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("BlogsId", "CategoriesId");
-
-                    b.HasIndex("CategoriesId");
-
-                    b.ToTable("BlogCategory", (string)null);
-                });
 
             modelBuilder.Entity("CourseManagement.Model.Model.AppUser", b =>
                 {
@@ -176,6 +164,21 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Blogs");
+                });
+
+            modelBuilder.Entity("CourseManagement.Model.Model.BlogCategory", b =>
+                {
+                    b.Property<int>("BlogId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BlogId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("BlogCategories");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Category", b =>
@@ -559,21 +562,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("BlogCategory", b =>
-                {
-                    b.HasOne("CourseManagement.Model.Model.Blog", null)
-                        .WithMany()
-                        .HasForeignKey("BlogsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CourseManagement.Model.Model.Category", null)
-                        .WithMany()
-                        .HasForeignKey("CategoriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("CourseManagement.Model.Model.Blog", b =>
                 {
                     b.HasOne("CourseManagement.Model.Model.AppUser", "User")
@@ -583,6 +571,25 @@ namespace CourseManagement.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CourseManagement.Model.Model.BlogCategory", b =>
+                {
+                    b.HasOne("CourseManagement.Model.Model.Blog", "Blog")
+                        .WithMany("BlogCategories")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CourseManagement.Model.Model.Category", "Category")
+                        .WithMany("BlogCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Comment", b =>
@@ -748,8 +755,15 @@ namespace CourseManagement.DataAccess.Migrations
                     b.Navigation("LessonProgresses");
                 });
 
+            modelBuilder.Entity("CourseManagement.Model.Model.Blog", b =>
+                {
+                    b.Navigation("BlogCategories");
+                });
+
             modelBuilder.Entity("CourseManagement.Model.Model.Category", b =>
                 {
+                    b.Navigation("BlogCategories");
+
                     b.Navigation("Courses");
                 });
 

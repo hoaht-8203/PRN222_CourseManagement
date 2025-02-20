@@ -2,7 +2,6 @@
     public enum CourseStatus {
         Available = 1,
         UnAvailable = 0,
-        InProgress = 2,
-        Pro = 3
+        InProgress = 2
     }
 }

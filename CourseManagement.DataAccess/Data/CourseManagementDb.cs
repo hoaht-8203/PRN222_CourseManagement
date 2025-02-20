@@ -45,10 +45,24 @@ namespace CourseManagement.DataAccess.Data
                 .HasOne(e => e.Course)
                 .WithMany(c => c.Enrollments)
                 .HasForeignKey(e => e.CourseId);
+
             modelBuilder.Entity<Blog>()
                 .HasMany(b => b.Categories)
                 .WithMany(c => c.Blogs)
                 .UsingEntity(j => j.ToTable("BlogCategory"));
+
+            modelBuilder.Entity<LessonProgress>()
+                .HasKey(e => new { e.UserId, e.LessonId });
+
+            modelBuilder.Entity<LessonProgress>()
+                .HasOne(e => e.User)
+                .WithMany(u => u.LessonProgresses)
+                .HasForeignKey(e => e.UserId);
+
+            modelBuilder.Entity<LessonProgress>()
+                .HasOne(e => e.Lesson)
+                .WithMany(c => c.LessonProgresses)
+                .HasForeignKey(e => e.LessonId);
 
             DataSeed.InsertData(modelBuilder);
         }

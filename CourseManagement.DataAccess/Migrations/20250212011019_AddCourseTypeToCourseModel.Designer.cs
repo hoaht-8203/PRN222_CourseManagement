@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250212011019_AddCourseTypeToCourseModel")]
+    partial class AddCourseTypeToCourseModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace CourseManagement.DataAccess.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BlogCategory", b =>
-                {
-                    b.Property<int>("BlogsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoriesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("BlogsId", "CategoriesId");
-
-                    b.HasIndex("CategoriesId");
-
-                    b.ToTable("BlogCategory", (string)null);
-                });
 
             modelBuilder.Entity("CourseManagement.Model.Model.AppUser", b =>
                 {
@@ -107,35 +95,35 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "072144ac-eb28-4e0f-883e-5af300f2cf10",
+                            Id = "f575ca17-e732-412a-a7f0-b0bc616b1155",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b4246dc8-bc60-470f-8dee-a9e4ab96dc2d",
+                            ConcurrencyStamp = "a784adc8-fd06-47bf-ae16-7a7d60777e21",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             FullName = "Admin",
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN@ADMIN.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI2ofqTaS/HOGL9CV6bsvkojqsVgMPyTkcgo1IKtf7Kn97cFJXIpyeVn9gL4gCVUJw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJSwk8fRJwhDIpjA8hCuSX6ZZIeqNof420XP6pAHBUfwxSE7e/6Q0c3mQft9T+FtRg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6129657d-678d-4c21-a7e8-53bc7d2108b1",
+                            SecurityStamp = "53ffd2e1-43c3-41e1-991e-e25d847b2e5e",
                             TwoFactorEnabled = false,
                             UserName = "admin@admin.com"
                         },
                         new
                         {
-                            Id = "bf8d68fc-4e80-430e-8485-06737c5d59b9",
+                            Id = "7b78c639-5f0c-450a-9096-bb42a760fe86",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d66f10ab-a001-462f-826c-0705d43b575a",
+                            ConcurrencyStamp = "23bd9fd2-29ec-438f-9c96-35236ad9ae0a",
                             Email = "user@user.com",
                             EmailConfirmed = true,
                             FullName = "User",
                             LockoutEnabled = true,
                             NormalizedEmail = "USER@USER.COM",
                             NormalizedUserName = "USER@USER.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEt0WioKvWq0yuwxq9sW8P6q3j9voR8G/tWMuKXZjTBLsC2xWAh/cvbRL65cBl5Icg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPvNjP6sTTCir/mL25l4HkHgVMmWfQWdCZ83jhFLDVQqE3BCVAFezpmrL3mhCm/Q+g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "151cae56-1549-4f7b-bf71-c7ad8fe7b8d5",
+                            SecurityStamp = "c62b94c8-ec9a-4544-863c-ee8df90589f8",
                             TwoFactorEnabled = false,
                             UserName = "user@user.com"
                         });
@@ -176,6 +164,21 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Blogs");
+                });
+
+            modelBuilder.Entity("CourseManagement.Model.Model.BlogCategory", b =>
+                {
+                    b.Property<int>("BlogId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BlogId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("BlogCategories");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Category", b =>
@@ -328,13 +331,10 @@ namespace CourseManagement.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ModuleId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -352,24 +352,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.ToTable("Lessons");
                 });
 
-            modelBuilder.Entity("CourseManagement.Model.Model.LessonProgress", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("LessonId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
-
-                    b.HasKey("UserId", "LessonId");
-
-                    b.HasIndex("LessonId");
-
-                    b.ToTable("LessonProgress");
-                });
-
             modelBuilder.Entity("CourseManagement.Model.Model.Module", b =>
                 {
                     b.Property<int>("Id")
@@ -380,12 +362,6 @@ namespace CourseManagement.DataAccess.Migrations
 
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -427,14 +403,14 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "b2c104b2-9ea4-47d9-9dd3-c9098bfb4327",
+                            Id = "ec294c18-285b-4fed-8ce6-bedcf098bda4",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "dfa84aae-f28e-47d4-b403-d97c5510826a",
+                            Id = "afb35093-944c-46cf-9e25-45bc4c0566bf",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "USER"
@@ -530,13 +506,13 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "072144ac-eb28-4e0f-883e-5af300f2cf10",
-                            RoleId = "b2c104b2-9ea4-47d9-9dd3-c9098bfb4327"
+                            UserId = "f575ca17-e732-412a-a7f0-b0bc616b1155",
+                            RoleId = "ec294c18-285b-4fed-8ce6-bedcf098bda4"
                         },
                         new
                         {
-                            UserId = "bf8d68fc-4e80-430e-8485-06737c5d59b9",
-                            RoleId = "dfa84aae-f28e-47d4-b403-d97c5510826a"
+                            UserId = "7b78c639-5f0c-450a-9096-bb42a760fe86",
+                            RoleId = "afb35093-944c-46cf-9e25-45bc4c0566bf"
                         });
                 });
 
@@ -559,21 +535,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("BlogCategory", b =>
-                {
-                    b.HasOne("CourseManagement.Model.Model.Blog", null)
-                        .WithMany()
-                        .HasForeignKey("BlogsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CourseManagement.Model.Model.Category", null)
-                        .WithMany()
-                        .HasForeignKey("CategoriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("CourseManagement.Model.Model.Blog", b =>
                 {
                     b.HasOne("CourseManagement.Model.Model.AppUser", "User")
@@ -583,6 +544,25 @@ namespace CourseManagement.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CourseManagement.Model.Model.BlogCategory", b =>
+                {
+                    b.HasOne("CourseManagement.Model.Model.Blog", "Blog")
+                        .WithMany("BlogCategories")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CourseManagement.Model.Model.Category", "Category")
+                        .WithMany("BlogCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Comment", b =>
@@ -656,25 +636,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.Navigation("Module");
                 });
 
-            modelBuilder.Entity("CourseManagement.Model.Model.LessonProgress", b =>
-                {
-                    b.HasOne("CourseManagement.Model.Model.Lesson", "Lesson")
-                        .WithMany("LessonProgresses")
-                        .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CourseManagement.Model.Model.AppUser", "User")
-                        .WithMany("LessonProgresses")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lesson");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("CourseManagement.Model.Model.Module", b =>
                 {
                     b.HasOne("CourseManagement.Model.Model.Course", "Course")
@@ -744,12 +705,17 @@ namespace CourseManagement.DataAccess.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Enrollments");
+                });
 
-                    b.Navigation("LessonProgresses");
+            modelBuilder.Entity("CourseManagement.Model.Model.Blog", b =>
+                {
+                    b.Navigation("BlogCategories");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Category", b =>
                 {
+                    b.Navigation("BlogCategories");
+
                     b.Navigation("Courses");
                 });
 
@@ -765,8 +731,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Documents");
-
-                    b.Navigation("LessonProgresses");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Module", b =>

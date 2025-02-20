@@ -4,15 +4,18 @@
 @using AntDesign.TableModels
 @using BlazorAppSecure.Model
 @using System.ComponentModel
+@using CourseManagement.Model.Constant
+@using CourseManagement.Model.DTOs
 
 @inject IHttpClientFactory HttpClientFactory
 @inject IMessageService _mess
-@inject ModalService ModelService;
+@inject ModalService ModelService
+@inject NavigationManager _nav
 
 <div class="mb-2">
     <Breadcrumb>
         <BreadcrumbItem Href="">
-            <Icon Type="@IconType.Outline.Home" />
+            Home
         </BreadcrumbItem>
         <BreadcrumbItem>
             Courses Management
@@ -59,12 +62,28 @@
                             AllowClear>
                         <SelectOptions>
                             @foreach (var status in Enum.GetValues(typeof(CourseStatus))) {
-                                if ((int) status == 0) {
-                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="Un Available" />
-                                } else if ((int) status == 2) {
-                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="In Progress" />
-                                } else {
-                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="@status.ToString()" />                                    
+                                <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="@status.ToString()" />
+                            }
+                        </SelectOptions>
+                    </Select>
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="6">
+                <Text>Status</Text>
+                <FormItem>
+                    <Select Mode="SelectMode.Multiple"
+                            Placeholder="Please select course type"
+                            @bind-Values="@context.CourseTypes"
+                            TItemValue="int"
+                            TItem="string"
+                            EnableSearch
+                            AllowClear>
+                        <SelectOptions>
+                            @foreach (var type in Enum.GetValues(typeof(CourseType))) {
+                                if ((int) type == 0) {
+                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)type)" Label="Free Course" />
+                                } else if ((int) type == 1) {
+                                    <SelectOption TItemValue="int" TItem="string" Value="@((int)type)" Label="Pro Course" />
                                 }
                             }
                         </SelectOptions>
@@ -74,19 +93,6 @@
             <AntDesign.Col Span="6">
                 <Text>Category</Text>
                 <FormItem>
-                    @* <Select Mode="SelectMode.Multiple"
-                            Placeholder="Please select category"
-                            @bind-Values="@context.Statuss"
-                            TItemValue="int"
-                            TItem="string"
-                            EnableSearch
-                            AllowClear>
-                        <SelectOptions>
-                            @foreach (var c in categoryList) {
-                                <SelectOption TItemValue="int" TItem="string" Value="@c.Id" Label="@c.Name" />
-                            }
-                        </SelectOptions>
-                    </Select> *@
                     <Select Mode="SelectMode.Multiple"
                             Placeholder="Please select category"
                             @bind-Values="@context.CategoryIds"
@@ -104,9 +110,11 @@
                     </Select>
                 </FormItem>
             </AntDesign.Col>
-            <AntDesign.Col Span="24">
-                <Button Icon="@IconType.Outline.Clear" @onclick="HandleResetSearchForm">Clear</Button>
-                <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Search" @onclick="HandleSearchCourse">Search</Button>
+            <AntDesign.Col Span="18">
+                <div style="margin-top: 22px">
+                    <Button Icon="@IconType.Outline.Clear" @onclick="HandleResetSearchForm">Clear</Button>
+                    <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Search" @onclick="HandleSearchCourse">Search</Button>
+                </div>
             </AntDesign.Col>
         </Row>
     </Form>
@@ -124,7 +132,14 @@
     </div>
 </div>
 
-<Table DataSource="courseList" PageSize="12" ScrollX="1000" AutoHeight Loading="loadingCourseList" Bordered Striped="false">
+<Table DataSource="courseList" 
+    PageSize="12" 
+    ScrollX="1000" 
+    AutoHeight 
+    Loading="loadingCourseList" 
+    Bordered 
+    Striped="false"
+    class="table-list-course">
     <ColumnDefinitions>
         <PropertyColumn Property="c=>c.Index"
                         Title="#"
@@ -157,7 +172,7 @@
         <PropertyColumn Property="c=>c.Status" Width="200" Title="Status">
             @if (context.Status == 0) {
                 <Tag Color="TagColor.Red">Un Available</Tag>
-            } else if (context.Status == 2) {
+            } else if ((int) context.Status == 2) {
                 <Tag Color="TagColor.Gold">In Progress</Tag>
             } else {
                 <Tag>@context.StatusName</Tag>
@@ -166,16 +181,14 @@
         <PropertyColumn Property="c=>c.Level" Title="Total Enrolled" Width="150" Align="ColumnAlign.Center">
             0
         </PropertyColumn>
-        <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
+        <ActionColumn Title="Action" Width="140" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
             <CellRender Context="cellData">
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Eye" @onclick="@(() => HandleNavigateToDetail(context))"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
             </CellRender>
         </ActionColumn>
     </ColumnDefinitions>
-    <ExpandTemplate>
-        Expanded value
-    </ExpandTemplate>
 </Table>
 
 <Drawer Closable="true" 
@@ -227,10 +240,10 @@
                 <Text>Level</Text>
                 <FormItem>
                     <Segmented @bind-Value="context.Level">
-                        <SegmentedItem Label="Beginner" Value=@(1) />
-                        <SegmentedItem Label="Intermediate" Value=@(2) />
-                        <SegmentedItem Label="Advanced" Value=@(3) />
-                        <SegmentedItem Label="Expert" Value=@(4) />
+                        <SegmentedItem Label="Beginner" Value=@(CourseLevel.Beginner) />
+                        <SegmentedItem Label="Intermediate" Value=@(CourseLevel.Intermediate) />
+                        <SegmentedItem Label="Advanced" Value=@(CourseLevel.Advanced) />
+                        <SegmentedItem Label="Expert" Value=@(CourseLevel.Expert) />
                     </Segmented>
                 </FormItem>
             </AntDesign.Col>
@@ -292,11 +305,11 @@
     string errorImageUrl = "https://placehold.co/1920x1080?text=This%20Image%20Is%20Error&font=roboto";
     HttpClient httpClient;
 
-    private IQueryable<CoursesModel> courseList;
+    private IQueryable<SearchCourseResponse> courseList;
     private List<CategoiesModel> categoryList = new List<CategoiesModel>();
 
-    CourseModel courseModel = new();
-    CategoyModel categoryModel = new();
+    AddCourseRequest courseModel = new();
+    CategoryModel categoryModel = new();
     CourseSearchModel courseSearchModel = new();
 
     bool loadingCourseList = false;
@@ -305,7 +318,7 @@
     bool visibleAddNewCourseDrawer = false;
     bool visibleAddNewCategoryModal = false;
 
-    private Form<CategoyModel> _form;
+    private Form<CategoryModel> _form;
 
     RenderFragment FormTemplate() {
         return
@@ -352,6 +365,10 @@
         StateHasChanged();
     }
 
+    void HandleNavigateToDetail(SearchCourseResponse model) {
+        _nav.NavigateTo($"/courses/detail/{model.Id}");
+    }
+
     async void FetchListCourse() {
         loadingCourseList = true;
         try {
@@ -359,12 +376,9 @@
 
             if (result.IsSuccessStatusCode) {
                 var resposne = await result.Content.ReadAsStringAsync();
-                var values = JsonSerializer.Deserialize<CoursesModel[]>(resposne, jsonSerializerOptions);
+                var values = JsonSerializer.Deserialize<SearchCourseResponse[]>(resposne, jsonSerializerOptions);
                 if (values != null) {
-                    courseList = values.Select((item, index) => {
-                        item.Index = index;
-                        return item;
-                    }).ToList().AsQueryable();
+                    courseList = values.ToList().AsQueryable();
                 }
             } else {
                 await _mess.Error("Internal server error when load list course");
@@ -448,6 +462,12 @@
                     }
                 }
 
+                if (courseSearchModel.CourseTypes != null && courseSearchModel.CourseTypes.Any()) {
+                    foreach (var courseType in courseSearchModel.CourseTypes) {
+                        queryParams.Add($"CourseTypes={courseType}");
+                    }
+                }
+
                 if (courseSearchModel.Statuss != null && courseSearchModel.Statuss.Any()) {
                     foreach (var status in courseSearchModel.Statuss) {
                         queryParams.Add($"Statuss={status}");
@@ -470,12 +490,9 @@
 
             if (result.IsSuccessStatusCode) {
                 var response = await result.Content.ReadAsStringAsync();
-                var values = JsonSerializer.Deserialize<CoursesModel[]>(response, jsonSerializerOptions);
+                var values = JsonSerializer.Deserialize<SearchCourseResponse[]>(response, jsonSerializerOptions);
                 if (values != null) {
-                    courseList = values.Select((item, index) => {
-                        item.Index = index;
-                        return item;
-                    }).ToList().AsQueryable();
+                    courseList = values.ToList().AsQueryable();
                 }
             } else {
                 await _mess.Error("Internal server error when load list course");
@@ -543,35 +560,18 @@
 
         return $"https://www.youtube.com/embed/{videoId}";
     }
+
+    public class CourseSearchModel {
+        public string? Title { get; set; }
+        public IEnumerable<int>? Levels { get; set; }
+        public IEnumerable<int>? Statuss { get; set; }
+        public IEnumerable<int>? CategoryIds { get; set; }
+        public IEnumerable<int>? CourseTypes { get; set; }
+    }
 }
 
 <style>
-    .total-course {
-        h6 {
-            color: darkorange
-        }
-    }
-
-    thead .ant-table-row-expand-icon-cell {
-        position: sticky !important;
-        left: 0px !important;
-        z-index: 2 !important;
-    }
-
-    tbody .ant-table-row-expand-icon-cell {
-        position: sticky !important;
-        left: 0px !important;
-        background: #fff !important;
-        z-index: 2 !important;
-    }
-
-    .index-col {
-        position: sticky !important;
-        left: 48px !important;
-    }
-
-    .title-col {
-        position: sticky !important;
-        left: 98px !important;
+    .total-course h6 {
+        color: darkorange
     }
 </style>

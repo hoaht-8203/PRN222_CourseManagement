@@ -163,3 +163,10 @@ code {
 .ant-btn-delete:hover, .ant-btn-delete:focus {
     color: #dc3545 !important;
 }
+
+.no-select {
+    user-select: none; /* Chặn chọn văn bản */
+    -webkit-user-select: none; /* Chrome, Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
+}

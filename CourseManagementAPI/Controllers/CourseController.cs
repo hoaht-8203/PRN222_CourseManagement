@@ -1,119 +1,76 @@
-﻿using CourseManagement.DataAccess.Data;
+﻿using AutoMapper;
+using CourseManagement.DataAccess.Data;
+using CourseManagement.DataAccess.Repositorys;
+using CourseManagement.DataAccess.Repositorys.IRepositorys;
 using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using CourseManagement.Model.Model;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagementAPI.Controllers {
     [Route("api/[controller]")]
     [ApiController]
     public class CourseController : ControllerBase {
         private readonly CourseManagementDb _db;
+        private readonly IMapper _mapper;
+        private readonly CourseRepository _courseRepository;
 
-        public CourseController(CourseManagementDb db)
-        {
+        public CourseController(CourseManagementDb db, IMapper mapper, CourseRepository courseRepository) {
             _db = db;
+            _mapper = mapper;
+            _courseRepository = courseRepository;
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("add")]
-        public IActionResult Add([FromBody] AddCourseRequest req) {
-            var foundCategory = _db.Categories.Find(req.CategoryId);
-
-            if (foundCategory == null) {
-                return BadRequest(new {
-                    error = $"Category with id {req.CategoryId} not exsited or removed"
-                });
+        public async Task<IActionResult> Add([FromBody] AddCourseRequest req) {
+            try {
+                await _courseRepository.CreateCourse(req);
+                return Ok(new { Message = "Add new course success" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while creating the course" });
             }
-
-            Course newCourse = new Course() {
-                Title = req.Title,
-                PreviewImage = req.PreviewImage,
-                PreviewVideoUrl = req.PreviewVideoUrl,
-                Description = req.Description,
-                Level = req.Level,
-                Status = req.IsProCourse ? CourseStatus.Pro : CourseStatus.InProgress,
-                CategoryId = req.CategoryId,
-            };
-
-            _db.Courses.Add(newCourse);
-            _db.SaveChanges();
-
-            return Ok(new { Message = "Add new course success" });
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("search")]
-        public IActionResult Search([FromQuery] SearchCourseRequest req) {
-            var res = _db.Courses
-                .Select(c => new {
-                    c.Id,
-                    c.Title,
-                    c.Description,
-                    c.PreviewImage,
-                    c.PreviewVideoUrl,
-                    c.Level,
-                    LevelName = c.Level.ToString(),
-                    c.Status,
-                    StatusName = c.Status.ToString(),
-                    c.Enrollments,
-                    c.Modules,
-                    c.CategoryId,
-                    CategoryName = c.Category.Name,
-                })
-                .ToList();
-
-            if (!string.IsNullOrEmpty(req.Title)) {
-                res = res.Where((c) => c.Title.ToLower().Contains(req.Title.ToLower())).ToList();
+        public async Task<IActionResult> Search([FromQuery] SearchCourseRequest req) {
+            try {
+                var result = await _courseRepository.Search(req);
+                return Ok(result);
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while searching courses: {ex}" });
             }
-
-            if (req.Levels != null && req.Levels.Any()) {
-                res = res.Where((c) => req.Levels.Contains(c.Level)).ToList();
-            }
-
-            if (req.Statuss != null && req.Statuss.Any()) {
-                res = res.Where((c) => req.Statuss.Contains(c.Status)).ToList();
-            }
-
-            if (req.CategoryIds != null && req.CategoryIds.Any()) {
-                res = res.Where((c) => req.CategoryIds.Contains(c.CategoryId)).ToList();
-            }
-
-            return Ok(res);
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("remove")]
-        public IActionResult Remove([FromBody] RemoveCourseRequest req) {
-            var courseFounded = _db.Courses.SingleOrDefault((c) => c.Id.ToString() == req.CourseId && c.Status != CourseStatus.UnAvailable);
-
-            if (courseFounded != null) {
-                courseFounded.Status = CourseStatus.UnAvailable;
-                _db.Courses.Update(courseFounded);
-                _db.SaveChanges();
+        public async Task<IActionResult> Remove([FromBody] RemoveCourseRequest req) {
+            try {
+                await _courseRepository.RemoveCourse(req);
+                return Ok(new { Message = "Course removed successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while removing the course" });
             }
-
-            return BadRequest(new {
-                Error = $"Course {req.CourseId} is not existed or removed"
-            });
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("detail")]
-        public IActionResult Detail([FromQuery] DetailCourseRequest req) {
-            var courseFounded = _db.Courses.SingleOrDefault((c) => c.Id.ToString() == req.CourseId && c.Status != CourseStatus.UnAvailable);
-
-            if (courseFounded != null) {
-                return Ok(courseFounded);
+        public async Task<IActionResult> Detail([FromQuery] DetailCourseRequest req) {
+            try {
+                var response = await _courseRepository.Detail(req);
+                return Ok(response);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while getting course details" });
             }
-
-            return BadRequest(new {
-                Error = $"Course {req.CourseId} is not existed or removed"
-            });
         }
     }
 }

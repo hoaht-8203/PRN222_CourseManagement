@@ -7,7 +7,7 @@ namespace BlazorAppSecure.Model {
         public string Description { get; set; }
     }
 
-    public class CategoyModel {
+    public class CategoryModel {
         [Required]
         public string Name { get; set; }
         [Required]
