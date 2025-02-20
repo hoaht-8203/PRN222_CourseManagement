@@ -6,13 +6,14 @@ namespace CourseManagement.DataAccess.Repositorys
 {
     public class BlogRepository : Repository<Blog>, IBlog
     {
+        private readonly CourseManagementDb _db;
         public BlogRepository(CourseManagementDb db) : base(db)
         {
         }
 
-        public Task UpdateAsync(Blog blog)
+        public async Task UpdateAsync(Blog blog)
         {
-            throw new NotImplementedException();
+            _db.Blogs.Update(blog);
         }
     }
 }

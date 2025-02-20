@@ -1,4 +1,5 @@
-﻿using CourseManagement.Business.Services.IService;
+﻿using CourseManagement.Business.Services;
+using CourseManagement.Business.Services.IService;
 using CourseManagement.DataAccess.Data;
 using CourseManagement.DataAccess.Repositorys.IRepositorys;
 using CourseManagement.DataAccess.Repositorys;
@@ -40,6 +41,9 @@ builder.Services.AddScoped<CourseRepository>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IBlogService, BlogService>();
+
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddControllers();

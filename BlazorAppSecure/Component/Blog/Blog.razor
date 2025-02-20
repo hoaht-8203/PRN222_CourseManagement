@@ -1,0 +1,91 @@
+﻿@page "/blogs"
+@using AntDesign
+@using BlazorAppSecure.Model
+@using BlazorAppSecure.Sevices.Blog
+
+@inject IBlogService BlogService
+@inject IMessageService _mess
+
+<PageTitle>Blog List</PageTitle>
+
+<h3>Blog Management</h3>
+
+<Table DataSource="blogList" PageSize="10" ScrollX="1000" AutoHeight Loading="loadingBlogs" Bordered Striped="false">
+    <ColumnDefinitions>
+    
+
+        <PropertyColumn Property="b=>b.Title"
+                        Title="Title"
+                        Width="270"
+                        Fixed="ColumnFixPlacement.Left"
+                        class="title-col" />
+
+        <PropertyColumn Property="b=>b.UrlImage"
+                        Width="250"
+                        Title="Image">
+            <Image Src="@(string.IsNullOrEmpty(context.UrlImage) ? defaultImageUrl : context.UrlImage)"
+                   Fallback="@errorImageUrl" />
+        </PropertyColumn>
+
+        <PropertyColumn Property="b=>b.Content"
+                        Width="350"
+                        Title="Content">
+            @(string.IsNullOrEmpty(context.Content)
+                ? "No Content"
+                : context.Content.Substring(0, Math.Min(context.Content.Length, 50)) + "...")
+        </PropertyColumn>
+
+        <PropertyColumn Property="b=>b.CreatedAt"
+                        Title="Created At"
+                        Width="200" />
+
+        <PropertyColumn Property="b => b.CategoryIds"
+                        Width="250"
+                        Title="Categories">
+            <Template>
+                @(context.CategoryIds != null && context.CategoryIds.Any()
+                    ? string.Join(", ", context.CategoryIds.Select(id => $"Category {id}"))
+                    : "No Categories")
+            </Template>
+        </PropertyColumn>
+
+        <PropertyColumn Property="b=>b.ViewCount"
+                        Title="Views"
+                        Width="150"
+                        Align="ColumnAlign.Center" />
+
+        <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
+            <CellRender Context="cellData">
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit"></Button>
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
+            </CellRender>
+        </ActionColumn>
+    </ColumnDefinitions>
+</Table>
+
+@code {
+    private List<BlogModel> blogList;
+    private bool loadingBlogs = false;
+    private string defaultImageUrl = "https://placehold.co/200x150?text=No+Image";
+    private string errorImageUrl = "https://placehold.co/200x150?text=Error+Image";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBlogs();
+    }
+
+    private async Task LoadBlogs()
+    {
+        loadingBlogs = true;
+        try
+        {
+            blogList = await BlogService.GetBlogList();
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error loading blogs: {ex.Message}");
+        }
+        loadingBlogs = false;
+    }
+}
+

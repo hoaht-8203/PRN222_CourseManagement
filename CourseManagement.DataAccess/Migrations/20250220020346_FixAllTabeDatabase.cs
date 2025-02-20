@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CourseManagement.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class FixAllTabeDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,19 +54,17 @@ namespace CourseManagement.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Courses",
+                name: "Categories",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PreviewImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PreviewVideoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Level = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Courses", x => x.Id);
+                    table.PrimaryKey("PK_Categories", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -176,6 +174,79 @@ namespace CourseManagement.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Blogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UrlImage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ViewCount = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Blogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Blogs_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Courses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PreviewImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PreviewVideoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Level = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CourseType = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Courses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Courses_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BlogCategory",
+                columns: table => new
+                {
+                    BlogsId = table.Column<int>(type: "int", nullable: false),
+                    CategoriesId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BlogCategory", x => new { x.BlogsId, x.CategoriesId });
+                    table.ForeignKey(
+                        name: "FK_BlogCategory_Blogs_BlogsId",
+                        column: x => x.BlogsId,
+                        principalTable: "Blogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BlogCategory_Categories_CategoriesId",
+                        column: x => x.CategoriesId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Enrollment",
                 columns: table => new
                 {
@@ -207,6 +278,8 @@ namespace CourseManagement.DataAccess.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -228,8 +301,9 @@ namespace CourseManagement.DataAccess.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
                     UrlVideo = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     ModuleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -292,13 +366,38 @@ namespace CourseManagement.DataAccess.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "LessonProgress",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LessonId = table.Column<int>(type: "int", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LessonProgress", x => new { x.UserId, x.LessonId });
+                    table.ForeignKey(
+                        name: "FK_LessonProgress_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LessonProgress_Lessons_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lessons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "885a9ef1-6867-4eed-96ea-e8d44c4a8083", "2", "User", "USER" },
-                    { "f61d7250-8526-449e-b601-f0b744178284", "1", "Admin", "ADMIN" }
+                    { "11ea7f26-3a0b-4ee8-88ec-0bee65ad975d", "1", "Admin", "ADMIN" },
+                    { "394e5930-426c-440d-a9f1-fc3a6c59ccf6", "2", "User", "USER" }
                 });
 
             migrationBuilder.InsertData(
@@ -306,8 +405,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FullName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "bf39c843-6bec-4d08-ae35-5fa5ad90ba5f", 0, "8c8f9b67-91e8-40f4-bf4f-f16827b828e2", "user@user.com", true, "User", true, null, "USER@USER.COM", "USER@USER.COM", "AQAAAAIAAYagAAAAEGAsLhjagAj32w6CTGsFSySt2RLZx+8re/n3tm2Z0rYrtdQSO+oOuZomh24gSXB2nA==", null, false, "bc61610e-3080-4b8f-908e-b14ea34a1a79", false, "user@user.com" },
-                    { "f048ac45-c890-4e0e-bc9a-f619e4fc1323", 0, "def9f211-d384-450c-80f6-714ed86354b9", "admin@admin.com", true, "Admin", true, null, "ADMIN@ADMIN.COM", "ADMIN@ADMIN.COM", "AQAAAAIAAYagAAAAEKnDneNtomWnz4BKBFgELyqlclGOzFHmeVCl4lanERjTMH6dvb6xsVSYQBzWM9oaRg==", null, false, "060ea66d-5377-469e-a209-b081a6034a61", false, "admin@admin.com" }
+                    { "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2", 0, "cd99cec4-001a-4278-8df7-50c3175a0350", "admin@admin.com", true, "Admin", true, null, "ADMIN@ADMIN.COM", "ADMIN@ADMIN.COM", "AQAAAAIAAYagAAAAEBxdbrGWrkIXnv6eKSuQE6YB2q368aHqSQ0M8N2SFG0lzTudGWq1GKMge1gf0f0hmw==", null, false, "768ad81f-d2c1-4c2a-be43-d783e455d400", false, "admin@admin.com" },
+                    { "e404e498-c930-4a45-9b22-c35d2f333d37", 0, "9d040fc6-650d-472a-848a-75b6f4386f61", "user@user.com", true, "User", true, null, "USER@USER.COM", "USER@USER.COM", "AQAAAAIAAYagAAAAEPqfNnQvvSYNlRYq4YF2eqob9sO/FYSQePR62JdLQHdlMEW7exwvcrevNx8Vr/BtHA==", null, false, "68ba4162-89cb-41fa-87bd-66d2d9bcaf75", false, "user@user.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -315,8 +414,8 @@ namespace CourseManagement.DataAccess.Migrations
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
-                    { "885a9ef1-6867-4eed-96ea-e8d44c4a8083", "bf39c843-6bec-4d08-ae35-5fa5ad90ba5f" },
-                    { "f61d7250-8526-449e-b601-f0b744178284", "f048ac45-c890-4e0e-bc9a-f619e4fc1323" }
+                    { "11ea7f26-3a0b-4ee8-88ec-0bee65ad975d", "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2" },
+                    { "394e5930-426c-440d-a9f1-fc3a6c59ccf6", "e404e498-c930-4a45-9b22-c35d2f333d37" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -359,6 +458,16 @@ namespace CourseManagement.DataAccess.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BlogCategory_CategoriesId",
+                table: "BlogCategory",
+                column: "CategoriesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Blogs_UserId",
+                table: "Blogs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Comments_LessonId",
                 table: "Comments",
                 column: "LessonId");
@@ -369,6 +478,11 @@ namespace CourseManagement.DataAccess.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Courses_CategoryId",
+                table: "Courses",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Documents_LessonId",
                 table: "Documents",
                 column: "LessonId");
@@ -377,6 +491,11 @@ namespace CourseManagement.DataAccess.Migrations
                 name: "IX_Enrollment_CourseId",
                 table: "Enrollment",
                 column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonProgress_LessonId",
+                table: "LessonProgress",
+                column: "LessonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Lessons_ModuleId",
@@ -408,6 +527,9 @@ namespace CourseManagement.DataAccess.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "BlogCategory");
+
+            migrationBuilder.DropTable(
                 name: "Comments");
 
             migrationBuilder.DropTable(
@@ -417,7 +539,13 @@ namespace CourseManagement.DataAccess.Migrations
                 name: "Enrollment");
 
             migrationBuilder.DropTable(
+                name: "LessonProgress");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Blogs");
 
             migrationBuilder.DropTable(
                 name: "Lessons");
@@ -430,6 +558,9 @@ namespace CourseManagement.DataAccess.Migrations
 
             migrationBuilder.DropTable(
                 name: "Courses");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
         }
     }
 }

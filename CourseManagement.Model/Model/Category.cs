@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace CourseManagement.Model.Model {
@@ -12,6 +13,7 @@ namespace CourseManagement.Model.Model {
         public string Name { get; set; }
         public string Description { get; set; }
         public ICollection<Course> Courses { get; set; }
-        public virtual ICollection<BlogCategory> BlogCategories { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Blog> Blogs { get; set; }
     }
 }

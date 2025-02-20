@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace CourseManagement.Model.Model
 {
@@ -27,6 +28,8 @@ namespace CourseManagement.Model.Model
         [ForeignKey("UserId")]
         public virtual AppUser User { get; set; }
 
-        public virtual ICollection<BlogCategory> BlogCategories { get; set; }
+        [JsonIgnore]
+
+        public virtual ICollection<Category> Categories { get; set; }
     }
 }
