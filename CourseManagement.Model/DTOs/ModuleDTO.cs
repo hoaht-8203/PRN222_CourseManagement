@@ -47,11 +47,15 @@ namespace CourseManagement.Model.DTOs {
 
         public class UpdateModuleRequest {
             [Required]
-            public string ModuleId { get; set; }
+            public int ModuleId { get; set; }
             [Required]
             public string Title { get; set; }
-            [Required]
-            public int NewOrder {  get; set; }
+            public int? NewOrder { get; set; } = null;
+        }
+
+        public class ReorderModuleRequest {
+            public List<SearchModuleResponse> NewListModules { get; set; }
+            public string CourseId { get; set; }
         }
     }
 }

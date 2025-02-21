@@ -4,11 +4,6 @@ using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using CourseManagement.Model.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace CourseManagement.DataAccess.Repositorys {
@@ -48,13 +43,9 @@ namespace CourseManagement.DataAccess.Repositorys {
         }
 
         public async Task UpdateModule(ModuleDTO.UpdateModuleRequest req) {
-            if (!int.TryParse(req.ModuleId, out int moduleId)) {
-                throw new ArgumentException("Invalid Module ID format");
-            }
-
             var module = await _context.Modules
                 .Include(m => m.Course)
-                .FirstOrDefaultAsync(m => m.Id == moduleId && m.Status == ModuleStatus.Active)
+                .FirstOrDefaultAsync(m => m.Id == req.ModuleId && m.Status == ModuleStatus.Active)
                 ?? throw new ArgumentException($"Module with id {req.ModuleId} not found or not active");
 
             if (module.Course.Status == CourseStatus.UnAvailable) {
@@ -65,14 +56,14 @@ namespace CourseManagement.DataAccess.Repositorys {
             module.Title = req.Title;
 
             // Handle order change if needed
-            if (req.NewOrder != module.Order) {
+            if (req.NewOrder != null && req.NewOrder != module.Order) {
                 var modulesList = await _context.Modules
                     .Where(m => m.CourseId == module.CourseId && m.Status == ModuleStatus.Active)
                     .OrderBy(m => m.Order)
                     .ToListAsync();
 
                 var currentOrder = module.Order ?? modulesList.Count;
-                var newOrder = Math.Max(1, Math.Min(req.NewOrder, modulesList.Count));
+                var newOrder = Math.Max(1, Math.Min((int)req.NewOrder, modulesList.Count));
 
                 if (newOrder < currentOrder) {
                     foreach (var mod in modulesList) {
@@ -172,6 +163,38 @@ namespace CourseManagement.DataAccess.Repositorys {
                 foreach (var mod in modulesToReorder) {
                     mod.Order--;
                 }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ReorderModule(ReorderModuleRequest req) {
+            if (req.NewListModules == null || !req.NewListModules.Any()) {
+                throw new ArgumentException("New module list cannot be empty");
+            }
+
+            if (!Guid.TryParse(req.CourseId, out Guid courseGuid)) {
+                throw new ArgumentException("Invalid Course ID format");
+            }
+
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == courseGuid)
+                ?? throw new ArgumentException($"Course with id {courseGuid} not found");
+
+            var existingModules = await _context.Modules
+                .Where(m => m.CourseId == courseGuid && m.Status == ModuleStatus.Active)
+                .ToListAsync();
+
+            var requestModuleIds = req.NewListModules.Select(m => m.Id).ToHashSet();
+            var existingModuleIds = existingModules.Select(m => m.Id).ToHashSet();
+
+            if (!requestModuleIds.SetEquals(existingModuleIds)) {
+                throw new ArgumentException("The modules in the new order do not match the existing modules");
+            }
+
+            for (var index = 0; index < req.NewListModules.Count; index++) {
+                var module = existingModules.First(m => m.Id == req.NewListModules[index].Id);
+                module.Order = index + 1;
             }
 
             await _context.SaveChangesAsync();

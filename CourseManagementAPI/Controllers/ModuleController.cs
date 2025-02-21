@@ -89,5 +89,18 @@ namespace CourseManagementAPI.Controllers {
                 return StatusCode(500, new { Error = "An error occurred while removing the module" });
             }
         }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("reorder-modules")]
+        public async Task<IActionResult> ReorderModules([FromBody] ReorderModuleRequest req) {
+            try {
+                await moduleRepository.ReorderModule(req);
+                return Ok(new { Message = "Reorder module list successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while reorder list module: {ex}" });
+            }
+        }
     }
 }

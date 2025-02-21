@@ -14,21 +14,26 @@
 } else {
     <div class="course-detail">
         <div class="mb-2">
-            <Button Type="ButtonType.Primary" @onclick="OpenAddNewModuleDrawer">Add New Module</Button>
-            <Button Type="ButtonType.Primary" @onclick="OpenAddNewLessonDrawer">Add New Lesson</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Plus" @onclick="OpenAddNewModuleDrawer">Add New Module</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Plus" @onclick="OpenAddNewLessonDrawer">Add New Lesson</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderModulePositionDrawer">Reorder Module Position</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderLessonPositionDrawer">Reorder Lesson Position</Button>
         </div>
         <GridRow Gutter="12">
             <GridCol Span="6">
-                <div class="mb-2">
-                    @if (visible) {
-                        <Alert Message="Tip: You can right click on lesson to see the actions you can do with this item" Type="AlertType.Info" Closable AfterClose="handleClose" />
-                    }
-                </div>
-
+                @if (visible) {
+                    <div class="mb-2">
+                        <Alert Message="Tip: You can right click on lesson to see the actions you can do with this item" 
+                        Type="AlertType.Info" 
+                        Closable 
+                        AfterClose="handleClose" />
+                    </div>
+                }
                 <Collapse DefaultActiveKey="@(new[] { "1" })"
                           OnChange="Callback"
                           ExpandIconPosition="@expandIconPosition"
-                          ExpandIcon="@IconType.Outline.CaretRight">
+                          ExpandIcon="@IconType.Outline.CaretRight"
+                          Style="@($"max-height: {(visible ? "705px" : "775px")}; overflow: auto;")">
                     @if (!CourseDetailModel.Modules.Any()) {
                         <div class="d-flex justify-content-center align-items-center" style="height: 685px"><Empty /></div>
                     } else {
@@ -39,7 +44,7 @@
                                         <Dropdown Trigger="@(new Trigger[] { Trigger.Click })" Placement="Placement.RightTop">
                                             <Overlay>
                                                 <Menu Style="width: 100px">
-                                                    <MenuItem @onclick="OpenEditModuleDrawer">
+                                                    <MenuItem @onclick="() => OpenEditModuleDrawer(module.Id)">
                                                         Edit
                                                     </MenuItem>
                                                     <MenuItem>
@@ -59,7 +64,8 @@
                                     } else {
                                         <AntList DataSource="@module.Lessons" Loading="LoadingCourseDetail">
                                             <ChildContent Context="lesson">
-                                                <Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }" Style="width: 100% !important">
+                                                <Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }" 
+                                                Style="width: 100% !important">
                                                     <Overlay>
                                                         <Menu>
                                                             <MenuItem>Edit</MenuItem>
@@ -69,7 +75,7 @@
                                                     <ChildContent>
                                                         <div>
                                                             <ListItem Class="@(lesson.Id == CurrentLesson?.Id ? "active" : "")"
-                                                                      OnClick="@(() => HandleLessonClick(lesson))">
+                                                            OnClick="@(() => HandleLessonClick(lesson))">
                                                                 <div class="course-detail-lesson">
                                                                     <div>
                                                                         <Icon Type="@IconType.Outline.PlayCircle" /> @lesson.Title
@@ -96,9 +102,9 @@
                     } else {
                         <div style="position: relative; padding-bottom: 525px; height: 0; overflow: hidden;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 525px; border: 0; border-radius: 0.5rem"
-                                    src="@GetYouTubeEmbedUrl(CurrentLesson.UrlVideo)"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
+                            src="@GetYouTubeEmbedUrl(CurrentLesson.UrlVideo)"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
                             </iframe>
                         </div>
 
@@ -132,10 +138,10 @@
 }
 
 <Drawer Closable="true"
-        @bind-Visible="VisibleAddNewModuleDrawer"
-        Placement="DrawerPlacement.Right"
-        Title='("Add new module")'
-        Width="500">
+@bind-Visible="VisibleAddNewModuleDrawer"
+Placement="DrawerPlacement.Right"
+Title='("Add new module")'
+Width="500">
     <Form Model="@AddModuleRequest" OnFinish="SubmitNewModule">
         <Row Gutter="16">
             <AntDesign.Col Span="24">
@@ -155,10 +161,10 @@
 </Drawer>
 
 <Drawer Closable="true"
-        @bind-Visible="VisibleAddNewLessonDrawer"
-        Placement="DrawerPlacement.Right"
-        Title='("Add new lesson")'
-        Width="500">
+@bind-Visible="VisibleAddNewLessonDrawer"
+Placement="DrawerPlacement.Right"
+Title='("Add new lesson")'
+Width="500">
     <Form Model="@AddNewLessonModel" OnFinish="SubmitNewLesson">
         <Row Gutter="16">
             <AntDesign.Col Span="24">
@@ -180,9 +186,9 @@
                     @if (!string.IsNullOrEmpty(context.UrlVideo)) {
                         <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-                                    src="@GetYouTubeEmbedUrl(context.UrlVideo)"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
+                            src="@GetYouTubeEmbedUrl(context.UrlVideo)"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
                             </iframe>
                         </div>
                     }
@@ -193,13 +199,13 @@
                 <FormItem>
                     <div class="d-flex gap-1">
                         <Select DataSource="@ListModule"
-                                @bind-Value="@context.ModuleId"
-                                ItemValue="p=>p.Id"
-                                ItemLabel="p=>p.Title"
-                                Placeholder="Select a module"
-                                EnableSearch
-                                AutoClearSearchValue="false"
-                                Loading="LoadingModuleList">
+                        @bind-Value="@context.ModuleId"
+                        ItemValue="p=>p.Id"
+                        ItemLabel="p=>p.Title"
+                        Placeholder="Select a module"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        Loading="LoadingModuleList">
                         </Select>
                         <Tooltip Title="Reload list module">
                             <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchModuleList(Id)" Loading="LoadingModuleList" />
@@ -218,11 +224,11 @@
 </Drawer>
 
 <Drawer Closable="true"
-        @bind-Visible="VisibleEditModule"
-        Placement="DrawerPlacement.Right"
-        Title='("Edit module")'
-        Width="500">
-    <Form Model="@AddNewLessonModel" OnFinish="SubmitNewLesson">
+@bind-Visible="VisibleEditModule"
+Placement="DrawerPlacement.Right"
+Title='("Edit module")'
+Width="500">
+    <Form Model="@UpdateModuleModel" OnFinish="UpdateModule">
         <Row Gutter="16">
             <AntDesign.Col Span="24">
                 <Text>Title</Text>
@@ -230,54 +236,43 @@
                     <Input Placeholder="Please enter title" TValue="string" @bind-Value="@context.Title"></Input>
                 </FormItem>
             </AntDesign.Col>
-            <AntDesign.Col Span="24">
-                <Text>Description</Text>
-                <FormItem>
-                    <TextArea Placeholder="Please enter description" AutoSize="true" @bind-Value="@context.Description" />
-                </FormItem>
-            </AntDesign.Col>
-            <AntDesign.Col Span="24">
-                <Text>Video URL</Text>
-                <FormItem>
-                    <Input Placeholder="Please enter preview video url" TValue="string" @bind-Value="@context.UrlVideo"></Input>
-                    @if (!string.IsNullOrEmpty(context.UrlVideo)) {
-                        <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-                                    src="@GetYouTubeEmbedUrl(context.UrlVideo)"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
-                            </iframe>
-                        </div>
-                    }
-                </FormItem>
-            </AntDesign.Col>
-            <AntDesign.Col Span="24">
-                <Text>Module</Text>
-                <FormItem>
-                    <div class="d-flex gap-1">
-                        <Select DataSource="@ListModule"
-                                @bind-Value="@context.ModuleId"
-                                ItemValue="p=>p.Id"
-                                ItemLabel="p=>p.Title"
-                                Placeholder="Select a module"
-                                EnableSearch
-                                AutoClearSearchValue="false"
-                                Loading="LoadingModuleList">
-                        </Select>
-                        <Tooltip Title="Reload list module">
-                            <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchModuleList(Id)" Loading="LoadingModuleList" />
-                        </Tooltip>
-                    </div>
-                </FormItem>
-            </AntDesign.Col>
         </Row>
         <Row Class="mt-3">
             <Col Span="24" Class="d-flex justify-content-end gap-2">
-            <Button Type="ButtonType.Default" @onclick="CloseAddNewLessonDrawer">Cancel</Button>
-            <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
+                <Button Type="ButtonType.Default" @onclick="CloseEditModuleDrawer">Cancel</Button>
+                <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
             </Col>
         </Row>
     </Form>
+</Drawer>
+
+<Drawer Closable="true"
+        @bind-Visible="VisibleReorderModulePositionDrawer"
+        Placement="DrawerPlacement.Right"
+        Title='("Reorder module position")'
+        Width="700">
+    @if (ListModulePreview.Count == 0) {
+        <Empty />
+    } else {
+        <div class="mb-2 draggable-list">
+            <AntList DataSource="@ListModulePreview" Loading="LoadingModuleList" Bordered>
+                <ChildContent Context="module">
+                    <ListItem>
+                        <div draggable="true"
+                             @ondrop="() => OnDrop(module)"
+                             @ondragstart="e => OnDragStart(e, module)"
+                             ondragover="event.preventDefault()"
+                             class="draggable-item">
+                            @module.Title
+                        </div>
+                    </ListItem>
+                </ChildContent>
+            </AntList>
+        </div>
+
+        <Button Type="ButtonType.Default" @onclick="CloseReorderModulePostionDrawer">Cancel</Button>
+        <Button Type="ButtonType.Primary" @onclick="ReorderModulePosition">Submit</Button>
+    }
 </Drawer>
 
 <style>
@@ -348,5 +343,21 @@
 
     .course-detail .ant-list-items .antblazor-overlay-trigger-wrapper:last-child {
         border-bottom: none;
+    }
+
+    .draggable-item {
+        cursor: move;
+        height: 100%;
+        width: 100%;
+        padding: 12px 24px;
+    }
+
+    .draggable-item .dragging {
+        opacity: 0.5;
+        background: red !important;
+    }
+    
+    .draggable-list .ant-list-item {
+        padding: 0px !important;
     }
 </style>

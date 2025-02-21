@@ -6,6 +6,7 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task CreateModule(AddModuleRequest req);
         Task UpdateModule(UpdateModuleRequest req);
         Task RemoveModule(RemoveModuleRequest req);
+        Task ReorderModule(ReorderModuleRequest req);
         Task<List<SearchModuleResponse>> SearchModule(SearchModuleRequest req);
         Task<DetailModuleResponse> DetailModule(DetailModuleRequest req);
     }

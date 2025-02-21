@@ -1,9 +1,12 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading.Tasks;
 using AntDesign;
 using BlazorAppSecure.Model;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace BlazorAppSecure.Component.Courses;
@@ -37,6 +40,8 @@ public class CourseDetailBase : ComponentBase
     protected bool LoadingModuleList = false;
     protected bool VisibleAddNewModuleDrawer = false;
     protected bool VisibleAddNewLessonDrawer = false;
+    protected bool VisibleReorderModulePositionDrawer = false;
+    protected bool VisibleReorderLessonPositionDrawer = false;
     protected bool VisibleEditModule = false;
     protected bool visible = true;
 
@@ -44,9 +49,50 @@ public class CourseDetailBase : ComponentBase
     protected DetailCourseResponse.Lesson? CurrentLesson = null;
     protected AddModuleRequest AddModuleRequest = new();
     protected AddLessonRequest AddNewLessonModel = new();
-    protected UpdateModuleRequest UpdateModuleModel = new();
+    protected UpdateModuleRequest? UpdateModuleModel;
 
     protected List<SearchModuleResponse> ListModule = [];
+    protected List<SearchModuleResponse> ListModulePreview = [];
+
+    protected SearchModuleResponse? _searchModuleResponseDragging;
+    protected int? _draggedIndex;
+    protected int? _targetIndex;
+
+    protected void OnDragStart(DragEventArgs e, SearchModuleResponse searchModuleResponse) {
+        _draggedIndex = ListModulePreview.IndexOf(searchModuleResponse);
+        _searchModuleResponseDragging = searchModuleResponse;
+    }
+
+    protected void OnDrop(SearchModuleResponse targetModule) {
+        if (_searchModuleResponseDragging != null && _draggedIndex.HasValue) {
+            var targetIndex = ListModulePreview.IndexOf(targetModule);
+            if (targetIndex != -1) {
+                var item = ListModulePreview[_draggedIndex.Value];
+                ListModulePreview.RemoveAt(_draggedIndex.Value);
+                ListModulePreview.Insert(targetIndex, item);
+
+                _searchModuleResponseDragging = null;
+                _draggedIndex = null;
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected void OnDrop(DragEventArgs e, SearchModuleResponse searchModuleResponse) {
+        if (_searchModuleResponseDragging != null && _draggedIndex.HasValue && _targetIndex.HasValue) {
+            var item = ListModulePreview[_draggedIndex.Value];
+            ListModulePreview.RemoveAt(_draggedIndex.Value);
+            ListModulePreview.Insert(_targetIndex.Value, item);
+
+            // Reset drag state
+            _searchModuleResponseDragging = null;
+            _draggedIndex = null;
+            _targetIndex = null;
+
+            StateHasChanged();
+        }
+    }
 
     protected void Callback(string[] keys)
     {
@@ -67,7 +113,7 @@ public class CourseDetailBase : ComponentBase
         AddModuleRequest = new()
         {
             CourseId = Id,
-            Title = String.Empty,
+            Title = "",
         };
         VisibleAddNewModuleDrawer = true;
     }
@@ -81,10 +127,28 @@ public class CourseDetailBase : ComponentBase
             VisibleAddNewLessonDrawer = true;
         }
     }
+    protected async Task OpenReorderModulePositionDrawer() {
+        VisibleReorderModulePositionDrawer = true;
+        var listModulePreview = await FetchModuleList(Id);
+        if (listModulePreview != null) {
+            ListModulePreview = listModulePreview;
+        }
+    }
 
-    protected void OpenEditModuleDrawer() {
+    protected async Task OpenReorderLessonPositionDrawer() {
+        VisibleReorderLessonPositionDrawer = true;
+    }
+
+    protected async Task OpenEditModuleDrawer(int moduleId) {
         VisibleEditModule = true;
-        UpdateModuleModel = new();
+        var moduleDetail = await FetchModuleDetail(moduleId);
+        if (moduleDetail != null) {
+            UpdateModuleModel = new() {
+                ModuleId = moduleDetail.Id,
+                Title = moduleDetail.Title,
+                NewOrder = null
+            };
+        }
     }
 
     protected void CloseAddNewModuleDrawer()
@@ -95,6 +159,14 @@ public class CourseDetailBase : ComponentBase
     protected void CloseAddNewLessonDrawer()
     {
         VisibleAddNewLessonDrawer = false;
+    }
+
+    protected void CloseReorderModulePostionDrawer() {
+        VisibleReorderModulePositionDrawer = false;
+    }
+
+    protected void CloseReorderLessonPositionDrawer() {
+        VisibleReorderLessonPositionDrawer = false;
     }
 
     protected void CloseEditModuleDrawer() {
@@ -182,6 +254,29 @@ public class CourseDetailBase : ComponentBase
         return null;
     }
 
+    protected async Task<DetailModuleResponse?> FetchModuleDetail(int moduleId) {
+        try {
+            var result = await httpClient.GetAsync($"/api/Module/detail?ModuleId={moduleId}");
+
+            if (result.IsSuccessStatusCode) {
+                var response = await result.Content.ReadAsStringAsync();
+                var values = JsonSerializer
+                    .Deserialize<DetailModuleResponse>(response, jsonSerializerOptions);
+                if (values != null) {
+                    return values;
+                } else {
+                    await _mess.Error("Error: List module is null, please add module to this course first");
+                    return null;
+                }
+            } else {
+                await _mess.Error(await result.Content.ReadAsStringAsync());
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Internal server error when load list course: {ex.Message}");
+        }
+        return null;
+    }
+
     protected async void SubmitNewModule() {
         try {
             var response = await httpClient
@@ -210,6 +305,43 @@ public class CourseDetailBase : ComponentBase
                 await _mess.Success("Lesson added successfully");
             } else {
                 await _mess.Error("Failed to add lesson");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    protected async void UpdateModule() {
+        try {
+            var response = await httpClient
+                .PostAsJsonAsync("/api/Lesson/add", AddNewLessonModel);
+
+            if (response.IsSuccessStatusCode) {
+                CloseAddNewLessonDrawer();
+                await FetchCourseDetail(Id);
+                await _mess.Success("Lesson added successfully");
+            } else {
+                await _mess.Error("Failed to add lesson");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    protected async void ReorderModulePosition() {
+        try {
+            var response = await httpClient
+                .PostAsJsonAsync("/api/Module/reorder-modules", new {
+                    NewListModules = ListModulePreview,
+                    CourseId = Id
+                });
+
+            if (response.IsSuccessStatusCode) {
+                CloseReorderModulePostionDrawer();
+                await FetchCourseDetail(Id);
+                await _mess.Success("List module reorder successfully");
+            } else {
+                await _mess.Error("Failed to reorder list module");
             }
         } catch (Exception ex) {
             await _mess.Error($"Error: {ex.Message}");
