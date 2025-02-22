@@ -1,4 +1,5 @@
 @page "/courses/detail/{Id}"
+@using static CourseManagement.Model.DTOs.ModuleDTO
 @inherits CourseDetailBase
 
 <div class="mb-2">
@@ -16,8 +17,8 @@
         <div class="mb-2">
             <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Plus" @onclick="OpenAddNewModuleDrawer">Add New Module</Button>
             <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Plus" @onclick="OpenAddNewLessonDrawer">Add New Lesson</Button>
-            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderModulePositionDrawer">Reorder Module Position</Button>
-            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderLessonPositionDrawer">Reorder Lesson Position</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderModulePositionDrawer">Edit | Remove | Reorder Module</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderLessonPositionDrawer">Edit | Remove | Reorder Lesson</Button>
         </div>
         <GridRow Gutter="12">
             <GridCol Span="6">
@@ -247,10 +248,10 @@ Width="500">
 </Drawer>
 
 <Drawer Closable="true"
-        @bind-Visible="VisibleReorderModulePositionDrawer"
-        Placement="DrawerPlacement.Right"
-        Title='("Reorder module position")'
-        Width="700">
+@bind-Visible="VisibleReorderModulePositionDrawer"
+Placement="DrawerPlacement.Right"
+Title='("Reorder module position")'
+Width="700">
     @if (ListModulePreview.Count == 0) {
         <Empty />
     } else {
@@ -259,10 +260,10 @@ Width="500">
                 <ChildContent Context="module">
                     <ListItem>
                         <div draggable="true"
-                             @ondrop="() => OnDrop(module)"
-                             @ondragstart="e => OnDragStart(e, module)"
-                             ondragover="event.preventDefault()"
-                             class="draggable-item">
+                        @ondrop="() => OnDrop(module)"
+                        @ondragstart="e => OnDragStart(e, module)"
+                        ondragover="event.preventDefault()"
+                        class="draggable-item">
                             @module.Title
                         </div>
                     </ListItem>
@@ -273,6 +274,67 @@ Width="500">
         <Button Type="ButtonType.Default" @onclick="CloseReorderModulePostionDrawer">Cancel</Button>
         <Button Type="ButtonType.Primary" @onclick="ReorderModulePosition">Submit</Button>
     }
+</Drawer>
+
+<Drawer Closable="true"
+@bind-Visible="VisibleReorderLessonPositionDrawer"
+Placement="DrawerPlacement.Right"
+Title='("Reorder lesson position")'
+Width="700">
+    <div class="mb-2">
+        <Alert Type="AlertType.Warning"
+               Message="Please select a module to show a list lesson of this module to reorder"
+               Banner />
+    </div>
+
+    <Row Gutter="16">
+        <AntDesign.Col Span="24">
+            <Text>Module</Text>
+            <div class="d-flex gap-1">
+                <Select TItem="SearchModuleResponse"
+                TItemValue="int" 
+                DataSource="@ListModule"
+                @bind-Value="@ModuleIdToReorderListLesson"
+                ValueName="@nameof(SearchModuleResponse.Id)"
+                LabelName="@nameof(SearchModuleResponse.Title)"
+                Placeholder="Select a module"
+                EnableSearch
+                AutoClearSearchValue="false"
+                Loading="LoadingModuleList"
+                OnSelectedItemChanged="OnSelectedModuleChangedHandler">
+                </Select>
+                <Tooltip Title="Reload list module">
+                    <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchModuleList(Id)" Loading="LoadingModuleList" />
+                </Tooltip>
+            </div>
+        </AntDesign.Col>
+    </Row>
+
+    @* <div draggable="true"
+                             @ondrop="() => OnDrop(module)"
+                             @ondragstart="e => OnDragStart(e, module)"
+                             ondragover="event.preventDefault()"
+                             class="draggable-item">
+                            @module.Title
+                        </div> *@
+
+    <div class="mt-2">
+        @if (ListLessonPreview == null || ListLessonPreview.Count == 0) {
+            <Empty />
+        } else
+        {
+            <AntList DataSource="@ListLessonPreview" Loading="LoadingLessonList" Bordered>
+                <Header>
+                    <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchLessonList(ModuleIdToReorderListLesson)" Loading="LoadingLessonList">Reload list lesson</Button>
+                </Header>
+                <ChildContent Context="lesson">
+                    <ListItem>
+                        @lesson.Title
+                    </ListItem>
+                </ChildContent>
+            </AntList>
+        }
+    </div>
 </Drawer>
 
 <style>

@@ -38,6 +38,7 @@ public class CourseDetailBase : ComponentBase
 
     protected bool LoadingCourseDetail = false;
     protected bool LoadingModuleList = false;
+    protected bool LoadingLessonList = false;
     protected bool VisibleAddNewModuleDrawer = false;
     protected bool VisibleAddNewLessonDrawer = false;
     protected bool VisibleReorderModulePositionDrawer = false;
@@ -53,6 +54,9 @@ public class CourseDetailBase : ComponentBase
 
     protected List<SearchModuleResponse> ListModule = [];
     protected List<SearchModuleResponse> ListModulePreview = [];
+
+    protected int ModuleIdToReorderListLesson;
+    protected List<SearchLessonResponse>? ListLessonPreview = null;
 
     protected SearchModuleResponse? _searchModuleResponseDragging;
     protected int? _draggedIndex;
@@ -136,7 +140,14 @@ public class CourseDetailBase : ComponentBase
     }
 
     protected async Task OpenReorderLessonPositionDrawer() {
-        VisibleReorderLessonPositionDrawer = true;
+        ModuleIdToReorderListLesson = 0;
+        ListLessonPreview = null;
+        var ListModuleRes = await FetchModuleList(Id);
+        if (ListModuleRes != null && ListModuleRes.Count > 0) {
+            ListModule = ListModuleRes;
+            VisibleReorderLessonPositionDrawer = true;
+        }
+        StateHasChanged();
     }
 
     protected async Task OpenEditModuleDrawer(int moduleId) {
@@ -171,6 +182,17 @@ public class CourseDetailBase : ComponentBase
 
     protected void CloseEditModuleDrawer() {
         VisibleEditModule = false;
+    }
+
+    protected async Task OnSelectedModuleChangedHandler(SearchModuleResponse module) {
+        if (module != null) {
+            var fetchLessonListRes = await FetchLessonList(module.Id);
+            if (fetchLessonListRes != null && fetchLessonListRes.Count != 0) {
+                ListLessonPreview = fetchLessonListRes;
+            } else {
+                ListLessonPreview = null;
+            }
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -250,6 +272,29 @@ public class CourseDetailBase : ComponentBase
             await _mess.Error($"Internal server error when load list course: {ex.Message}");
         } finally {
             LoadingModuleList = false;
+        }
+        return null;
+    }
+
+    protected async Task<List<SearchLessonResponse>?> FetchLessonList(int moduleId) {
+        LoadingLessonList = true;
+        try {
+            var result = await httpClient.GetAsync($"/api/Lesson/search?ModuleId={moduleId}");
+
+            if (result.IsSuccessStatusCode) {
+                var response = await result.Content.ReadAsStringAsync();
+                var values = JsonSerializer
+                    .Deserialize<List<SearchLessonResponse>>(response, jsonSerializerOptions);
+                if (values != null && values.Count != 0) {
+                    return values;
+                }
+            } else {
+                await _mess.Error(await result.Content.ReadAsStringAsync());
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Internal server error when load list lessons: {ex.Message}");
+        } finally {
+            LoadingLessonList = false;
         }
         return null;
     }

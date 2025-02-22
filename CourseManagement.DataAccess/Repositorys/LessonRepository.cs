@@ -129,19 +129,56 @@ namespace CourseManagement.DataAccess.Repositorys {
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Lesson>> SearchModule(SearchLessonRequest req) {
+        public async Task<List<SearchLessonResponse>> SearchLesson(SearchLessonRequest req) {
             var module = await _context.Modules
                 .FirstOrDefaultAsync(m => m.Id == req.ModuleId && m.Status == ModuleStatus.Active)
                 ?? throw new ArgumentException($"Module with id {req.ModuleId} not found or not active");
 
             var lessons = await _context.Lessons
-                .Include(l => l.Documents)
-                .Include(l => l.Comments)
                 .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
+                .Select(l => new SearchLessonResponse {
+                    Id = l.Id,
+                    Title = l.Title,
+                    Description = l.Description,
+                    UrlVideo = l.UrlVideo,
+                    Order = l.Order ?? 0,
+                    Status = (int) l.Status,
+                    ModuleId = l.ModuleId,
+                    Module = new SearchLessonResponse.ModuleDetail {
+                        Id = l.Module.Id,
+                        Title = l.Module.Title,
+                        Order = l.Module.Order ?? 0,
+                        Status = (int) l.Module.Status,
+                        CourseId = l.Module.CourseId.ToString()
+                    }
+                })
                 .OrderBy(l => l.Order)
                 .ToListAsync();
 
             return lessons;
+        }
+
+        public async Task ReorderLessons(ReorderLessonsRequest req) {
+            var foundedModule = await _context.Modules.FirstOrDefaultAsync(m => m.Id == req.ModuleId && m.Status == ModuleStatus.Active)
+                ?? throw new ArgumentException($"Module with id {req.ModuleId} not found or not active");
+
+            var existingLessons = await _context.Lessons
+                .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
+                .ToListAsync();
+
+            var requestLessonIds = req.NewListLessons.Select(l => l.Id).ToHashSet();
+            var existingLessonIds = existingLessons.Select(l => l.Id).ToHashSet();
+
+            if (!requestLessonIds.SetEquals(existingLessonIds)) {
+                throw new ArgumentException("The lessons in the new order do not match the existing lessons");
+            }
+
+            for (var index = 0; index < req.NewListLessons.Count; index++) {
+                var lesson = existingLessons.First(m => m.Id == req.NewListLessons[index].Id);
+                lesson.Order = index + 1;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }
