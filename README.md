@@ -16,3 +16,5 @@ dotnet workload restore
 dotnet workload install wasm-tools
 dotnet workload install wasm-tools-net8
 ```
+
+## Hướng dẫn chạy UI và API cùng lúc trong Visual Studio Code
