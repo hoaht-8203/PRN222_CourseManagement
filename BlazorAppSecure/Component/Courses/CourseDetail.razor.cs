@@ -1,20 +1,16 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using System.Threading.Tasks;
-using AntDesign;
-using BlazorAppSecure.Model;
+﻿using AntDesign;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Org.BouncyCastle.Ocsp;
+using System.Net.Http.Json;
+using System.Text.Json;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace BlazorAppSecure.Component.Courses;
 
-public class CourseDetailBase : ComponentBase
-{
-    private readonly JsonSerializerOptions jsonSerializerOptions = new()
-    {
+public class CourseDetailBase : ComponentBase {
+    private readonly JsonSerializerOptions jsonSerializerOptions = new() {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
@@ -44,13 +40,17 @@ public class CourseDetailBase : ComponentBase
     protected bool VisibleReorderModulePositionDrawer = false;
     protected bool VisibleReorderLessonPositionDrawer = false;
     protected bool VisibleEditModule = false;
+    protected bool VisibleEditLesson = false;
     protected bool visible = true;
+    protected bool LoadingUpdateListModule = false;
+    protected bool LoadingUpdateListLesson = false;
 
     protected DetailCourseResponse? CourseDetailModel = null;
     protected DetailCourseResponse.Lesson? CurrentLesson = null;
     protected AddModuleRequest AddModuleRequest = new();
     protected AddLessonRequest AddNewLessonModel = new();
     protected UpdateModuleRequest? UpdateModuleModel;
+    protected UpdateLessonRequest UpdateLessonModel = new();
 
     protected List<SearchModuleResponse> ListModule = [];
     protected List<SearchModuleResponse> ListModulePreview = [];
@@ -61,6 +61,10 @@ public class CourseDetailBase : ComponentBase
     protected SearchModuleResponse? _searchModuleResponseDragging;
     protected int? _draggedIndex;
     protected int? _targetIndex;
+
+    protected SearchLessonResponse? _searchLessonResponseDragging;
+    protected int? _draggedIndexLesson;
+    protected int? _targetIndexLesson;
 
     protected void OnDragStart(DragEventArgs e, SearchModuleResponse searchModuleResponse) {
         _draggedIndex = ListModulePreview.IndexOf(searchModuleResponse);
@@ -83,28 +87,37 @@ public class CourseDetailBase : ComponentBase
         }
     }
 
-    protected void OnDrop(DragEventArgs e, SearchModuleResponse searchModuleResponse) {
-        if (_searchModuleResponseDragging != null && _draggedIndex.HasValue && _targetIndex.HasValue) {
-            var item = ListModulePreview[_draggedIndex.Value];
-            ListModulePreview.RemoveAt(_draggedIndex.Value);
-            ListModulePreview.Insert(_targetIndex.Value, item);
-
-            // Reset drag state
-            _searchModuleResponseDragging = null;
-            _draggedIndex = null;
-            _targetIndex = null;
-
-            StateHasChanged();
+    protected void OnDragStartLesson(DragEventArgs e, SearchLessonResponse searchLessonResponse) {
+        if (ListLessonPreview != null && ListLessonPreview.Count != 0) {
+            _draggedIndexLesson = ListLessonPreview.IndexOf(searchLessonResponse);
+            _searchLessonResponseDragging = searchLessonResponse;
         }
     }
 
-    protected void Callback(string[] keys)
-    {
+    protected void OnDropLesson(SearchLessonResponse targetLesson) {
+        if (ListLessonPreview != null &&
+            ListLessonPreview.Count != 0 &&
+            _searchLessonResponseDragging != null &&
+            _draggedIndexLesson.HasValue) {
+            var targetIndex = ListLessonPreview.IndexOf(targetLesson);
+            if (targetIndex != -1) {
+                var item = ListLessonPreview[_draggedIndexLesson.Value];
+                ListLessonPreview.RemoveAt(_draggedIndexLesson.Value);
+                ListLessonPreview.Insert(targetIndex, item);
+
+                _searchLessonResponseDragging = null;
+                _draggedIndexLesson = null;
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected void Callback(string[] keys) {
         Console.WriteLine(string.Join(',', keys));
     }
 
-    protected void HandleLessonClick(DetailCourseResponse.Lesson lesson)
-    {
+    protected void HandleLessonClick(DetailCourseResponse.Lesson lesson) {
         CurrentLesson = lesson;
     }
 
@@ -112,18 +125,15 @@ public class CourseDetailBase : ComponentBase
         visible = false;
     }
 
-    protected void OpenAddNewModuleDrawer()
-    {
-        AddModuleRequest = new()
-        {
+    protected void OpenAddNewModuleDrawer() {
+        AddModuleRequest = new() {
             CourseId = Id,
             Title = "",
         };
         VisibleAddNewModuleDrawer = true;
     }
 
-    protected async Task OpenAddNewLessonDrawer()
-    {
+    protected async Task OpenAddNewLessonDrawer() {
         AddNewLessonModel = new();
         var ListModuleRes = await FetchModuleList(Id);
         if (ListModuleRes != null && ListModuleRes.Count > 0) {
@@ -131,6 +141,20 @@ public class CourseDetailBase : ComponentBase
             VisibleAddNewLessonDrawer = true;
         }
     }
+
+    protected async Task ReloadModulePreviewList() {
+        var ListModuleRes = await FetchModuleList(Id);
+        if (ListModuleRes != null && ListModuleRes.Count > 0) {
+            ListModulePreview = ListModuleRes;
+        }
+    }
+    protected async Task ReloadModuleList() {
+        var ListModuleRes = await FetchModuleList(Id);
+        if (ListModuleRes != null && ListModuleRes.Count > 0) {
+            ListModule = ListModuleRes;
+        }
+    }
+
     protected async Task OpenReorderModulePositionDrawer() {
         VisibleReorderModulePositionDrawer = true;
         var listModulePreview = await FetchModuleList(Id);
@@ -162,13 +186,28 @@ public class CourseDetailBase : ComponentBase
         }
     }
 
-    protected void CloseAddNewModuleDrawer()
-    {
+    protected async Task OpenEditLessonDrawer(int lessonId) {
+        var lessonDetail = await FetchLessonDetail(lessonId);
+        var ListModuleRes = await FetchModuleList(Id);
+        if (ListModuleRes != null && ListModuleRes.Count > 0 && lessonDetail != null) {
+            ListModule = ListModuleRes;
+            UpdateLessonModel = new() {
+                Id = lessonDetail.Id,
+                Title = lessonDetail.Title,
+                Description = lessonDetail.Description,
+                UrlVideo = lessonDetail.UrlVideo,
+                ModuleId = lessonDetail.ModuleId,
+                NewOrder = null,
+            };
+            VisibleEditLesson = true;
+        }
+    }
+
+    protected void CloseAddNewModuleDrawer() {
         VisibleAddNewModuleDrawer = false;
     }
 
-    protected void CloseAddNewLessonDrawer()
-    {
+    protected void CloseAddNewLessonDrawer() {
         VisibleAddNewLessonDrawer = false;
     }
 
@@ -184,6 +223,10 @@ public class CourseDetailBase : ComponentBase
         VisibleEditModule = false;
     }
 
+    protected void CloseEditLessonDrawer() {
+        VisibleEditLesson = false;
+    }
+
     protected async Task OnSelectedModuleChangedHandler(SearchModuleResponse module) {
         if (module != null) {
             var fetchLessonListRes = await FetchLessonList(module.Id);
@@ -195,19 +238,15 @@ public class CourseDetailBase : ComponentBase
         }
     }
 
-    protected override async Task OnInitializedAsync()
-    {
+    protected override async Task OnInitializedAsync() {
         httpClient = HttpClientFactory.CreateClient("Auth");
 
         await FetchCourseDetail(Id);
-        if (CourseDetailModel != null)
-        {
+        if (CourseDetailModel != null) {
             var firstModule = CourseDetailModel.Modules.SingleOrDefault((m) => m.Order == 1);
-            if (firstModule != null)
-            {
+            if (firstModule != null) {
                 var firstLesson = firstModule.Lessons.SingleOrDefault(l => l.Order == 1);
-                if (firstLesson != null)
-                {
+                if (firstLesson != null) {
                     CurrentLesson = firstLesson;
                 }
             }
@@ -216,41 +255,30 @@ public class CourseDetailBase : ComponentBase
         await base.OnInitializedAsync();
     }
 
-    protected async Task FetchCourseDetail(string courseId)
-    {
+    protected async Task FetchCourseDetail(string courseId) {
         LoadingCourseDetail = true;
-        try
-        {
+        try {
             var result = await httpClient.GetAsync($"/api/Course/detail?CourseId={courseId}");
 
-            if (result.IsSuccessStatusCode)
-            {
+            if (result.IsSuccessStatusCode) {
                 var response = await result.Content.ReadAsStringAsync();
                 var value = JsonSerializer
                     .Deserialize<DetailCourseResponse>(response, jsonSerializerOptions);
-                if (value != null)
-                {
+                if (value != null) {
                     CourseDetailModel = value;
                 }
-            }
-            else
-            {
+            } else {
                 await _mess.Error(await result.Content.ReadAsStringAsync());
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             await _mess.Error($"Internal server error when load list course: {ex.Message}");
-        }
-        finally
-        {
+        } finally {
             LoadingCourseDetail = false;
             StateHasChanged();
         }
     }
 
-    protected async Task<List<SearchModuleResponse>?> FetchModuleList(string courseId) 
-    {
+    protected async Task<List<SearchModuleResponse>?> FetchModuleList(string courseId) {
         LoadingModuleList = true;
         try {
             var result = await httpClient.GetAsync($"/api/Module/search?CourseId={courseId}");
@@ -317,7 +345,25 @@ public class CourseDetailBase : ComponentBase
                 await _mess.Error(await result.Content.ReadAsStringAsync());
             }
         } catch (Exception ex) {
-            await _mess.Error($"Internal server error when load list course: {ex.Message}");
+            await _mess.Error($"Internal server error when load module detail: {ex.Message}");
+        }
+        return null;
+    }
+
+    protected async Task<DetailLessonResponse?> FetchLessonDetail(int lessonId) {
+        try {
+            var result = await httpClient.GetAsync($"/api/Lesson/detail?LessonId={lessonId}");
+
+            if (result.IsSuccessStatusCode) {
+                var response = await result.Content.ReadAsStringAsync();
+                var values = JsonSerializer
+                    .Deserialize<DetailLessonResponse>(response, jsonSerializerOptions);
+                return values;
+            } else {
+                await _mess.Error(await result.Content.ReadAsStringAsync());
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Internal server error when load lesson detail: {ex.Message}");
         }
         return null;
     }
@@ -359,14 +405,39 @@ public class CourseDetailBase : ComponentBase
     protected async void UpdateModule() {
         try {
             var response = await httpClient
-                .PostAsJsonAsync("/api/Lesson/add", AddNewLessonModel);
+                .PostAsJsonAsync("/api/Module/update", UpdateModuleModel);
 
             if (response.IsSuccessStatusCode) {
-                CloseAddNewLessonDrawer();
-                await FetchCourseDetail(Id);
-                await _mess.Success("Lesson added successfully");
+                CloseEditModuleDrawer();
+                var listModuleRes = await FetchModuleList(Id);
+                if (listModuleRes != null) {
+                    ListModulePreview = listModuleRes;
+                }
+                await FetchCourseDetail(Id);                
+                await _mess.Success("Module updated successfully");
             } else {
-                await _mess.Error("Failed to add lesson");
+                await _mess.Error("Failed to update module");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    protected async void UpdateLesson() {
+        try {
+            var response = await httpClient
+                .PostAsJsonAsync("/api/Lesson/update", UpdateLessonModel);
+
+            if (response.IsSuccessStatusCode) {
+                CloseEditLessonDrawer();
+                var listLessonRes = await FetchLessonList(ModuleIdToReorderListLesson);
+                if (listLessonRes != null) {
+                    ListLessonPreview = listLessonRes;
+                }
+                await FetchCourseDetail(Id);
+                await _mess.Success("Lesson updated successfully");
+            } else {
+                await _mess.Error("Failed to update lesson");
             }
         } catch (Exception ex) {
             await _mess.Error($"Error: {ex.Message}");
@@ -374,12 +445,15 @@ public class CourseDetailBase : ComponentBase
     }
 
     protected async void ReorderModulePosition() {
+        LoadingUpdateListModule = true;
         try {
             var response = await httpClient
                 .PostAsJsonAsync("/api/Module/reorder-modules", new {
                     NewListModules = ListModulePreview,
                     CourseId = Id
                 });
+
+            LoadingUpdateListModule = false;
 
             if (response.IsSuccessStatusCode) {
                 CloseReorderModulePostionDrawer();
@@ -390,27 +464,98 @@ public class CourseDetailBase : ComponentBase
             }
         } catch (Exception ex) {
             await _mess.Error($"Error: {ex.Message}");
+        } finally {
+            LoadingUpdateListModule = false;
+            StateHasChanged();
         }
     }
 
-    protected string GetYouTubeEmbedUrl(string url)
-    {
+    protected async void ReorderLessonPosition() {
+        LoadingUpdateListLesson = true;
+        try {
+            var response = await httpClient
+                .PostAsJsonAsync("/api/Lesson/reorder-lessons", new {
+                    NewListLessons = ListLessonPreview,
+                    ModuleId = ModuleIdToReorderListLesson
+                });
+
+            LoadingUpdateListLesson = false;
+            if (response.IsSuccessStatusCode) {
+                CloseReorderLessonPositionDrawer();
+                await FetchCourseDetail(Id);
+                await _mess.Success("List lesson reorder successfully");
+            } else {
+                await _mess.Error("Failed to reorder list lesson");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        } finally {
+            LoadingUpdateListLesson = false;
+        }
+    }
+
+    protected async void DeleteModule(int id) {
+        try {
+            var response = await httpClient
+                .PostAsJsonAsync("/api/Module/remove", new RemoveModuleRequest() {
+                    ModuleId = id
+                });
+
+            if (response.IsSuccessStatusCode) {
+                var listModuleRes = await FetchModuleList(Id);
+                if (listModuleRes != null) {
+                    ListModulePreview = listModuleRes;
+                } else {
+                    ListModulePreview = [];
+                }
+                    await FetchCourseDetail(Id);
+                StateHasChanged();
+                await _mess.Success("Module removed successfully");
+            } else {
+                await _mess.Error("Failed to remove module");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    protected async void DeleteLesson(int id, int moduleId) {
+        try {
+            var response = await httpClient
+                .PostAsJsonAsync("/api/Lesson/remove", new RemoveLessonRequest() {
+                    LessonId = id
+                });
+
+            if (response.IsSuccessStatusCode) {
+                var listLessonRes = await FetchLessonList(moduleId);
+                if (listLessonRes != null) {
+                    ListLessonPreview = listLessonRes;
+                } else {
+                    ListLessonPreview = [];
+                }
+                await FetchCourseDetail(Id);
+                StateHasChanged();
+                await _mess.Success("Lesson removed successfully");
+            } else {
+                await _mess.Error("Failed to remove lesson");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    protected string GetYouTubeEmbedUrl(string url) {
         if (string.IsNullOrEmpty(url)) return "";
 
         string videoId = "";
 
-        if (url.Contains("youtube.com/watch"))
-        {
+        if (url.Contains("youtube.com/watch")) {
             var uri = new Uri(url);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
             videoId = query["v"];
-        }
-        else if (url.Contains("youtu.be"))
-        {
+        } else if (url.Contains("youtu.be")) {
             videoId = url.Split('/').Last();
-        }
-        else if (url.Length == 11)
-        {
+        } else if (url.Length == 11) {
             videoId = url;
         }
 

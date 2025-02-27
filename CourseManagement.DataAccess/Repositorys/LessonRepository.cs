@@ -59,16 +59,24 @@ namespace CourseManagement.DataAccess.Repositorys {
             lesson.Title = req.Title;
             lesson.Description = req.Description;
             lesson.UrlVideo = req.UrlVideo;
+            if(lesson.ModuleId != req.ModuleId) {
+                var maxLessonOrder = await _context.Lessons
+                .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
+                .MaxAsync(l => (int?)l.Order) ?? 0;
+
+                lesson.ModuleId = req.ModuleId;
+                lesson.Order = maxLessonOrder + 1;
+            }
 
             // Handle order change if needed
-            if (req.NewOrder != lesson.Order) {
+            if (req.NewOrder != null && req.NewOrder != lesson.Order) {
                 var lessonsList = await _context.Lessons
                     .Where(l => l.ModuleId == lesson.ModuleId && l.Status == LessonStatus.Active)
                     .OrderBy(l => l.Order)
                     .ToListAsync();
 
                 var currentOrder = lesson.Order ?? lessonsList.Count;
-                var newOrder = Math.Max(1, Math.Min(req.NewOrder, lessonsList.Count));
+                var newOrder = Math.Max(1, Math.Min((int) req.NewOrder, lessonsList.Count));
 
                 if (newOrder < currentOrder) {
                     foreach (var les in lessonsList) {
@@ -179,6 +187,23 @@ namespace CourseManagement.DataAccess.Repositorys {
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<DetailLessonResponse> Detail(DetailLessonRequest req) {
+            var foundedLesson = await _context.Lessons.FirstOrDefaultAsync(l => l.Id == req.LessonId)
+            ?? throw new ArgumentException($"Module with id {req.LessonId} not found or not active");
+
+            DetailLessonResponse res = new() {
+                Id = foundedLesson.Id,
+                Title = foundedLesson.Title,
+                Description = foundedLesson.Description,
+                UrlVideo = foundedLesson.UrlVideo,
+                ModuleId = foundedLesson.ModuleId,
+                Order = foundedLesson.Order,
+                Status = (int)foundedLesson.Status
+            };
+
+            return res;
         }
     }
 }

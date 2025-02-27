@@ -1,4 +1,4 @@
-@page "/courses/detail/{Id}"
+﻿@page "/courses/detail/{Id}"
 @using static CourseManagement.Model.DTOs.ModuleDTO
 @inherits CourseDetailBase
 
@@ -224,39 +224,19 @@ Width="500">
     </Form>
 </Drawer>
 
-<Drawer Closable="true"
-@bind-Visible="VisibleEditModule"
-Placement="DrawerPlacement.Right"
-Title='("Edit module")'
-Width="500">
-    <Form Model="@UpdateModuleModel" OnFinish="UpdateModule">
-        <Row Gutter="16">
-            <AntDesign.Col Span="24">
-                <Text>Title</Text>
-                <FormItem>
-                    <Input Placeholder="Please enter title" TValue="string" @bind-Value="@context.Title"></Input>
-                </FormItem>
-            </AntDesign.Col>
-        </Row>
-        <Row Class="mt-3">
-            <Col Span="24" Class="d-flex justify-content-end gap-2">
-                <Button Type="ButtonType.Default" @onclick="CloseEditModuleDrawer">Cancel</Button>
-                <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
-            </Col>
-        </Row>
-    </Form>
-</Drawer>
-
-<Drawer Closable="true"
+<Drawer Closable="!LoadingUpdateListModule"
 @bind-Visible="VisibleReorderModulePositionDrawer"
 Placement="DrawerPlacement.Right"
-Title='("Reorder module position")'
+Title='("Edit | Remove | Reorder module position")'
 Width="700">
     @if (ListModulePreview.Count == 0) {
         <Empty />
     } else {
         <div class="mb-2 draggable-list">
             <AntList DataSource="@ListModulePreview" Loading="LoadingModuleList" Bordered>
+                <Header>
+                    <Button Icon="@IconType.Outline.Reload" @onclick="ReloadModulePreviewList" Loading="LoadingModuleList">Reload list module</Button>
+                </Header>
                 <ChildContent Context="module">
                     <ListItem>
                         <div draggable="true"
@@ -264,22 +244,31 @@ Width="700">
                         @ondragstart="e => OnDragStart(e, module)"
                         ondragover="event.preventDefault()"
                         class="draggable-item">
-                            @module.Title
+                            <div class="d-flex justify-content-between">
+                                <div>@module.Title</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <Tag Color="TagColor.Gold">Total lesson: @module.TotalLesson</Tag>
+                                    <Button OnClick="() => OpenEditModuleDrawer(module.Id)" Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit"></Button>
+                                    <Popconfirm Title="Are you sure delete this module? this actions can't be undo" OnConfirm="() => DeleteModule(module.Id)">
+                                        <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
+                                    </Popconfirm>
+                                </div>
+                            </div>
                         </div>
                     </ListItem>
                 </ChildContent>
             </AntList>
         </div>
 
-        <Button Type="ButtonType.Default" @onclick="CloseReorderModulePostionDrawer">Cancel</Button>
-        <Button Type="ButtonType.Primary" @onclick="ReorderModulePosition">Submit</Button>
+        <Button Type="ButtonType.Default" @onclick="CloseReorderModulePostionDrawer" Loading="LoadingUpdateListModule">Cancel</Button>
+        <Button Type="ButtonType.Primary" @onclick="ReorderModulePosition" Loading="LoadingUpdateListModule">Submit</Button>
     }
 </Drawer>
 
-<Drawer Closable="true"
+<Drawer Closable="!LoadingUpdateListLesson"
 @bind-Visible="VisibleReorderLessonPositionDrawer"
 Placement="DrawerPlacement.Right"
-Title='("Reorder lesson position")'
+Title='("Edit | Remove | Reorder lesson position")'
 Width="700">
     <div class="mb-2">
         <Alert Type="AlertType.Warning"
@@ -304,37 +293,135 @@ Width="700">
                 OnSelectedItemChanged="OnSelectedModuleChangedHandler">
                 </Select>
                 <Tooltip Title="Reload list module">
-                    <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchModuleList(Id)" Loading="LoadingModuleList" />
+                    <Button Icon="@IconType.Outline.Reload" @onclick="ReloadModuleList" Loading="LoadingModuleList" />
                 </Tooltip>
             </div>
         </AntDesign.Col>
     </Row>
 
-    @* <div draggable="true"
-                             @ondrop="() => OnDrop(module)"
-                             @ondragstart="e => OnDragStart(e, module)"
-                             ondragover="event.preventDefault()"
-                             class="draggable-item">
-                            @module.Title
-                        </div> *@
-
-    <div class="mt-2">
+    <div class="mt-2 mb-2">
         @if (ListLessonPreview == null || ListLessonPreview.Count == 0) {
             <Empty />
         } else
         {
-            <AntList DataSource="@ListLessonPreview" Loading="LoadingLessonList" Bordered>
-                <Header>
-                    <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchLessonList(ModuleIdToReorderListLesson)" Loading="LoadingLessonList">Reload list lesson</Button>
-                </Header>
-                <ChildContent Context="lesson">
-                    <ListItem>
-                        @lesson.Title
-                    </ListItem>
-                </ChildContent>
-            </AntList>
+            <div class="mb-2 draggable-list">
+                <AntList DataSource="@ListLessonPreview" Loading="LoadingLessonList" Bordered>
+                    <Header>
+                        <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchLessonList(ModuleIdToReorderListLesson)" Loading="LoadingLessonList">Reload list lesson</Button>
+                    </Header>
+                    <ChildContent Context="lesson">
+                        <ListItem>
+                            <div draggable="true"
+                                 @ondrop="() => OnDropLesson(lesson)"
+                                 @ondragstart="e => OnDragStartLesson(e, lesson)"
+                                 ondragover="event.preventDefault()"
+                                 class="draggable-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>@lesson.Title</div>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit" OnClick="() => OpenEditLessonDrawer(lesson.Id)"></Button>
+                                        <Popconfirm Title="Are you sure delete this lesson? this actions can't be undo" OnConfirm="() => DeleteLesson(lesson.Id, ModuleIdToReorderListLesson)">
+                                            <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
+                                        </Popconfirm>
+                                    </div>
+                                 </div>
+                            </div>
+                        </ListItem>
+                    </ChildContent>
+                </AntList>
+            </div>
         }
     </div>
+
+    <Button Type="ButtonType.Default" @onclick="CloseReorderLessonPositionDrawer" Loading="LoadingUpdateListLesson">Cancel</Button>
+    <Button Type="ButtonType.Primary" @onclick="ReorderLessonPosition" Loading="LoadingUpdateListLesson">Submit</Button>
+</Drawer>
+
+<Drawer Closable="true"
+        @bind-Visible="VisibleEditModule"
+        Placement="DrawerPlacement.Right"
+        Title='("Edit module")'
+        Width="500">
+    <Form Model="@UpdateModuleModel" OnFinish="UpdateModule">
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Title</Text>
+                <FormItem>
+                    <Input Placeholder="Please enter title" TValue="string" @bind-Value="@context.Title"></Input>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Class="mt-3">
+            <Col Span="24" Class="d-flex justify-content-end gap-2">
+            <Button Type="ButtonType.Default" @onclick="CloseEditModuleDrawer">Cancel</Button>
+            <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
+            </Col>
+        </Row>
+    </Form>
+</Drawer>
+
+<Drawer Closable="true"
+        @bind-Visible="VisibleEditLesson"
+        Placement="DrawerPlacement.Right"
+        Title='("Edit lesson")'
+        Width="500">
+    <Form Model="@UpdateLessonModel" OnFinish="UpdateLesson">
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Title</Text>
+                <FormItem>
+                    <Input Placeholder="Please enter title" TValue="string" @bind-Value="@context.Title"></Input>
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="24">
+                <Text>Description</Text>
+                <FormItem>
+                    <TextArea Placeholder="Please enter description" AutoSize="true" @bind-Value="@context.Description" />
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="24">
+                <Text>Video URL</Text>
+                <FormItem>
+                    <Input Placeholder="Please enter preview video url" TValue="string" @bind-Value="@context.UrlVideo"></Input>
+                    @if (!string.IsNullOrEmpty(context.UrlVideo)) {
+                        <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                                    src="@GetYouTubeEmbedUrl(context.UrlVideo)"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    }
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="24">
+                <Text>Module</Text>
+                <FormItem>
+                    <div class="d-flex gap-1">
+                        <Select DataSource="@ListModule"
+                                @bind-Value="@context.ModuleId"
+                                ItemValue="p=>p.Id"
+                                ItemLabel="p=>p.Title"
+                                Placeholder="Select a module"
+                                EnableSearch
+                                AutoClearSearchValue="false"
+                                Loading="LoadingModuleList">
+                        </Select>
+                        <Tooltip Title="Reload list module">
+                            <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchModuleList(Id)" Loading="LoadingModuleList" />
+                        </Tooltip>
+                    </div>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Class="mt-3">
+            <Col Span="24" Class="d-flex justify-content-end gap-2">
+            <Button Type="ButtonType.Default" @onclick="CloseEditLessonDrawer">Cancel</Button>
+            <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
+            </Col>
+        </Row>
+    </Form>
 </Drawer>
 
 <style>

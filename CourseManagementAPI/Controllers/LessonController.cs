@@ -1,8 +1,10 @@
 ﻿using CourseManagement.DataAccess.Repositorys;
+using CourseManagement.DataAccess.Repositorys.IRepositorys;
 using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace CourseManagementAPI.Controllers {
     [Route("api/[controller]")]
@@ -76,6 +78,19 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while reorder the lesson list" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpGet("detail")]
+        public async Task<IActionResult> Detail([FromQuery] DetailLessonRequest req) {
+            try {
+                var res = await lessonRepository.Detail(req);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while get detail the lesson" });
             }
         }
     }
