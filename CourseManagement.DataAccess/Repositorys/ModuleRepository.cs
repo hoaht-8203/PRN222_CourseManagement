@@ -103,7 +103,8 @@ namespace CourseManagement.DataAccess.Repositorys {
                     Title = m.Title,
                     Order = m.Order ?? 0,
                     Status = (int) m.Status,
-                    CourseId = m.CourseId.ToString()
+                    CourseId = m.CourseId.ToString(),
+                    TotalLesson = m.Lessons.Count
                 })
                 .OrderBy(m => m.Order)
                 .ToListAsync();

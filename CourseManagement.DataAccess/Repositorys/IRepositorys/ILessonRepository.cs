@@ -14,5 +14,6 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task RemoveLesson(RemoveLessonRequest req);
         Task ReorderLessons(ReorderLessonsRequest req);
         Task<List<SearchLessonResponse>> SearchLesson(SearchLessonRequest req);
+        Task<DetailLessonResponse> Detail(DetailLessonRequest req);
     }
 }

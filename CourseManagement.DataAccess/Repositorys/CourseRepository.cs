@@ -38,11 +38,11 @@ namespace CourseManagement.DataAccess.Repositorys {
 
         public async Task<DetailCourseResponse> Detail(DetailCourseRequest request) {
             var course = await _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Modules)
-                    .ThenInclude(m => m.Lessons)
-                .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
-                .SingleOrDefaultAsync();
+                    .Include(c => c.Category)
+                    .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
+                        .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+                    .SingleOrDefaultAsync();
 
             if (course == null) {
                 throw new ArgumentException($"Course {request.CourseId} is not existed or removed");
