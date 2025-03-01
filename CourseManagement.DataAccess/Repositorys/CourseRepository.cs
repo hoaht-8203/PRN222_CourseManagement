@@ -118,8 +118,24 @@ namespace CourseManagement.DataAccess.Repositorys {
             return results;
         }
 
-        public Task UpdateCourse(UpdateCategoryReq request) {
-            throw new NotImplementedException();
+        public async Task UpdateCourse(UpdateCourseRequest request) {
+            var courseFounded = await _context.Courses
+               .SingleOrDefaultAsync(c => c.Id.ToString() == request.Id && c.Status != CourseStatus.UnAvailable)
+               ?? throw new ArgumentException($"Course with id {request.Id} not exsited or removed");
+
+            var foundCategory = _context.Categories
+               .Find(request.CategoryId)
+               ?? throw new ArgumentException($"Category with id {request.CategoryId} not exsited or removed");
+
+            courseFounded.Title = request.Title;
+            courseFounded.Description = request.Description;
+            courseFounded.PreviewImage = request.PreviewImage;
+            courseFounded.PreviewVideoUrl = request.PreviewVideoUrl;
+            courseFounded.Level = request.Level;
+            courseFounded.CourseType = request.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse;
+            courseFounded.CategoryId = request.CategoryId;
+                
+            await _context.SaveChangesAsync();
         }
     }
 }
