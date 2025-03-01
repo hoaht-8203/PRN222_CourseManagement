@@ -13,6 +13,7 @@ namespace CourseManagement.Model.DTOs {
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Module is required")]
         public int ModuleId { get; set; }
+        public TimeSpan? Duration { get; set; }
     }
 
     public class SearchLessonRequest {

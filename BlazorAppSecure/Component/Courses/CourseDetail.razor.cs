@@ -32,6 +32,8 @@ public class CourseDetailBase : ComponentBase {
     [Parameter]
     public string Id { get; set; }
 
+    protected TimeSpan? videoDuration;
+
     protected bool LoadingCourseDetail = false;
     protected bool LoadingModuleList = false;
     protected bool LoadingLessonList = false;
@@ -65,6 +67,21 @@ public class CourseDetailBase : ComponentBase {
     protected SearchLessonResponse? _searchLessonResponseDragging;
     protected int? _draggedIndexLesson;
     protected int? _targetIndexLesson;
+
+    protected string FormatDuration(TimeSpan duration) {
+        if (duration.Hours > 0) {
+            return $"{duration.Hours}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+        }
+        return $"{duration.Minutes}:{duration.Seconds:D2}";
+    }
+
+    protected async Task OnVideoUrlChanged() {
+        if (!string.IsNullOrEmpty(AddNewLessonModel.UrlVideo)) {
+            videoDuration = await GetYouTubeDuration(AddNewLessonModel.UrlVideo);
+            AddNewLessonModel.Duration = videoDuration;
+            StateHasChanged();
+        }
+    }
 
     protected void OnDragStart(DragEventArgs e, SearchModuleResponse searchModuleResponse) {
         _draggedIndex = ListModulePreview.IndexOf(searchModuleResponse);
@@ -387,6 +404,8 @@ public class CourseDetailBase : ComponentBase {
 
     protected async void SubmitNewLesson() {
         try {
+            AddNewLessonModel.Duration = await GetYouTubeDuration(AddNewLessonModel.UrlVideo);
+
             var response = await httpClient
                 .PostAsJsonAsync("/api/Lesson/add", AddNewLessonModel);
 
@@ -542,6 +561,54 @@ public class CourseDetailBase : ComponentBase {
         } catch (Exception ex) {
             await _mess.Error($"Error: {ex.Message}");
         }
+    }
+
+    protected async Task<TimeSpan?> GetYouTubeDuration(string url) {
+        try {
+            string videoId = GetYouTubeVideoId(url);
+            if (string.IsNullOrEmpty(videoId)) return null;
+
+            string apiKey = "AIzaSyB-NqIazBxqDipAkc-jw5G2_BshS-R1x5g";
+            string apiUrl = $"https://www.googleapis.com/youtube/v3/videos?id={videoId}&part=contentDetails&key={apiKey}";
+
+            // Tạo HttpClient mới không có authentication header
+            using (var client = new HttpClient()) {
+                var response = await client.GetAsync(apiUrl);
+                if (response.IsSuccessStatusCode) {
+                    var content = await response.Content.ReadAsStringAsync();
+                    using JsonDocument document = JsonDocument.Parse(content);
+                    var items = document.RootElement.GetProperty("items");
+
+                    if (items.GetArrayLength() > 0) {
+                        var duration = items[0].GetProperty("contentDetails").GetProperty("duration").GetString();
+                        if (duration != null) {
+                            return System.Xml.XmlConvert.ToTimeSpan(duration);
+                        }
+                    }
+                } else {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await _mess.Error($"YouTube API error: {errorContent}");
+                }
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error getting video duration: {ex.Message}");
+        }
+        return null;
+    }
+
+    protected string GetYouTubeVideoId(string url) {
+        if (string.IsNullOrEmpty(url)) return "";
+
+        if (url.Contains("youtube.com/watch")) {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            return query["v"] ?? "";
+        } else if (url.Contains("youtu.be")) {
+            return url.Split('/').Last();
+        } else if (url.Length == 11) {
+            return url;
+        }
+        return "";
     }
 
     protected string GetYouTubeEmbedUrl(string url) {

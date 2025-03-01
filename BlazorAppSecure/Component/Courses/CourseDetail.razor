@@ -183,15 +183,23 @@ Width="500">
             <AntDesign.Col Span="24">
                 <Text>Video URL</Text>
                 <FormItem>
-                    <Input Placeholder="Please enter preview video url" TValue="string" @bind-Value="@context.UrlVideo"></Input>
+                    <Input Placeholder="Please enter preview video url"
+                           TValue="string"
+                           @bind-Value="@context.UrlVideo"
+                           @bind-Value:after="OnVideoUrlChanged" />
                     @if (!string.IsNullOrEmpty(context.UrlVideo)) {
                         <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-                            src="@GetYouTubeEmbedUrl(context.UrlVideo)"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
+                                    src="@GetYouTubeEmbedUrl(context.UrlVideo)"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
                             </iframe>
                         </div>
+                        @if (videoDuration.HasValue) {
+                            <div class="mt-2">
+                                <Tag Color="TagColor.Blue">Duration: @FormatDuration(videoDuration.Value)</Tag>
+                            </div>
+                        }
                     }
                 </FormItem>
             </AntDesign.Col>

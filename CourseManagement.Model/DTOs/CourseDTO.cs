@@ -90,4 +90,23 @@ namespace CourseManagement.Model.DTOs {
         public string TypeName { get; set; }
         public string CategoryName { get; set; }
     }
+
+    public class UpdateCourseRequest() {
+        [Required]
+        public string Id { get; set; }
+        [Required]
+        public string Title { get; set; }
+        [Required]
+        public string Description { get; set; }
+        [Required]
+        public string PreviewImage { get; set; }
+        [Required]
+        public string PreviewVideoUrl { get; set; }
+        [Required]
+        public CourseLevel Level { get; set; }
+        [Required]
+        public bool IsProCourse { get; set; }
+        [Required]
+        public int CategoryId { get; set; }
+    }
 }
