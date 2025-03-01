@@ -15,6 +15,9 @@ public class CourseDetailBase : ComponentBase {
     };
 
     [Inject]
+    protected IConfiguration Configuration { get; set; }
+
+    [Inject]
     protected IHttpClientFactory HttpClientFactory { get; set; }
 
     [Inject]
@@ -568,7 +571,7 @@ public class CourseDetailBase : ComponentBase {
             string videoId = GetYouTubeVideoId(url);
             if (string.IsNullOrEmpty(videoId)) return null;
 
-            string apiKey = "AIzaSyB-NqIazBxqDipAkc-jw5G2_BshS-R1x5g";
+            string apiKey = Configuration["YouTube:ApiKey"];
             string apiUrl = $"https://www.googleapis.com/youtube/v3/videos?id={videoId}&part=contentDetails&key={apiKey}";
 
             // Tạo HttpClient mới không có authentication header
