@@ -72,5 +72,18 @@ namespace CourseManagementAPI.Controllers {
                 return StatusCode(500, new { Error = "An error occurred while getting course details" });
             }
         }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("update")]
+        public async Task<IActionResult> Update([FromBody] UpdateCourseRequest req) {
+            try {
+                await _courseRepository.UpdateCourse(req);
+                return Ok(new { Message = "Update course successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while updating course details" });
+            }
+        }
     }
 }

@@ -38,11 +38,11 @@ namespace CourseManagement.DataAccess.Repositorys {
 
         public async Task<DetailCourseResponse> Detail(DetailCourseRequest request) {
             var course = await _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Modules)
-                    .ThenInclude(m => m.Lessons)
-                .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
-                .SingleOrDefaultAsync();
+                    .Include(c => c.Category)
+                    .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
+                        .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+                    .SingleOrDefaultAsync();
 
             if (course == null) {
                 throw new ArgumentException($"Course {request.CourseId} is not existed or removed");
@@ -118,8 +118,24 @@ namespace CourseManagement.DataAccess.Repositorys {
             return results;
         }
 
-        public Task UpdateCourse(UpdateCategoryReq request) {
-            throw new NotImplementedException();
+        public async Task UpdateCourse(UpdateCourseRequest request) {
+            var courseFounded = await _context.Courses
+               .SingleOrDefaultAsync(c => c.Id.ToString() == request.Id && c.Status != CourseStatus.UnAvailable)
+               ?? throw new ArgumentException($"Course with id {request.Id} not exsited or removed");
+
+            var foundCategory = _context.Categories
+               .Find(request.CategoryId)
+               ?? throw new ArgumentException($"Category with id {request.CategoryId} not exsited or removed");
+
+            courseFounded.Title = request.Title;
+            courseFounded.Description = request.Description;
+            courseFounded.PreviewImage = request.PreviewImage;
+            courseFounded.PreviewVideoUrl = request.PreviewVideoUrl;
+            courseFounded.Level = request.Level;
+            courseFounded.CourseType = request.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse;
+            courseFounded.CategoryId = request.CategoryId;
+                
+            await _context.SaveChangesAsync();
         }
     }
 }

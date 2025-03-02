@@ -59,16 +59,24 @@ namespace CourseManagement.DataAccess.Repositorys {
             lesson.Title = req.Title;
             lesson.Description = req.Description;
             lesson.UrlVideo = req.UrlVideo;
+            if(lesson.ModuleId != req.ModuleId) {
+                var maxLessonOrder = await _context.Lessons
+                .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
+                .MaxAsync(l => (int?)l.Order) ?? 0;
+
+                lesson.ModuleId = req.ModuleId;
+                lesson.Order = maxLessonOrder + 1;
+            }
 
             // Handle order change if needed
-            if (req.NewOrder != lesson.Order) {
+            if (req.NewOrder != null && req.NewOrder != lesson.Order) {
                 var lessonsList = await _context.Lessons
                     .Where(l => l.ModuleId == lesson.ModuleId && l.Status == LessonStatus.Active)
                     .OrderBy(l => l.Order)
                     .ToListAsync();
 
                 var currentOrder = lesson.Order ?? lessonsList.Count;
-                var newOrder = Math.Max(1, Math.Min(req.NewOrder, lessonsList.Count));
+                var newOrder = Math.Max(1, Math.Min((int) req.NewOrder, lessonsList.Count));
 
                 if (newOrder < currentOrder) {
                     foreach (var les in lessonsList) {
@@ -129,19 +137,73 @@ namespace CourseManagement.DataAccess.Repositorys {
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Lesson>> SearchModule(SearchLessonRequest req) {
+        public async Task<List<SearchLessonResponse>> SearchLesson(SearchLessonRequest req) {
             var module = await _context.Modules
                 .FirstOrDefaultAsync(m => m.Id == req.ModuleId && m.Status == ModuleStatus.Active)
                 ?? throw new ArgumentException($"Module with id {req.ModuleId} not found or not active");
 
             var lessons = await _context.Lessons
-                .Include(l => l.Documents)
-                .Include(l => l.Comments)
                 .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
+                .Select(l => new SearchLessonResponse {
+                    Id = l.Id,
+                    Title = l.Title,
+                    Description = l.Description,
+                    UrlVideo = l.UrlVideo,
+                    Order = l.Order ?? 0,
+                    Status = (int) l.Status,
+                    ModuleId = l.ModuleId,
+                    Module = new SearchLessonResponse.ModuleDetail {
+                        Id = l.Module.Id,
+                        Title = l.Module.Title,
+                        Order = l.Module.Order ?? 0,
+                        Status = (int) l.Module.Status,
+                        CourseId = l.Module.CourseId.ToString()
+                    }
+                })
                 .OrderBy(l => l.Order)
                 .ToListAsync();
 
             return lessons;
+        }
+
+        public async Task ReorderLessons(ReorderLessonsRequest req) {
+            var foundedModule = await _context.Modules.FirstOrDefaultAsync(m => m.Id == req.ModuleId && m.Status == ModuleStatus.Active)
+                ?? throw new ArgumentException($"Module with id {req.ModuleId} not found or not active");
+
+            var existingLessons = await _context.Lessons
+                .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
+                .ToListAsync();
+
+            var requestLessonIds = req.NewListLessons.Select(l => l.Id).ToHashSet();
+            var existingLessonIds = existingLessons.Select(l => l.Id).ToHashSet();
+
+            if (!requestLessonIds.SetEquals(existingLessonIds)) {
+                throw new ArgumentException("The lessons in the new order do not match the existing lessons");
+            }
+
+            for (var index = 0; index < req.NewListLessons.Count; index++) {
+                var lesson = existingLessons.First(m => m.Id == req.NewListLessons[index].Id);
+                lesson.Order = index + 1;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<DetailLessonResponse> Detail(DetailLessonRequest req) {
+            var foundedLesson = await _context.Lessons.FirstOrDefaultAsync(l => l.Id == req.LessonId)
+            ?? throw new ArgumentException($"Module with id {req.LessonId} not found or not active");
+
+            DetailLessonResponse res = new() {
+                Id = foundedLesson.Id,
+                Title = foundedLesson.Title,
+                Description = foundedLesson.Description,
+                UrlVideo = foundedLesson.UrlVideo,
+                ModuleId = foundedLesson.ModuleId,
+                Order = foundedLesson.Order,
+                Status = (int)foundedLesson.Status
+            };
+
+            return res;
         }
     }
 }

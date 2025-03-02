@@ -25,6 +25,7 @@ namespace CourseManagement.Model.DTOs {
             public int Order { get; set; }
             public int Status { get; set; }
             public string CourseId { get; set; }
+            public int TotalLesson { get; set; }
         }
 
         public class DetailModuleRequest {

@@ -9,6 +9,11 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+if (builder.HostEnvironment.IsDevelopment()) {
+    builder.Configuration.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddAntDesign();
 builder.Services.AddAuthorizationCore();
 builder.RootComponents.Add<App>("#app");

@@ -36,12 +36,12 @@
                 <Text>Level</Text>
                 <FormItem>
                     <Select Mode="SelectMode.Multiple"
-                            Placeholder="Please select level"
-                            @bind-Values="@context.Levels"
-                            TItemValue="int"
-                            TItem="string"
-                            EnableSearch
-                            AllowClear>
+                    Placeholder="Please select level"
+                    @bind-Values="@context.Levels"
+                    TItemValue="int"
+                    TItem="string"
+                    EnableSearch
+                    AllowClear>
                         <SelectOptions>
                             @foreach (var level in Enum.GetValues(typeof(CourseLevel))) {
                                 <SelectOption TItemValue="int" TItem="string" Value="@((int)level)" Label="@level.ToString()" />
@@ -54,12 +54,12 @@
                 <Text>Status</Text>
                 <FormItem>
                     <Select Mode="SelectMode.Multiple"
-                            Placeholder="Please select status"
-                            @bind-Values="@context.Statuss"
-                            TItemValue="int"
-                            TItem="string"
-                            EnableSearch
-                            AllowClear>
+                    Placeholder="Please select status"
+                    @bind-Values="@context.Statuss"
+                    TItemValue="int"
+                    TItem="string"
+                    EnableSearch
+                    AllowClear>
                         <SelectOptions>
                             @foreach (var status in Enum.GetValues(typeof(CourseStatus))) {
                                 <SelectOption TItemValue="int" TItem="string" Value="@((int)status)" Label="@status.ToString()" />
@@ -72,12 +72,12 @@
                 <Text>Status</Text>
                 <FormItem>
                     <Select Mode="SelectMode.Multiple"
-                            Placeholder="Please select course type"
-                            @bind-Values="@context.CourseTypes"
-                            TItemValue="int"
-                            TItem="string"
-                            EnableSearch
-                            AllowClear>
+                    Placeholder="Please select course type"
+                    @bind-Values="@context.CourseTypes"
+                    TItemValue="int"
+                    TItem="string"
+                    EnableSearch
+                    AllowClear>
                         <SelectOptions>
                             @foreach (var type in Enum.GetValues(typeof(CourseType))) {
                                 if ((int) type == 0) {
@@ -94,12 +94,12 @@
                 <Text>Category</Text>
                 <FormItem>
                     <Select Mode="SelectMode.Multiple"
-                            Placeholder="Please select category"
-                            @bind-Values="@context.CategoryIds"
-                            TItemValue="int"
-                            TItem="string"
-                            EnableSearch
-                            AllowClear>
+                    Placeholder="Please select category"
+                    @bind-Values="@context.CategoryIds"
+                    TItemValue="int"
+                    TItem="string"
+                    EnableSearch
+                    AllowClear>
                         <SelectOptions>
                             @if (categoryList != null) {
                                 @foreach (var c in categoryList) {
@@ -133,35 +133,44 @@
 </div>
 
 <Table DataSource="courseList" 
-    PageSize="12" 
-    ScrollX="1000" 
-    AutoHeight 
-    Loading="loadingCourseList" 
-    Bordered 
-    Striped="false"
-    class="table-list-course">
+PageSize="12" 
+ScrollX="1000" 
+AutoHeight 
+Loading="loadingCourseList" 
+Bordered 
+Striped="false"
+class="table-list-course">
     <ColumnDefinitions>
         <PropertyColumn Property="c=>c.Index"
-                        Title="#"
-                        Width="50"
-                        Fixed="ColumnFixPlacement.Left"
-                        Align="ColumnAlign.Center" 
-                        class="index-col"
+        Title="#"
+        Width="50"
+        Fixed="ColumnFixPlacement.Left"
+        Align="ColumnAlign.Center" 
+        class="index-col"
         >
             @(context.Index + 1)
         </PropertyColumn>
         <PropertyColumn Property="c=>c.Title"
-                        Title="Title"
-                        Width="270"
-                        Fixed="ColumnFixPlacement.Left" 
-                        class="title-col"
+        Title="Title"
+        Width="270"
+        Fixed="ColumnFixPlacement.Left" 
+        class="title-col"
         />
         <PropertyColumn Property="u=>u.PreviewImage" Width="250" Title="Preview Image">
             <Image Src="@(string.IsNullOrEmpty(context.PreviewImage) ? previewImageUrl : context.PreviewImage)"
-                   Fallback="@errorImageUrl" />
+            Fallback="@errorImageUrl" />
         </PropertyColumn>
         <PropertyColumn Property="c=>c.Description" Width="350" Title="Description">
             @context.Description
+        </PropertyColumn>
+        <PropertyColumn Property="c=>c.CourseType" Width="200" Title="Course Type">
+            @if (context.CourseType == 0) {
+                <Tag>Free Course</Tag>
+            } else if ((int) context.CourseType == 1) {
+                <Tag Color="TagColor.Gold">Pro Course</Tag>
+            } else {
+                <Tag>@context.TypeName</Tag>
+            }
         </PropertyColumn>
         <PropertyColumn Property="c=>c.CategoryName" Width="200" Title="Category">
             <Tag>@context.CategoryName</Tag>
@@ -184,7 +193,7 @@
         <ActionColumn Title="Action" Width="140" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
             <CellRender Context="cellData">
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Eye" @onclick="@(() => HandleNavigateToDetail(context))"></Button>
-                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit"></Button>
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit" OnClick="() => OpenUpdateCourseDrawer(context.Id)"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
             </CellRender>
         </ActionColumn>
@@ -192,11 +201,11 @@
 </Table>
 
 <Drawer Closable="true" 
-        @bind-Visible="visibleAddNewCourseDrawer" 
-        Placement="DrawerPlacement.Right" 
-        Title='("Add new course")'
-        Width="500"
-    >
+@bind-Visible="visibleAddNewCourseDrawer" 
+Placement="DrawerPlacement.Right" 
+Title='("Add new course")'
+Width="500"
+>
     <Form Model="@courseModel" OnFinish="SubmitNewCourse">
         <Row Gutter="16">
             <AntDesign.Col Span="24">
@@ -213,7 +222,7 @@
                     <Input Placeholder="Please enter preview image url" TValue="string" @bind-Value="@context.PreviewImage"></Input>
                     @if (!string.IsNullOrEmpty(context.PreviewImage)) {
                         <Image class="mt-2" Src="@(string.IsNullOrEmpty(context.PreviewImage) ? previewImageUrl : context.PreviewImage)"
-                               Fallback="@errorImageUrl" />
+                        Fallback="@errorImageUrl" />
                     }
                 </FormItem>
             </AntDesign.Col>
@@ -226,9 +235,9 @@
                     @if (!string.IsNullOrEmpty(context.PreviewVideoUrl)) {
                         <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-                                    src="@GetYouTubeEmbedUrl(context.PreviewVideoUrl)"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
+                            src="@GetYouTubeEmbedUrl(context.PreviewVideoUrl)"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
                             </iframe>
                         </div>
                     }
@@ -262,13 +271,13 @@
                 <FormItem>
                     <div class="d-flex gap-1">
                         <Select DataSource="@categoryList"
-                                @bind-Value="@context.CategoryId"
-                                ItemValue="p=>p.Id"
-                                ItemLabel="p=>p.Name"
-                                Placeholder="Select a category"
-                                EnableSearch
-                                AutoClearSearchValue="false"
-                                Loading="loadingListCategory">
+                        @bind-Value="@context.CategoryId"
+                        ItemValue="p=>p.Id"
+                        ItemLabel="p=>p.Name"
+                        Placeholder="Select a category"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        Loading="loadingListCategory">
                         </Select>
                         <Tooltip Title="Add new category">
                             <Button Icon="@IconType.Outline.PlusCircle" @onclick="HandleOpenAddCategoryModel" />
@@ -300,6 +309,114 @@
     </Form>
 </Drawer>
 
+<Drawer Closable="true"
+@bind-Visible="visibleUpdateCourse"
+Placement="DrawerPlacement.Right"
+Title='("Update course")'
+Width="500">
+    <Form Model="@updateCourseModel" OnFinish="UpdateCourse">
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Title</Text>
+                <FormItem>
+                    <Input Placeholder="Please enter title" TValue="string" @bind-Value="@context.Title"></Input>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Preview Image</Text>
+                <FormItem>
+                    <Input Placeholder="Please enter preview image url" TValue="string" @bind-Value="@context.PreviewImage"></Input>
+                    @if (!string.IsNullOrEmpty(context.PreviewImage)) {
+                        <Image class="mt-2" Src="@(string.IsNullOrEmpty(context.PreviewImage) ? previewImageUrl : context.PreviewImage)"
+                        Fallback="@errorImageUrl" />
+                    }
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Preview Video URL</Text>
+                <FormItem>
+                    <Input Placeholder="Please enter preview video url" TValue="string" @bind-Value="@context.PreviewVideoUrl"></Input>
+                    @if (!string.IsNullOrEmpty(context.PreviewVideoUrl)) {
+                        <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                            src="@GetYouTubeEmbedUrl(context.PreviewVideoUrl)"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                            </iframe>
+                        </div>
+                    }
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Level</Text>
+                <FormItem>
+                    <Segmented @bind-Value="context.Level">
+                        <SegmentedItem Label="Beginner" Value=@(CourseLevel.Beginner) />
+                        <SegmentedItem Label="Intermediate" Value=@(CourseLevel.Intermediate) />
+                        <SegmentedItem Label="Advanced" Value=@(CourseLevel.Advanced) />
+                        <SegmentedItem Label="Expert" Value=@(CourseLevel.Expert) />
+                    </Segmented>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Description</Text>
+                <FormItem>
+                    <TextArea Placeholder="Please enter description" AutoSize="true" @bind-Value="@context.Description" />
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Category</Text>
+                <FormItem>
+                    <div class="d-flex gap-1">
+                        <Select DataSource="@categoryList"
+                        @bind-Value="@context.CategoryId"
+                        ItemValue="p=>p.Id"
+                        ItemLabel="p=>p.Name"
+                        Placeholder="Select a category"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        Loading="loadingListCategory">
+                        </Select>
+                        <Tooltip Title="Add new category">
+                            <Button Icon="@IconType.Outline.PlusCircle" @onclick="HandleOpenAddCategoryModel" />
+                        </Tooltip>
+                        <Tooltip Title="Reload list category">
+                            <Button Icon="@IconType.Outline.Reload" @onclick="FetchListCategory" Loading="loadingListCategory" />
+                        </Tooltip>
+                    </div>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>Course Type</Text>
+                <FormItem>
+                    <Segmented @bind-Value="context.IsProCourse" Size="SegmentedSize.Large">
+                        <SegmentedItem Value="true" Label="Pro Course" />
+                        <SegmentedItem Value="false" Label="Free Course" />
+                    </Segmented>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Class="mt-3">
+            <Col Span="24" Class="d-flex justify-content-end gap-2">
+                <Button Type="ButtonType.Default" @onclick="close">Cancel</Button>
+                <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Submit</Button>
+            </Col>
+        </Row>
+    </Form>
+</Drawer>
+
 @code {
     string previewImageUrl = "https://placehold.co/1920x1080?text=Preview%20Image&font=roboto";
     string errorImageUrl = "https://placehold.co/1920x1080?text=This%20Image%20Is%20Error&font=roboto";
@@ -311,12 +428,15 @@
     AddCourseRequest courseModel = new();
     CategoryModel categoryModel = new();
     CourseSearchModel courseSearchModel = new();
+    UpdateCourseRequest updateCourseModel = new();
 
     bool loadingCourseList = false;
     bool loadingListCategory = false;
 
     bool visibleAddNewCourseDrawer = false;
     bool visibleAddNewCategoryModal = false;
+    bool visibleUpdateCourse = false;
+    bool LoadingCourseDetail = false;
 
     private Form<CategoryModel> _form;
 
@@ -369,6 +489,35 @@
         _nav.NavigateTo($"/courses/detail/{model.Id}");
     }
 
+    async Task OpenUpdateCourseDrawer(string courseId)
+    {
+        var courseDetailRes = await FetchCourseDetail(courseId);
+        if (courseDetailRes != null)
+        {
+            updateCourseModel = new() {
+                    Id = courseDetailRes.Id,
+                    Title = courseDetailRes.Title,
+                    Description = courseDetailRes.Description,
+                    PreviewImage = courseDetailRes.PreviewImage,
+                    PreviewVideoUrl = courseDetailRes.PreviewVideoUrl,
+                    Level = (CourseLevel)courseDetailRes.Level,
+                    CategoryId = courseDetailRes.CategoryId,
+                    IsProCourse = (int)courseDetailRes.CourseType == (int)CourseType.ProCourse
+                };
+            visibleUpdateCourse = true;
+        } else
+        {
+            await _mess.Error($"Course with id {courseId} is not existed");
+        }
+    }
+
+    void CloseUpdateCourseDrawer()
+    {
+        updateCourseModel = new();
+        visibleUpdateCourse = false;
+        StateHasChanged();
+    }
+
     async void FetchListCourse() {
         loadingCourseList = true;
         try {
@@ -389,6 +538,31 @@
             loadingCourseList = false;
             StateHasChanged();
         }
+    }
+
+    async Task<DetailCourseResponse?> FetchCourseDetail(string courseId) {
+        LoadingCourseDetail = true;
+        try {
+            var result = await httpClient.GetAsync($"/api/Course/detail?CourseId={courseId}");
+
+            if (result.IsSuccessStatusCode) {
+                var response = await result.Content.ReadAsStringAsync();
+                var value = JsonSerializer
+                    .Deserialize<DetailCourseResponse>(response, jsonSerializerOptions);
+                if (value != null) {
+                    return value;
+                }
+            } else {
+                await _mess.Error(await result.Content.ReadAsStringAsync());
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Internal server error when load list course: {ex.Message}");
+            return null;
+        } finally {
+            LoadingCourseDetail = false;
+            StateHasChanged();
+        }
+        return null;
     }
 
     async void FetchListCategory() {
@@ -440,6 +614,22 @@
                 await _mess.Success("Course added successfully");
             } else {
                 await _mess.Error("Failed to add course");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    async void UpdateCourse() {
+        try {
+            var response = await httpClient.PostAsJsonAsync("/api/Course/update", updateCourseModel);
+
+            if (response.IsSuccessStatusCode) {
+                CloseUpdateCourseDrawer();
+                FetchListCourse();
+                await _mess.Success("Course updated successfully");
+            } else {
+                await _mess.Error("Failed to update course");
             }
         } catch (Exception ex) {
             await _mess.Error($"Error: {ex.Message}");
