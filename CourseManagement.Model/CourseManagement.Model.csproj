@@ -10,5 +10,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10" />
 		<PackageReference Include="NETCore.MailKit" Version="2.1.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 </Project>

@@ -1,0 +1,68 @@
+﻿@using AntDesign
+@using BlazorAppSecure.Model
+@using BlazorAppSecure.Sevices.Profile
+
+@inject IAccountService ProfileService
+@inject IMessageService _mess
+
+<div class="space-y-6">
+    <div class="shrink-0 bg-border h-[1px] w-full"></div>
+    <Form Model="userModel" OnFinish="HandleSubmit" class="space-y-8" Layout="FormLayout.Vertical">
+        <FormItem Label="Full Name" Name="FullName">
+            <Input @bind-Value="userModel.FullName" />
+            <p class="text-sm text-muted-foreground">
+                This name will be displayed in this application.
+            </p>
+        </FormItem>
+        
+        <FormItem Label="Email" Name="Email">
+            <Input @bind-Value="userModel.Email" Disabled="true" />
+            <p class="text-sm text-muted-foreground">
+                You can not change the email (contact the admin if needed)
+            </p>
+        </FormItem>
+        
+        <FormItem Label="Phone Number" Name="PhoneNumber">
+            <Input @bind-Value="userModel.PhoneNumber" />
+        </FormItem>
+        
+        
+        <FormItem>
+            <Button Type="ButtonType.Primary" HtmlType="submit">Update Account</Button>
+        </FormItem>
+    </Form>
+</div>
+
+@code {
+    private UserViewModel userModel = new UserViewModel();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+    private async Task LoadProfile(){
+        try
+        {
+            userModel = await ProfileService.GetMyProfile();
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error loading profile: {ex.Message}");
+        }
+    }
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            await ProfileService.UpdateProfile(userModel.Email, userModel);
+            await _mess.Success("Update profile successfully");
+            await LoadProfile();
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error updating profile: {ex.Message}");
+        }
+    }
+    
+}

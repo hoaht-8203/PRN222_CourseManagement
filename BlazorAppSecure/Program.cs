@@ -2,6 +2,7 @@ using BlazorAppSecure;
 using BlazorAppSecure.Services.Blog;
 using BlazorAppSecure.Sevices;
 using BlazorAppSecure.Sevices.Blog;
+using BlazorAppSecure.Sevices.Profile;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -16,6 +17,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddTransient<CutomHttpHandler>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped(sp => (IAccountManagement)sp.GetRequiredService<AuthenticationStateProvider>());
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = 

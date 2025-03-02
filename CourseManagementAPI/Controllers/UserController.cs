@@ -5,6 +5,7 @@ using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -20,6 +21,29 @@ namespace CourseManagementAPI.Controllers
         {
             _signInManager = signInManager;
             _userService = userService;
+        }
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+            if (userEmail is null)
+            {
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            var user = await _userService.GetUserByEmail(userEmail.Value);
+            return Ok(user);
+
+        }
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateUser([FromBody] AppUserVm userModel)
+        {
+            var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+            var result = await _userService.UpdateUser(userEmail.Value, userModel);
+            if (!result)
+            {
+                return BadRequest();
+            }
+            return NoContent();
         }
 
         [Authorize(Roles = Role.Role_User_Admin)]
