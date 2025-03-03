@@ -12,6 +12,7 @@ namespace CourseManagement.Model.Model
         public string Description { get; set; }
         public string UrlVideo { get; set; }
         public int? Order { get; set; }
+        public TimeSpan? VideoDuration { get; set; }
         public LessonStatus Status { get; set; } = LessonStatus.Active;
 
         public int ModuleId { get; set; }

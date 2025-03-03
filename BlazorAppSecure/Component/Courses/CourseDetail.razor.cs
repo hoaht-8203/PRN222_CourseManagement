@@ -78,10 +78,18 @@ public class CourseDetailBase : ComponentBase {
         return $"{duration.Minutes}:{duration.Seconds:D2}";
     }
 
-    protected async Task OnVideoUrlChanged() {
+    protected async Task OnVideoUrlChangedAdd() {
         if (!string.IsNullOrEmpty(AddNewLessonModel.UrlVideo)) {
             videoDuration = await GetYouTubeDuration(AddNewLessonModel.UrlVideo);
             AddNewLessonModel.Duration = videoDuration;
+            StateHasChanged();
+        }
+    }
+
+    protected async Task OnVideoUrlChangedUpdate() {
+        if (!string.IsNullOrEmpty(UpdateLessonModel.UrlVideo)) {
+            videoDuration = await GetYouTubeDuration(UpdateLessonModel.UrlVideo);
+            UpdateLessonModel.Duration = videoDuration;
             StateHasChanged();
         }
     }
@@ -218,6 +226,7 @@ public class CourseDetailBase : ComponentBase {
                 UrlVideo = lessonDetail.UrlVideo,
                 ModuleId = lessonDetail.ModuleId,
                 NewOrder = null,
+                Duration = lessonDetail.Duration
             };
             VisibleEditLesson = true;
         }
@@ -447,6 +456,7 @@ public class CourseDetailBase : ComponentBase {
 
     protected async void UpdateLesson() {
         try {
+            UpdateLessonModel.Duration = videoDuration;
             var response = await httpClient
                 .PostAsJsonAsync("/api/Lesson/update", UpdateLessonModel);
 

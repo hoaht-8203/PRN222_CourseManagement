@@ -63,6 +63,7 @@ namespace CourseManagement.Model.DTOs {
             public int ModuleId { get; set; }
             public int Order { get; set; }
             public string ModuleName { get; set; }
+            public TimeSpan? VideoDuration { get; set; }
         }
     }
 

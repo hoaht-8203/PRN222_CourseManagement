@@ -51,6 +51,7 @@ namespace CourseManagement.Model.DTOs {
         public int? NewOrder { get; set; }
         [Required]
         public int ModuleId { get; set; }
+        public TimeSpan? Duration { get; set; }
     }
 
     public class RemoveLessonRequest {
@@ -76,6 +77,7 @@ namespace CourseManagement.Model.DTOs {
         public string Description { get; set; }
         public string UrlVideo { get; set; }
         public int? Order { get; set; }
+        public TimeSpan? Duration { get; set; }
         public int Status { get; set; }
 
         public int ModuleId { get; set; }

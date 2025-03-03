@@ -33,7 +33,8 @@ namespace CourseManagement.DataAccess.Repositorys {
                 UrlVideo = req.UrlVideo,
                 ModuleId = req.ModuleId,
                 Order = maxLessonOrder + 1,
-                Status = LessonStatus.Active
+                Status = LessonStatus.Active,
+                VideoDuration = req.Duration
             };
 
             _context.Lessons.Add(newLesson);
@@ -59,6 +60,8 @@ namespace CourseManagement.DataAccess.Repositorys {
             lesson.Title = req.Title;
             lesson.Description = req.Description;
             lesson.UrlVideo = req.UrlVideo;
+            lesson.VideoDuration = req.Duration;
+
             if(lesson.ModuleId != req.ModuleId) {
                 var maxLessonOrder = await _context.Lessons
                 .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
@@ -200,7 +203,8 @@ namespace CourseManagement.DataAccess.Repositorys {
                 UrlVideo = foundedLesson.UrlVideo,
                 ModuleId = foundedLesson.ModuleId,
                 Order = foundedLesson.Order,
-                Status = (int)foundedLesson.Status
+                Status = (int)foundedLesson.Status,
+                Duration = foundedLesson.VideoDuration
             };
 
             return res;
