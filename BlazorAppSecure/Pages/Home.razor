@@ -4,41 +4,156 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world! OK</h1>
+<div class="card-homepage">
+    <div>
+        <Tag Color="TagColor.Blue">1.183+ others learned</Tag>
+        <h3>Pro Course</h3>
+    </div>
 
-Welcome to your new app.
+    <Row Gutter="(16,16)">
+        <GridCol Span="6">
+            <Card Bordered Cover="coverTemplate" class="course-card">
+                <ChildContent>
+                    <CardMeta Title="Meta Card" Description="This is the description" />
 
-<Button Type="ButtonType.Primary">Hello World!</Button>
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="course-type">1.299.000đ</span>
+                        <div>
+                            <Button Type="ButtonType.Primary">Preview</Button>
+                            <Button>Go to learn</Button>
+                        </div>
+                    </div>
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="@IconType.Outline.User" /> 133.240</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> 33.120</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> 10h18p</CardAction>
+                </ActionTemplate>
+            </Card>
+        </GridCol>
+        <GridCol Span="6">
+            <Card Bordered Cover="coverTemplate">
+                <ChildContent>
+                    <CardMeta Title="Meta Card" Description="This is the description" />
 
-<Space>
-    <SpaceItem>
-        <Button Type="ButtonType.Default" OnClick="Success">
-            Success
-        </Button>
-    </SpaceItem>
-    <SpaceItem>
-        <Button Type="ButtonType.Default" OnClick="Error">
-            Error
-        </Button>
-    </SpaceItem>
-    <SpaceItem>
-        <Button Type="ButtonType.Default" OnClick="Warning">
-            Warning
-        </Button>
-    </SpaceItem>
-</Space>
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="course-type">1.399.000đ</span>
+                        <div>
+                            <Button Type="ButtonType.Primary">Preview</Button>
+                            <Button>Go to learn</Button>
+                        </div>
+                    </div>
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="@IconType.Outline.User" /> 133.240</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> 33.120</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> 29h5p</CardAction>
+                </ActionTemplate>
+            </Card>
+        </GridCol>
+        <GridCol Span="6">
+            <Card Bordered Cover="coverTemplate">
+                <ChildContent>
+                    <CardMeta Title="Meta Card" Description="This is the description" />
 
-@code {
-    private async Task Success() {
-        await _message.Success("This is a success message");
-    }
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="course-type">299.000đ</span>
+                        <div>
+                            <Button Type="ButtonType.Primary">Preview</Button>
+                            <Button>Go to learn</Button>
+                        </div>
+                    </div>
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="@IconType.Outline.User" /> 133.240</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> 33.120</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> 29h5p</CardAction>
+                </ActionTemplate>
+            </Card>
+        </GridCol>
+    </Row>
 
-    private async Task Error() {
-        await _message.Error("This is an error message");
+    <div class="mt-5">
+        <Tag Color="TagColor.Blue">433.183+ others learned</Tag>
+        <h3>Free Course</h3>
+    </div>
 
-    }
+    <Row Gutter="(16,16)">
+        <GridCol Span="6">
+            <Card Bordered Cover="coverTemplate" class="course-card">
+                <ChildContent>
+                    <CardMeta Title="Meta Card" Description="This is the description" />
 
-    private async Task Warning() {
-        await _message.Warning("This is a warning message");
-    }
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="course-type">Free Course</span>
+                        <div>
+                            <Button Type="ButtonType.Primary">Preview</Button>
+                            <Button>Go to learn</Button>
+                        </div>
+                    </div>
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="@IconType.Outline.User" /> 133.240</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> 33.120</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> 10h18p</CardAction>
+                </ActionTemplate>
+            </Card>
+        </GridCol>
+        <GridCol Span="6">
+            <Card Bordered Cover="coverTemplate">
+                <ChildContent>
+                    <CardMeta Title="Meta Card" Description="This is the description" />
+
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="course-type">Free Course</span>
+                        <div>
+                            <Button Type="ButtonType.Primary">Preview</Button>
+                            <Button>Go to learn</Button>
+                        </div>
+                    </div>
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="@IconType.Outline.User" /> 133.240</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> 33.120</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> 29h5p</CardAction>
+                </ActionTemplate>
+            </Card>
+        </GridCol>
+        <GridCol Span="6">
+            <Card Bordered Cover="coverTemplate">
+                <ChildContent>
+                    <CardMeta Title="Meta Card" Description="This is the description" />
+
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <span class="course-type">Free Course</span>
+                        <div>
+                            <Button Type="ButtonType.Primary">Preview</Button>
+                            <Button>Go to learn</Button>
+                        </div>
+                    </div>
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="@IconType.Outline.User" /> 133.240</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> 33.120</CardAction>
+                    <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> 29h5p</CardAction>
+                </ActionTemplate>
+            </Card>
+        </GridCol>
+    </Row>
+</div>
+
+@code
+{
+    RenderFragment coverTemplate = @<img alt="example" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIK8uoM7XCJ-Od4EQvRQhhwLkXvNy9ZTKQnA&s" />;
 }
+
+<style>
+    .card-homepage .ant-card-body {
+        padding: 16px;
+    }
+
+    .card-homepage .course-type {
+        color: #EC4899;
+        font-weight: bolder;
+        font-size: 1.2rem    }
+</style>

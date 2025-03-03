@@ -1,0 +1,48 @@
+﻿@page "/manage/{section}"
+@using AntDesign
+
+
+<PageHeader Title="Information Management" SubTitle="All information about this account" />
+
+<Divider />
+
+<Layout>
+    <Row Gutter="16">
+        <!-- Sidebar (Navigation) -->
+        <Col Span="24">
+            <Menu Mode="MenuMode.Horizontal" DefaultSelectedKeys="@selectedKeys">
+                <MenuItem Key="1" Icon="user">
+                    <NavLink href="/manage/profile">Profile</NavLink>
+                </MenuItem>
+                <MenuItem Key="2" Icon="lock">
+                    <NavLink href="/manage/change-password">Change Password</NavLink>
+                </MenuItem>
+                <MenuItem Key="3" Icon="book">
+                    <NavLink href="/manage/courses">Courses</NavLink>
+                </MenuItem>
+            </Menu>
+        </Col>
+
+        <!-- Main Content -->
+        <Col Span="24" Style="margin-top: 16px;">
+            <DynamicComponent Type="currentComponent" />
+        </Col>
+    </Row>
+</Layout>
+
+@code {
+    private string[] selectedKeys = new string[] { "1" };
+	[Parameter] public string section { get; set; }
+	private Type currentComponent = typeof(Profile);
+
+	protected override void OnParametersSet()
+	{
+		currentComponent = section switch
+		{
+			"profile" => typeof(Profile),
+			"change-password" => typeof(ChangePassword),
+			"courses" => typeof(Courses),
+			_ => typeof(Profile)
+		};
+	}
+}

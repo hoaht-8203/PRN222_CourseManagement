@@ -1,8 +1,10 @@
 ﻿using CourseManagement.DataAccess.Repositorys;
+using CourseManagement.DataAccess.Repositorys.IRepositorys;
 using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace CourseManagementAPI.Controllers {
     [Route("api/[controller]")]
@@ -31,7 +33,7 @@ namespace CourseManagementAPI.Controllers {
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchLessonRequest req) {
             try {
-                var lessons = await lessonRepository.SearchModule(req);
+                var lessons = await lessonRepository.SearchLesson(req);
                 return Ok(lessons);
             } catch (ArgumentException ex) {
                 return BadRequest(new { Error = ex.Message });
@@ -63,6 +65,32 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while removing the lesson" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("reorder-lessons")]
+        public async Task<IActionResult> ReorderLesson([FromBody] ReorderLessonsRequest req) {
+            try {
+                await lessonRepository.ReorderLessons(req);
+                return Ok(new { Message = "Reorder list lessons successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while reorder the lesson list" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpGet("detail")]
+        public async Task<IActionResult> Detail([FromQuery] DetailLessonRequest req) {
+            try {
+                var res = await lessonRepository.Detail(req);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while get detail the lesson" });
             }
         }
     }

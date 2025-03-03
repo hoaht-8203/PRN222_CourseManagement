@@ -79,7 +79,7 @@ namespace CourseManagementAPI.Services
             var userIdentity = await _userManager.FindByEmailAsync(emailId);
             if (userIdentity == null) return false;
 
-            userIdentity.UserName = user.UserName;
+            userIdentity.UserName = string.IsNullOrWhiteSpace(user.UserName) ? userIdentity.UserName : user.UserName; ;
             userIdentity.FullName = user.FullName;
             userIdentity.Email = user.Email;
             userIdentity.PhoneNumber = user.PhoneNumber;
