@@ -1,0 +1,141 @@
+﻿@page "/blogs/detail/{Id:int}"
+@using AntDesign
+@using BlazorAppSecure.Model
+@using BlazorAppSecure.Sevices.Blog
+@using CourseManagement.Model.Constant
+@inject IBlogService BlogService
+@inject IMessageService _mess
+@inject NavigationManager NavigationManager
+
+<PageTitle>Blog Detail</PageTitle>
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            Home
+        </BreadcrumbItem>
+        <BreadcrumbItem Href="/blogs">
+            Blog Management
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            Blog Detail
+        </BreadcrumbItem>
+    </Breadcrumb>
+</div>
+
+<div style="margin-bottom: 24px;">
+    <Button OnClick="@NavigateBack"
+            Icon="@IconType.Outline.ArrowLeft"
+            Style="border-radius: 4px; padding: 4px 14px;">
+        Back to
+    </Button>
+</div>
+
+@if (blog == null)
+{
+    <Spin Spinning="true" Style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+        <span style="font-size: 16px; color: #666;">Loading...</span>
+    </Spin>
+}
+else
+{
+    <div style="padding: 16px;">
+        <Card Style="max-width: 800px; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);" Hoverable="true">
+            <Body>
+                <h1 style="margin-bottom: 24px; font-weight: 600; color: #333;">@blog.Title</h1>
+
+                @if (!string.IsNullOrEmpty(blog.UrlImage))
+                {
+                    <div style="display: flex; justify-content: center; align-items: center;">
+                        <Image Src="@(string.IsNullOrEmpty(blog.UrlImage) ? previewImageUrl : blog.UrlImage)"
+                               Fallback="@errorImageUrl"
+                               Style="object-fit: contain;" />
+                    </div>
+                }
+
+                <p style="margin-bottom: 32px; line-height: 1.8; font-size: 16px; color: #444;">
+                    @((MarkupString)blog.Content.Replace("\n", "<br>"))
+                </p>
+
+                <Card Style="background: #fafafa; border-radius: 8px;" Bordered="false">
+                    <Space Direction="SpaceDirection.Vertical">
+                        <span style="font-size: 14px; color: #666;">
+                            <strong>Created At:</strong> @blog.CreatedAt.ToString("MMMM dd, yyyy HH:mm")
+                        </span>
+                        <span style="font-size: 14px; color: #666;">
+                            <strong>Views:</strong> @blog.ViewCount
+                        </span>
+                        <span style="font-size: 14px; color: #666;">
+                            <strong>Status:</strong>
+                            @if (blog.Status == BlogStatus.Draft)
+                            {
+                                <Tag Color="TagColor.Yellow">Draft</Tag>
+                            }
+                            else if (blog.Status == BlogStatus.Published)
+                            {
+                                <Tag Color="TagColor.Green">Published</Tag>
+                            }
+                        </span>
+                        @if (blog.Categories != null && blog.Categories.Any())
+                        {
+                            <Space Wrap="true">
+
+                                <span style="font-size: 14px; color: #666; margin-right: 12px;">
+
+                                    <strong>Categories:  </strong>
+                                </span>
+                                @foreach (var category in blog.Categories)
+                                {
+                                    <Tag Color="TagColor.Blue" Style="margin-right: 12px;">@category.Name</Tag>
+                                }
+                            </Space>
+                        }
+                    </Space>
+                </Card>
+            </Body>
+        </Card>
+    </div>
+}
+
+@code {
+    string previewImageUrl = "https://placehold.co/1920x1080?text=Preview%20Image&font=roboto";
+    string errorImageUrl = "https://placehold.co/1920x1080?text=This%20Image%20Is%20Error&font=roboto";
+    [Parameter]
+    public int Id { get; set; }
+
+    private BlogModel blog;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBlogDetail();
+    }
+
+    private async Task LoadBlogDetail()
+    {
+        try
+        {
+            isLoading = true;
+            blog = await BlogService.GetBlogById(Id);
+            if (blog == null)
+            {
+                await _mess.Error("Blog not found!");
+                NavigationManager.NavigateTo("/blogs");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error loading blog: {ex.Message}");
+            NavigationManager.NavigateTo("/blogs");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/blogs");
+    }
+}

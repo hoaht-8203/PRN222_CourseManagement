@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CourseManagement.Model.Constant;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -23,13 +24,18 @@ namespace CourseManagement.Model.Model
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public int ViewCount { get; set; } = 0;
+        public BlogStatus Status { get; set; } = BlogStatus.Published;
 
         public string UserId { get; set; }
+
+        [JsonIgnore]
         [ForeignKey("UserId")]
         public virtual AppUser User { get; set; }
 
         [JsonIgnore]
 
         public virtual ICollection<Category> Categories { get; set; }
+
+
     }
 }

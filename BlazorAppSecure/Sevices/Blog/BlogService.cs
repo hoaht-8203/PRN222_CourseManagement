@@ -1,9 +1,7 @@
-﻿using BlazorAppSecure.Model;
-using BlazorAppSecure.Services.Blog;
-using System.Net.Http.Json;
-using System.Net;
+﻿
 using BlazorAppSecure.Sevices.Blog;
-using System.Net.Http;
+using CourseManagement.Model.ViewModel;
+using System.Net.Http.Json;
 
 namespace BlazorAppSecure.Services.Blog
 {
@@ -63,14 +61,17 @@ namespace BlazorAppSecure.Services.Blog
             }
         }
 
-
-        public async Task AddBlog(BlogModel blog)
+        public async Task<bool> AddBlog(BlogVm blog)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("api/Blog/add", blog);
 
-                if (!response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
+                {
+                    return true; 
+                }
+                else
                 {
                     var errorMessage = await response.Content.ReadAsStringAsync();
                     throw new Exception($"Failed to add Blog. Status Code: {response.StatusCode}. Error: {errorMessage}");
@@ -82,11 +83,21 @@ namespace BlazorAppSecure.Services.Blog
             }
         }
 
-        public async Task UpdateBlog(int id, BlogModel blog)
+
+        public async Task UpdateBlog(int id, BlogEditModel blog)
         {
+            var blogVm = new BlogVm
+            {
+                Title = blog.Title,
+                Content = blog.Content,
+                UrlImage = blog.UrlImage,
+                Status = blog.Status,
+                CategoryIds = blog.CategoryIds
+            };
+
             try
             {
-                var response = await _httpClient.PutAsJsonAsync($"api/Blog/update/{id}", blog);
+                var response = await _httpClient.PostAsJsonAsync($"api/Blog/update/{id}", blogVm);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -97,6 +108,24 @@ namespace BlazorAppSecure.Services.Blog
             catch (Exception ex)
             {
                 throw new Exception($"Error updating Blog with ID {id}.", ex);
+            }
+        }
+
+        public async Task UpdateBlogStatus(int blogId, int status)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"api/Blog/update-status/{blogId}", new { status });
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Failed to update Blog status with ID {blogId}. Status Code: {response.StatusCode}. Error: {errorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating Blog status with ID {blogId}.", ex);
             }
         }
 
