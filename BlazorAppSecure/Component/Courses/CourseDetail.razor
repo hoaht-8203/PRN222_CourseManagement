@@ -22,26 +22,26 @@
         </div>
         <GridRow Gutter="12">
             <GridCol Span="6">
-                @if (visible) {
+                @* @if (visible) {
                     <div class="mb-2">
                         <Alert Message="Tip: You can right click on lesson to see the actions you can do with this item" 
                         Type="AlertType.Info" 
                         Closable 
                         AfterClose="handleClose" />
                     </div>
-                }
+                } *@
                 <Collapse DefaultActiveKey="@(new[] { "1" })"
                           OnChange="Callback"
                           ExpandIconPosition="@expandIconPosition"
                           ExpandIcon="@IconType.Outline.CaretRight"
-                          Style="@($"max-height: {(visible ? "705px" : "775px")}; overflow: auto;")">
+                          Style="@($"max-height: 775px; overflow: auto;")">
                     @if (!CourseDetailModel.Modules.Any()) {
                         <div class="d-flex justify-content-center align-items-center" style="height: 685px"><Empty /></div>
                     } else {
                         @foreach (var module in CourseDetailModel.Modules) {
                             <Panel Header="@module.Title" Key="@module.Order.ToString()">
                                 <ExtraTemplate>
-                                    <div @onclick:stopPropagation>
+                                    @* <div @onclick:stopPropagation>
                                         <Dropdown Trigger="@(new Trigger[] { Trigger.Click })" Placement="Placement.RightTop">
                                             <Overlay>
                                                 <Menu Style="width: 100px">
@@ -57,7 +57,7 @@
                                                 <Icon Type="@IconType.Outline.Setting" />
                                             </ChildContent>
                                         </Dropdown>
-                                    </div>
+                                    </div> *@
                                 </ExtraTemplate>
                                 <ChildContent>
                                     @if (module.Lessons == null || !module.Lessons.Any()) {
@@ -65,28 +65,18 @@
                                     } else {
                                         <AntList DataSource="@module.Lessons" Loading="LoadingCourseDetail">
                                             <ChildContent Context="lesson">
-                                                <Dropdown Trigger="new Trigger[] { Trigger.ContextMenu }" 
-                                                Style="width: 100% !important">
-                                                    <Overlay>
-                                                        <Menu>
-                                                            <MenuItem>Edit</MenuItem>
-                                                            <MenuItem>Delete</MenuItem>
-                                                        </Menu>
-                                                    </Overlay>
-                                                    <ChildContent>
+                                                <ListItem Class="@(lesson.Id == CurrentLesson?.Id ? "active" : "")"
+                                                OnClick="@(() => HandleLessonClick(lesson))">
+                                                    <div class="course-detail-lesson">
                                                         <div>
-                                                            <ListItem Class="@(lesson.Id == CurrentLesson?.Id ? "active" : "")"
-                                                            OnClick="@(() => HandleLessonClick(lesson))">
-                                                                <div class="course-detail-lesson">
-                                                                    <div>
-                                                                        <Icon Type="@IconType.Outline.PlayCircle" /> @lesson.Title
-                                                                    </div>
-                                                                    @* <Icon Type="@IconType.Outline.CheckCircle" Style="color: #52c41a" /> *@
-                                                                </div>
-                                                            </ListItem>
+                                                            <Icon Type="@IconType.Outline.PlayCircle" /> @lesson.Title
                                                         </div>
-                                                    </ChildContent>
-                                                </Dropdown>
+                                                            @* <Icon Type="@IconType.Outline.CheckCircle" Style="color: #52c41a" /> *@
+                                                        @if (lesson.VideoDuration != null) {
+                                                            <Tag Color="TagColor.Blue">Duration: @FormatDuration(lesson.VideoDuration.Value)</Tag>
+                                                        }
+                                                    </div>
+                                                </ListItem>
                                             </ChildContent>
                                         </AntList>
                                     }
@@ -186,7 +176,7 @@ Width="500">
                     <Input Placeholder="Please enter preview video url"
                            TValue="string"
                            @bind-Value="@context.UrlVideo"
-                           @bind-Value:after="OnVideoUrlChanged" />
+                           @bind-Value:after="OnVideoUrlChangedAdd" />
                     @if (!string.IsNullOrEmpty(context.UrlVideo)) {
                         <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
@@ -197,7 +187,7 @@ Width="500">
                         </div>
                         @if (videoDuration.HasValue) {
                             <div class="mt-2">
-                                <Tag Color="TagColor.Blue">Duration: @FormatDuration(videoDuration.Value)</Tag>
+                                <Tag Color="TagColor.Blue">@FormatDuration(videoDuration.Value)</Tag>
                             </div>
                         }
                     }
@@ -391,7 +381,7 @@ Width="700">
             <AntDesign.Col Span="24">
                 <Text>Video URL</Text>
                 <FormItem>
-                    <Input Placeholder="Please enter preview video url" TValue="string" @bind-Value="@context.UrlVideo"></Input>
+                    <Input Placeholder="Please enter preview video url" TValue="string" @bind-Value="@context.UrlVideo" @bind-Value:after="OnVideoUrlChangedUpdate"></Input>
                     @if (!string.IsNullOrEmpty(context.UrlVideo)) {
                         <div class="mt-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
@@ -400,6 +390,12 @@ Width="700">
                                     allowfullscreen>
                             </iframe>
                         </div>
+
+                        @if (videoDuration.HasValue) {
+                            <div class="mt-2">
+                                <Tag Color="TagColor.Blue">Duration: @FormatDuration(videoDuration.Value)</Tag>
+                            </div>
+                        }
                     }
                 </FormItem>
             </AntDesign.Col>
