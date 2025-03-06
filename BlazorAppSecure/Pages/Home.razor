@@ -145,81 +145,18 @@
 <h1>Blazored.TextEditor Usage Examples</h1>
 
 <h3>Basic Example</h3>
-<BlazoredTextEditor @ref="@richEditor">
-    <ToolbarContent>
-        @((MarkupString)toolbar)
-    </ToolbarContent>
-    <EditorContent>
-        @((MarkupString)body)
-    </EditorContent>
-</BlazoredTextEditor>
-<br />
-<br />
-<h3>Show the Toolbar Below the Editor</h3>
-<BlazoredTextEditor BottomToolbar="true"
-                    @ref="@richEditor">
-    <ToolbarContent>
-        @((MarkupString)toolbar)
-    </ToolbarContent>
-    <EditorContent>
-        @((MarkupString)body)
-    </EditorContent>
-</BlazoredTextEditor>
-<br />
-<br />
-<h3>Styled Toolbar</h3>
-<BlazoredTextEditor @ref="@richEditor"
-                    ToolbarCSSClass="rounded colored-border"
-                    ToolbarCssStyle="background: lightpink">
-    <ToolbarContent>
-        @((MarkupString)toolbar)
-    </ToolbarContent>
-    <EditorContent>
-        @((MarkupString)body)
-    </EditorContent>
-</BlazoredTextEditor>
-<br />
-<br />
-<h3>Styled Editor</h3>
-<BlazoredTextEditor EditorCSSClass="rounded colored-border"
-                    EditorCssStyle="padding: 10px; background: lightpink"
-                    @ref="@richEditor">
-    <ToolbarContent>
-        @((MarkupString)toolbar)
-    </ToolbarContent>
-    <EditorContent>
-        @((MarkupString)body)
-    </EditorContent>
-</BlazoredTextEditor>
+<div>
+    <BlazoredTextEditor @ref="@richEditor">
+        <ToolbarContent>
+            @((MarkupString)toolbar)
+        </ToolbarContent>
+        <EditorContent>
+            @((MarkupString)body)
+        </EditorContent>
+    </BlazoredTextEditor>
 
-<br />
-<br />
-
-<hr />
-
-<h3>Syntax</h3>
-<p>See <a href="https://quilljs.com/docs/modules/syntax" target="_blank">Syntax Highlighter Module</a>.</p>
-<p>Off</p>
-<BlazoredTextEditor @ref="@richEditor">
-    <ToolbarContent>
-        @((MarkupString)toolbar)
-    </ToolbarContent>
-    <EditorContent>
-<pre class="ql-syntax" spellcheck="false">const <span class="hljs-keyword">language</span> <span class="hljs-operator">=</span> "JavaScript";
-console.<span class="hljs-built_in">log</span>("I love " <span class="hljs-operator">+</span> <span class="hljs-keyword">language</span> <span class="hljs-operator">+</span> "!");</pre>
-    </EditorContent>
-</BlazoredTextEditor>
-<p>On</p>
-<BlazoredTextEditor Syntax="true"
-                    @ref="@richEditor">
-    <ToolbarContent>
-        @((MarkupString)toolbar)
-    </ToolbarContent>
-    <EditorContent>
-<pre class="ql-syntax" spellcheck="false">const <span class="hljs-keyword">language</span> <span class="hljs-operator">=</span> "JavaScript";
-console.<span class="hljs-built_in">log</span>("I love " <span class="hljs-operator">+</span> <span class="hljs-keyword">language</span> <span class="hljs-operator">+</span> "!");</pre>
-    </EditorContent>
-</BlazoredTextEditor>
+    <Button OnClick="HandleSubmit">Submit editor text</Button>
+</div>
 
 @code
 {
@@ -228,6 +165,15 @@ console.<span class="hljs-built_in">log</span>("I love " <span class="hljs-opera
     BlazoredTextEditor richEditor = default!;
     string toolbar = """"...markup here..."""";
     string body = """"...markup here..."""";
+
+    protected async void HandleSubmit()
+    {
+        // Lấy nội dung HTML từ editor
+        string htmlContent = await richEditor.GetHTML();
+
+        // Tại đây có thể lưu htmlContent vào database
+        Console.WriteLine(htmlContent);
+    }
 
     protected override void OnInitialized() {
         toolbar = """"
@@ -261,10 +207,7 @@ console.<span class="hljs-built_in">log</span>("I love " <span class="hljs-opera
             </span>
             """";
 
-        body = """"
-            <h4>This Toolbar works with HTML</h4>
-            <a href="https://BlazorHelpWebsite.com">BlazorHelpWebsite.com</a>
-            """";
+        body = "";
     }
 }
 
