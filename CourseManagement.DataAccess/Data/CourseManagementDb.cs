@@ -15,6 +15,7 @@ namespace CourseManagement.DataAccess.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Blog> Blogs { get; set; }
+        public DbSet<CourseLearningOutcome> CourseLearningOutcomes { get; set; }
       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,6 +64,12 @@ namespace CourseManagement.DataAccess.Data
                 .HasOne(e => e.Lesson)
                 .WithMany(c => c.LessonProgresses)
                 .HasForeignKey(e => e.LessonId);
+
+            modelBuilder.Entity<CourseLearningOutcome>()
+                .HasOne(clo => clo.Course)
+                .WithMany(c => c.LearningOutcomes)
+                .HasForeignKey(clo => clo.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             DataSeed.InsertData(modelBuilder);
         }

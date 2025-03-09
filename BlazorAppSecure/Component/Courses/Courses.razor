@@ -300,6 +300,29 @@ Width="500"
                 </FormItem>
             </AntDesign.Col>
         </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>What You'll Learn</Text>
+                <FormItem>
+                    <div class="d-flex gap-2 mb-2">
+                        <Input @bind-Value="newOutcome" Placeholder="Enter a learning outcome" />
+                        <Button Type="ButtonType.Primary" OnClick="AddLearningOutcome">Add</Button>
+                    </div>
+                    @if (context.LearningOutcomes.Any()) {
+                        <ul class="learning-outcomes-list">
+                            @foreach (var outcome in context.LearningOutcomes) {
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span>@outcome</span>
+                                    <Button Type="ButtonType.Link" Danger OnClick="() => RemoveLearningOutcome(outcome)">
+                                        <Icon Type="delete" />
+                                    </Button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
         <Row Class="mt-3">
             <Col Span="24" Class="d-flex justify-content-end gap-2">
                 <Button Type="ButtonType.Default" @onclick="close">Cancel</Button>
@@ -408,6 +431,29 @@ Width="500">
                 </FormItem>
             </AntDesign.Col>
         </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>What You'll Learn</Text>
+                <FormItem>
+                    <div class="d-flex gap-2 mb-2">
+                        <Input @bind-Value="newUpdateOutcome" Placeholder="Enter a learning outcome" />
+                        <Button Type="ButtonType.Primary" OnClick="AddUpdateLearningOutcome">Add</Button>
+                    </div>
+                    @if (context.LearningOutcomes.Any()) {
+                        <ul class="learning-outcomes-list">
+                            @foreach (var outcome in context.LearningOutcomes) {
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span>@outcome</span>
+                                    <Button Type="ButtonType.Link" Danger OnClick="() => RemoveUpdateLearningOutcome(outcome)">
+                                        <Icon Type="delete" />
+                                    </Button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
         <Row Class="mt-3">
             <Col Span="24" Class="d-flex justify-content-end gap-2">
                 <Button Type="ButtonType.Default" @onclick="close">Cancel</Button>
@@ -439,6 +485,30 @@ Width="500">
     bool LoadingCourseDetail = false;
 
     private Form<CategoryModel> _form;
+    private string newOutcome = "";
+    private string newUpdateOutcome = "";
+
+    private void AddLearningOutcome() {
+        if (!string.IsNullOrWhiteSpace(newOutcome)) {
+            courseModel.LearningOutcomes.Add(newOutcome);
+            newOutcome = "";
+        }
+    }
+
+    private void RemoveLearningOutcome(string outcome) {
+        courseModel.LearningOutcomes.Remove(outcome);
+    }
+
+    private void AddUpdateLearningOutcome() {
+        if (!string.IsNullOrWhiteSpace(newUpdateOutcome)) {
+            updateCourseModel.LearningOutcomes.Add(newUpdateOutcome);
+            newUpdateOutcome = "";
+        }
+    }
+
+    private void RemoveUpdateLearningOutcome(string outcome) {
+        updateCourseModel.LearningOutcomes.Remove(outcome);
+    }
 
     RenderFragment FormTemplate() {
         return
@@ -489,11 +559,9 @@ Width="500">
         _nav.NavigateTo($"/courses/detail/{model.Id}");
     }
 
-    async Task OpenUpdateCourseDrawer(string courseId)
-    {
+    async Task OpenUpdateCourseDrawer(string courseId) {
         var courseDetailRes = await FetchCourseDetail(courseId);
-        if (courseDetailRes != null)
-        {
+        if (courseDetailRes != null) {
             updateCourseModel = new() {
                     Id = courseDetailRes.Id,
                     Title = courseDetailRes.Title,
@@ -502,11 +570,11 @@ Width="500">
                     PreviewVideoUrl = courseDetailRes.PreviewVideoUrl,
                     Level = (CourseLevel)courseDetailRes.Level,
                     CategoryId = courseDetailRes.CategoryId,
-                    IsProCourse = (int)courseDetailRes.CourseType == (int)CourseType.ProCourse
+                    IsProCourse = (int)courseDetailRes.CourseType == (int)CourseType.ProCourse,
+                    LearningOutcomes = courseDetailRes.LearningOutcomes ?? new List<string>()
                 };
             visibleUpdateCourse = true;
-        } else
-        {
+        } else {
             await _mess.Error($"Course with id {courseId} is not existed");
         }
     }
@@ -764,4 +832,16 @@ Width="500">
     .total-course h6 {
         color: darkorange
     }
+
+    .learning-outcomes-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .learning-outcomes-list li {
+            padding: 8px;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
 </style>

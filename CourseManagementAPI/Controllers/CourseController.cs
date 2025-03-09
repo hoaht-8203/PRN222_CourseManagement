@@ -36,7 +36,7 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
+        [AllowAnonymous]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchCourseRequest req) {
             try {

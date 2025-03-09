@@ -1,7 +1,112 @@
 ﻿@page "/preview"
+@using AntDesign
 
-<h3>Preview</h3>
+<div class="course-container">
+    <Title Level="2">Kiến Thức Nhập Môn IT</Title>
+
+    <div class="course-intro">
+        <Row>
+            <Col Span="16">
+            <Paragraph>
+                Để có cái nhìn tổng quan về ngành IT - Lập trình web các bạn nên xem các videos tại khóa này trước nhé.
+            </Paragraph>
+
+            <Title Level="4">Bạn sẽ học được gì?</Title>
+            <ul class="learning-list">
+                <li><Icon Type="check" Theme="IconThemeType.Outline" /> Các kiến thức cơ bản, nền móng của ngành IT</li>
+                <li><Icon Type="check" Theme="IconThemeType.Outline" /> Các khái niệm, thuật ngữ cốt lõi khi triển khai ứng dụng</li>
+                <li><Icon Type="check" Theme="IconThemeType.Outline" /> Các mô hình, tiến trúc cơ bản khi triển khai ứng dụng</li>
+                <li><Icon Type="check" Theme="IconThemeType.Outline" /> Hiểu hơn về cách internet và máy vi tính hoạt động</li>
+            </ul>
+
+            <Title Level="4">Nội dung khóa học</Title>
+            <div class="course-stats">
+                <Text>4 chương • 12 bài học • Thời lượng 03 giờ 26 phút</Text>
+                <Button Type="ButtonType.Link" Class="expand-all">Mở rộng tất cả</Button>
+            </div>
+
+            <Collapse>
+                <Panel Header="1. Khái niệm kỹ thuật cần biết" Extra="3 bài học">
+                </Panel>
+                <Panel Header="2. Môi trường, con người IT" Extra="3 bài học">
+                </Panel>
+                <Panel Header="3. Phương pháp, định hướng" Extra="4 bài học">
+                </Panel>
+                <Panel Header="4. Hoàn thành khóa học" Extra="2 bài học">
+                </Panel>
+            </Collapse>
+            </Col>
+
+            <Col Span="8">
+            <Card Class="course-card">
+                <Title Level="2">Miễn phí</Title>
+                <Button Type="ButtonType.Primary" Block Size="ButtonSize.Large">ĐĂNG KÝ HỌC</Button>
+
+                <ul class="course-features">
+                    <li><Icon Type="check-circle" /> Trình độ cơ bản</li>
+                    <li><Icon Type="book" /> Tổng số 12 bài học</li>
+                    <li><Icon Type="clock-circle" /> Thời lượng 03 giờ 26 phút</li>
+                    <li><Icon Type="laptop" /> Học mọi lúc, mọi nơi</li>
+                </ul>
+            </Card>
+            </Col>
+        </Row>
+    </div>
+</div>
+
+<style>
+    .course-container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .course-intro {
+        margin-top: 24px;
+    }
+
+    .learning-list {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 32px;
+    }
+
+        .learning-list li {
+            margin-bottom: 12px;
+        }
+
+    .course-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .expand-all {
+        color: #ff4d4f !important;
+        padding: 0;
+    }
+
+    .course-features {
+        list-style: none;
+        padding: 0;
+        margin-top: 24px;
+    }
+
+        .course-features li {
+            margin-bottom: 12px;
+        }
+
+    .course-card {
+        margin-left: 24px;
+        text-align: center;
+    }
+
+        .course-card :deep(.ant-card-body) {
+            padding: 24px;
+        }
+</style>
 
 @code {
-
+    // Add any necessary code-behind logic here
 }

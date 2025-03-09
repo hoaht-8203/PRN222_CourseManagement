@@ -30,6 +30,9 @@ namespace CourseManagement.DataAccess.Repositorys {
                 Status = CourseStatus.InProgress,
                 CourseType = request.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse,
                 CategoryId = foundCategory.Id,
+                LearningOutcomes = request.LearningOutcomes.Select(o => new CourseLearningOutcome {
+                    Outcome = o
+                }).ToList()
             };
 
             _context.Courses.Add(newCourse);
@@ -39,6 +42,7 @@ namespace CourseManagement.DataAccess.Repositorys {
         public async Task<DetailCourseResponse> Detail(DetailCourseRequest request) {
             var course = await _context.Courses
                     .Include(c => c.Category)
+                    .Include(c => c.LearningOutcomes)
                     .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
                         .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
                     .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
@@ -53,8 +57,10 @@ namespace CourseManagement.DataAccess.Repositorys {
                 module.Lessons = module.Lessons.OrderBy(l => l.Order).ToList();
             }
 
-            // Note: This will need AutoMapper to be injected into the repository
-            return _mapper.Map<DetailCourseResponse>(course);
+            var response = _mapper.Map<DetailCourseResponse>(course);
+            response.LearningOutcomes = course.LearningOutcomes.Select(lo => lo.Outcome).ToList();
+
+            return response;
         }
 
         public async Task RemoveCourse(RemoveCourseRequest request) {
@@ -158,7 +164,13 @@ namespace CourseManagement.DataAccess.Repositorys {
             courseFounded.Level = request.Level;
             courseFounded.CourseType = request.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse;
             courseFounded.CategoryId = request.CategoryId;
-                
+
+            _context.CourseLearningOutcomes.RemoveRange(courseFounded.LearningOutcomes);
+            courseFounded.LearningOutcomes = request.LearningOutcomes.Select(o => new CourseLearningOutcome {
+                Outcome = o,
+                CourseId = courseFounded.Id
+            }).ToList();
+
             await _context.SaveChangesAsync();
         }
     }
