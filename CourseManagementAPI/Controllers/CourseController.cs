@@ -60,7 +60,7 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
+        [Authorize]
         [HttpGet("detail")]
         public async Task<IActionResult> Detail([FromQuery] DetailCourseRequest req) {
             try {
@@ -83,6 +83,19 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while updating course details" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("update-status")]
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusRequest req) {
+            try {
+                await _courseRepository.UpdateStatus(req);
+                return Ok(new { Message = "Update course status successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while updating course status" });
             }
         }
     }

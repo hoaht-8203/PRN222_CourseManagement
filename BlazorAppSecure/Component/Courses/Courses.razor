@@ -194,7 +194,23 @@ class="table-list-course">
             <CellRender Context="cellData">
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Eye" @onclick="@(() => HandleNavigateToDetail(context))"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit" OnClick="() => OpenUpdateCourseDrawer(context.Id)"></Button>
-                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
+                @if (context.Status != CourseStatus.Publish) {
+                    <Popconfirm Title="Are you sure you want to publish this course?"
+                                OnConfirm="() => HandlePublishCourse(context.Id)"
+                                OkText="Yes"
+                                CancelText="No">
+                        <Button Type="ButtonType.Text" Icon="@IconType.Outline.Upload"></Button>
+                    </Popconfirm>
+                }
+
+                @if (context.Status == CourseStatus.Publish) {
+                    <Popconfirm Title="Are you sure you want to unpublish this course?"
+                                OnConfirm="() => HandleUnpublishCourse(context.Id)"
+                                OkText="Yes"
+                                CancelText="No">
+                        <Button Type="ButtonType.Text" Icon="@IconType.Outline.Download"></Button>
+                    </Popconfirm>
+                }
             </CellRender>
         </ActionColumn>
     </ColumnDefinitions>
@@ -825,6 +841,64 @@ Width="500">
         public IEnumerable<int>? Statuss { get; set; }
         public IEnumerable<int>? CategoryIds { get; set; }
         public IEnumerable<int>? CourseTypes { get; set; }
+    }
+
+    private async Task HandlePublishCourse(string courseId)
+    {
+        try
+        {
+            var request = new UpdateStatusRequest
+            {
+                CourseId = courseId,
+                newStatus = CourseStatus.Publish
+            };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Course/update-status", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                FetchListCourse(); // Refresh the list
+                await _mess.Success("Course published successfully");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await _mess.Error($"Failed to publish course: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleUnpublishCourse(string courseId)
+    {
+        try
+        {
+            var request = new UpdateStatusRequest
+            {
+                CourseId = courseId,
+                newStatus = CourseStatus.InProgress
+            };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Course/update-status", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                FetchListCourse(); // Refresh the list
+                await _mess.Success("Course unpublished successfully");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await _mess.Error($"Failed to unpublish course: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error: {ex.Message}");
+        }
     }
 }
 

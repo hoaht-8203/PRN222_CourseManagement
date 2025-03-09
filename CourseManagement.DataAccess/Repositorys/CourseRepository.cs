@@ -173,5 +173,15 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateStatus(UpdateStatusRequest request) {
+            var courseFounded = await _context.Courses
+               .SingleOrDefaultAsync(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+               ?? throw new ArgumentException($"Course with id {request.CourseId} not exsited or removed");
+
+            courseFounded.Status = request.newStatus;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

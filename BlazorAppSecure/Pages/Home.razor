@@ -178,13 +178,13 @@
     }
 
     void HandleNavigateToPreview(SearchCourseResponse model) {
-        _nav.NavigateTo($"/courses/preview/{model.Id}");
+        _nav.NavigateTo($"/preview/{model.Id}");
     }
 
     async void FetchListCoursePro() {
         LoadingCourseProList = true;
         try {
-            var result = await httpClient.GetAsync("/api/Course/search?CourseTypes=1");
+            var result = await httpClient.GetAsync("/api/Course/search?CourseTypes=1&Statuss=1");
 
             if (result.IsSuccessStatusCode) {
                 var resposne = await result.Content.ReadAsStringAsync();
@@ -206,7 +206,7 @@
     async void FetchListCourseFree() {
         LoadingCourseFreeList = true;
         try {
-            var result = await httpClient.GetAsync("/api/Course/search?CourseTypes=0");
+            var result = await httpClient.GetAsync("/api/Course/search?CourseTypes=0&Statuss=1");
 
             if (result.IsSuccessStatusCode) {
                 var resposne = await result.Content.ReadAsStringAsync();
