@@ -5,6 +5,8 @@ using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using CourseManagement.Model.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace CourseManagement.DataAccess.Repositorys {
     public class CourseRepository : ICourseRepository {
@@ -181,6 +183,23 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             courseFounded.Status = request.newStatus;
 
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task EnrollCourse(EnrollCourseRequest request) {
+            var courseFounded = await _context.Courses
+               .SingleOrDefaultAsync(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+               ?? throw new ArgumentException($"Course with id {request.CourseId} not exsited or removed");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == request.UserEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            Enrollment enrollment = new Enrollment() {
+                CourseId = courseFounded.Id,
+                UserId = userFound.Id
+            };
+
+            _context.enrollments.Add(enrollment);
             await _context.SaveChangesAsync();
         }
     }

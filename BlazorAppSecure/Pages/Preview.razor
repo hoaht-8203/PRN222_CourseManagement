@@ -36,7 +36,7 @@
                     <Collapse DefaultActiveKey="@ActivePanelKeys">
                         @foreach (var module in CourseDetail.Modules.OrderBy(m => m.Order))
                         {
-                            <Panel Header="@($"{module.Order}. {module.Title}")" Key="@module.Order.ToString()" Extra="@($"{module.Lessons.Count} bài học")">
+                            <Panel Header="@($"{module.Order}. {module.Title}")" Key="@module.Order.ToString()" Extra="@($"{module.Lessons.Count} lesson")">
                                 <AntList DataSource="@module.Lessons.OrderBy(l => l.Order)">
                                     <ChildContent Context="lesson">
                                         <ListItem>
