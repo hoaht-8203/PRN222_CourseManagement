@@ -30,7 +30,7 @@
                         AfterClose="handleClose" />
                     </div>
                 } *@
-                <Collapse DefaultActiveKey="@(new[] { "1" })"
+                <Collapse DefaultActiveKey="@ActiveModuleKeys"
                           OnChange="Callback"
                           ExpandIconPosition="@expandIconPosition"
                           ExpandIcon="@IconType.Outline.CaretRight"
@@ -73,7 +73,7 @@
                                                         </div>
                                                             @* <Icon Type="@IconType.Outline.CheckCircle" Style="color: #52c41a" /> *@
                                                         @if (lesson.VideoDuration != null) {
-                                                            <Tag Color="TagColor.Blue">Duration: @FormatDuration(lesson.VideoDuration.Value)</Tag>
+                                                            <Tag Color="TagColor.Blue">@FormatDuration(lesson.VideoDuration.Value)</Tag>
                                                         }
                                                     </div>
                                                 </ListItem>
@@ -103,7 +103,7 @@
                             <GridRow Gutter="32">
                                 <GridCol Span="4">
                                     <div class="d-flex">
-                                        <Button Icon="@IconType.Outline.CaretLeft">Previous lesson</Button>
+                                        <Button Icon="@IconType.Outline.CaretLeft" OnClick="NavigateToPreviousLesson">Previous lesson</Button>
                                     </div>
                                 </GridCol>
                                 <GridCol Span="16">
@@ -116,7 +116,7 @@
                                 </GridCol>
                                 <GridCol Span="4">
                                     <div class="d-flex justify-content-end">
-                                        <Button Icon="@IconType.Outline.CaretRight">Next lesson</Button>
+                                        <Button Icon="@IconType.Outline.CaretRight" OnClick="NavigateToNextLesson">Next lesson</Button>
                                     </div>
                                 </GridCol>
                             </GridRow>
@@ -427,6 +427,10 @@ Width="700">
         </Row>
     </Form>
 </Drawer>
+
+@code {
+
+}
 
 <style>
     .ant-collapse-content-box {

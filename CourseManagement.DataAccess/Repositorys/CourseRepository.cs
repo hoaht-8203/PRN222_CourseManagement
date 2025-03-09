@@ -71,24 +71,15 @@ namespace CourseManagement.DataAccess.Repositorys {
         }
 
         public async Task<List<SearchCourseResponse>> Search(SearchCourseRequest request) {
+            // First query: Get basic course information
             var query = _context.Courses
+                .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
+                    .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                .Include(c => c.Enrollments)
                 .Include(c => c.Category)
-                .Select(c => new SearchCourseResponse {
-                    Id = c.Id.ToString(),
-                    Title = c.Title,
-                    Description = c.Description,
-                    PreviewImage = c.PreviewImage,
-                    PreviewVideoUrl = c.PreviewVideoUrl,
-                    Level = c.Level,
-                    LevelName = c.Level.ToString(),
-                    Status = c.Status,
-                    StatusName = c.Status.ToString(),
-                    CategoryId = c.CategoryId,
-                    CourseType = c.CourseType,
-                    TypeName = c.CourseType.ToString(),
-                    CategoryName = c.Category.Name,
-                });
+                .Where(c => c.Status != CourseStatus.UnAvailable);  // Only include available courses
 
+            // Apply filters
             if (!string.IsNullOrEmpty(request.Title)) {
                 query = query.Where(c => c.Title.ToLower().Contains(request.Title.ToLower()));
             }
@@ -109,13 +100,46 @@ namespace CourseManagement.DataAccess.Repositorys {
                 query = query.Where(c => request.CategoryIds.Contains(c.CategoryId));
             }
 
-            var results = await query.ToListAsync();
+            // Execute the query and load the data
+            var courses = await query.ToListAsync();
 
-            for (int i = 0; i < results.Count; i++) {
-                results[i].Index = i;
-            }
+            // Second part: Process the data in memory
+            var results = courses.Select((c, index) => new SearchCourseResponse {
+                Index = index,
+                Id = c.Id.ToString(),
+                Title = c.Title,
+                Description = c.Description,
+                PreviewImage = c.PreviewImage,
+                PreviewVideoUrl = c.PreviewVideoUrl,
+                Level = c.Level,
+                LevelName = c.Level.ToString(),
+                Status = c.Status,
+                StatusName = c.Status.ToString(),
+                CategoryId = c.CategoryId,
+                CourseType = c.CourseType,
+                TypeName = c.CourseType.ToString(),
+                CategoryName = c.Category.Name,
+                TotalEnrolled = c.Enrollments.Count,
+                TotalLesson = c.Modules
+                    .Where(m => m.Status == ModuleStatus.Active)
+                    .SelectMany(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Count(),
+                TotalTime = CalculateTotalTime(c.Modules
+                    .Where(m => m.Status == ModuleStatus.Active)
+                    .SelectMany(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Where(l => l.VideoDuration.HasValue)
+                    .Select(l => l.VideoDuration.Value))
+            }).ToList();
 
             return results;
+        }
+
+        // Helper method to calculate total time
+        private TimeSpan CalculateTotalTime(IEnumerable<TimeSpan> durations) {
+            if (!durations.Any()) return TimeSpan.Zero;
+
+            long totalTicks = durations.Sum(d => d.Ticks);
+            return new TimeSpan(totalTicks);
         }
 
         public async Task UpdateCourse(UpdateCourseRequest request) {

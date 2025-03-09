@@ -90,6 +90,9 @@ namespace CourseManagement.Model.DTOs {
         public CourseType CourseType { get; set; }
         public string TypeName { get; set; }
         public string CategoryName { get; set; }
+        public int TotalEnrolled { get; set; }
+        public int TotalLesson { get; set; }
+        public TimeSpan TotalTime { get; set; }
     }
 
     public class UpdateCourseRequest() {
