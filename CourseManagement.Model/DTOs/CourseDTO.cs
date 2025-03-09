@@ -26,6 +26,12 @@ namespace CourseManagement.Model.DTOs {
         public string CourseId { get; set; }
     }
 
+    public class UpdateStatusRequest {
+        [Required]
+        public string CourseId { get; set; }
+        public CourseStatus newStatus { get; set; }
+    }
+
     public class DetailCourseRequest {
         [Required]
         public string CourseId { get; set; }
