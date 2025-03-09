@@ -2,9 +2,12 @@
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using OfficeOpenXml.Style;
+using OfficeOpenXml;
 using Org.BouncyCastle.Ocsp;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.JSInterop;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace BlazorAppSecure.Component.Courses;
@@ -28,6 +31,9 @@ public class CourseDetailBase : ComponentBase {
 
     [Inject]
     protected NavigationManager _nav { get; set; }
+
+    [Inject]
+    protected IJSRuntime JSRuntime { get; set; }
 
     protected HttpClient httpClient;
     protected CollapseExpandIconPosition expandIconPosition = CollapseExpandIconPosition.Left;
@@ -641,4 +647,70 @@ public class CourseDetailBase : ComponentBase {
 
         return $"https://www.youtube.com/embed/{videoId}";
     }
+    protected async Task ExportLessonsToExcel()
+    {
+        if (CourseDetailModel == null || CourseDetailModel.Modules == null)
+        {
+            await _mess.Warning("No data available to export.");
+            return;
+        }
+
+        using var package = new ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Lessons");
+
+        // Tiêu đề cột
+        worksheet.Cells[1, 1].Value = "Module Title";
+        worksheet.Cells[1, 2].Value = "Lesson Title";
+        worksheet.Cells[1, 3].Value = "Video URL";
+
+        using (var range = worksheet.Cells[1, 1, 1, 3])
+        {
+            range.Style.Font.Bold = true;
+            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+        }
+
+        int row = 2; // Bắt đầu ghi dữ liệu từ dòng 2
+        foreach (var module in CourseDetailModel.Modules)
+        {
+            int startRow = row;
+            if (module.Lessons != null && module.Lessons.Any())
+            {
+                // Ghi tất cả bài học của module
+                foreach (var lesson in module.Lessons)
+                {
+                    worksheet.Cells[row, 1].Value = module.Title;
+                    worksheet.Cells[row, 2].Value = lesson.Title;
+                    worksheet.Cells[row, 3].Value = lesson.UrlVideo;
+                    row++;
+                }
+            }
+            else
+            {
+                // Module không có bài học
+                worksheet.Cells[row, 1].Value = module.Title;
+                worksheet.Cells[row, 2].Value = "Không có lesson";
+                worksheet.Cells[row, 3].Value = "";
+                row++;
+            }
+
+            // Merge các ô trong cột Module Title nếu có nhiều dòng
+            if (row - startRow > 1)
+            {
+                worksheet.Cells[startRow, 1, row - 1, 1].Merge = true;
+                worksheet.Cells[startRow, 1, row - 1, 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            }
+        }
+
+        worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+        var stream = new MemoryStream();
+        await package.SaveAsAsync(stream);
+        var fileBytes = stream.ToArray();
+        var fileBase64 = Convert.ToBase64String(fileBytes);
+
+        var fileName = $"Course_{Id}_Lessons.xlsx";
+        await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, fileBase64);
+    }
+
 }

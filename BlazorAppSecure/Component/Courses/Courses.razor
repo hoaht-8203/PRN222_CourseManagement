@@ -11,6 +11,7 @@
 @inject IMessageService _mess
 @inject ModalService ModelService
 @inject NavigationManager _nav
+@inject IJSRuntime JS
 
 <div class="mb-2">
     <Breadcrumb>
@@ -125,6 +126,7 @@
         <h6>Total course: @courseList?.Count()</h6>
     </div>
     <div class="mb-2">
+        <Button Icon="@IconType.Outline.Download" OnClick="ExportToExcel">Export to Excel</Button>
         <Tooltip Title="Reload course data" Placement="Placement.Left">
             <Button Icon="@IconType.Outline.Reload" @onclick="FetchListCourse" />
         </Tooltip>
@@ -750,6 +752,89 @@ Width="500">
 
         return $"https://www.youtube.com/embed/{videoId}";
     }
+
+    async void ExportToExcel()
+    {
+        using var package = new OfficeOpenXml.ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Courses");
+
+        // Header Row Styling
+        using (var headerRange = worksheet.Cells["A1:G1"])
+        {
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+            headerRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            headerRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            headerRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Medium);
+        }
+
+        // Thêm tiêu đề cột
+        worksheet.Cells[1, 1].Value = "Title";
+        worksheet.Cells[1, 2].Value = "Description";
+        worksheet.Cells[1, 3].Value = "Level";
+        worksheet.Cells[1, 4].Value = "Status";
+        worksheet.Cells[1, 5].Value = "Course Type";
+        worksheet.Cells[1, 6].Value = "Category";
+        worksheet.Cells[1, 7].Value = "Total Enrolled";
+
+        // Thêm dữ liệu từ danh sách coursesList
+        int row = 2;
+        foreach (var course in courseList)
+        {
+            worksheet.Cells[row, 1].Value = course.Title;
+            worksheet.Cells[row, 2].Value = course.Description ?? "N/A";
+            worksheet.Cells[row, 3].Value = course.Level;
+            // Chuyển đổi CourseStatus thành chuỗi hiển thị
+            worksheet.Cells[row, 4].Value = course.Status switch
+            {
+                CourseStatus.Available => "Available",
+                CourseStatus.UnAvailable => "Unavailable",
+                CourseStatus.InProgress => "In Progress",
+                _ => "Unknown"
+            };
+
+            worksheet.Cells[row, 5].Value = course.CourseType;
+            worksheet.Cells[row, 6].Value = course.CategoryName;
+            worksheet.Cells[row, 7].Value = 0;
+
+            // Alternating row colors for readability
+            if (row % 2 == 0)
+            {
+                using (var rowRange = worksheet.Cells[$"A{row}:H{row}"])
+                {
+                    rowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    rowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                }
+            }
+
+            // Add borders to each cell
+            using (var cellRange = worksheet.Cells[$"A{row}:H{row}"])
+            {
+                cellRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+            }
+
+            row++;
+        }
+
+        // AutoFit Columns
+        worksheet.Cells.AutoFitColumns();
+
+        // Xuất file
+        var fileContent = package.GetAsByteArray();
+        var fileName = "CoursesList.xlsx";
+        if (fileContent == null || fileContent.Length == 0)
+        {
+            await _mess.Error("File generation failed!");
+            return;
+        }
+
+        var base64 = Convert.ToBase64String(fileContent);
+
+        // Convert byte[] thành Base64 để tải về
+        await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
+    }
+
 
     public class CourseSearchModel {
         public string? Title { get; set; }

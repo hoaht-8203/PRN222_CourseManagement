@@ -19,6 +19,9 @@
             <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Plus" @onclick="OpenAddNewLessonDrawer">Add New Lesson</Button>
             <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderModulePositionDrawer">Edit | Remove | Reorder Module</Button>
             <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Retweet" @onclick="OpenReorderLessonPositionDrawer">Edit | Remove | Reorder Lesson</Button>
+            <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Download" @onclick="ExportLessonsToExcel">
+                Export Lessons (Excel)
+            </Button>
         </div>
         <GridRow Gutter="12">
             <GridCol Span="6">
