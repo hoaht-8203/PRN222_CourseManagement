@@ -7,6 +7,7 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task UpdateCourse(UpdateCourseRequest request);
         Task RemoveCourse(RemoveCourseRequest request);
         Task UpdateStatus(UpdateStatusRequest request);
+        Task EnrollCourse(EnrollCourseRequest request);
         Task<List<SearchCourseResponse>> Search(SearchCourseRequest request);
         Task<DetailCourseResponse> Detail(DetailCourseRequest request);
     }

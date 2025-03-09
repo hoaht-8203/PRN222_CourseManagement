@@ -124,6 +124,18 @@ namespace CourseManagement.Model.DTOs {
         [Required]
         public int CategoryId { get; set; }
         [Required]
-    public List<string> LearningOutcomes { get; set; } = new();
+        public List<string> LearningOutcomes { get; set; } = new();
+    }
+
+    public class EnrollCourseRequestModel {
+        [Required]
+        public string CourseId;
+    }
+
+    public class EnrollCourseRequest {
+        [Required]
+        public string CourseId;
+        [Required]
+        public string UserEmail;
     }
 }
