@@ -872,7 +872,7 @@ Width="500">
             // Chuyển đổi CourseStatus thành chuỗi hiển thị
             worksheet.Cells[row, 4].Value = course.Status switch
             {
-                CourseStatus.Available => "Available",
+                CourseStatus.Publish => "Publish",
                 CourseStatus.UnAvailable => "Unavailable",
                 CourseStatus.InProgress => "In Progress",
                 _ => "Unknown"
@@ -893,7 +893,7 @@ Width="500">
             }
 
             // Add borders to each cell
-            using (var cellRange = worksheet.Cells[$"A{row}:H{row}"])
+            using (var cellRange = worksheet.Cells[$"A{row}:G{row}"])
             {
                 cellRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
             }
