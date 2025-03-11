@@ -73,6 +73,7 @@ public class PreviewBase : ComponentBase
     {
         if (CourseDetail.IsEnrolled) {
             nav.NavigateTo($"/learning/{courseId}");
+            return;
         }
 
         try {
