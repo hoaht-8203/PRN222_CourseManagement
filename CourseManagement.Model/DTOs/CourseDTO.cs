@@ -43,7 +43,52 @@ namespace CourseManagement.Model.DTOs {
         public string CourseId { get; set; }
     }
 
+    public class LearnCourseRequest {
+        [Required]
+        public string CourseId { get; set; }
+    }
+
     public class DetailCourseResponse {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string PreviewImage { get; set; }
+        public string PreviewVideoUrl { get; set; }
+        public int Level { get; set; }
+        public string LevelName { get; set; }
+        public int Status { get; set; }
+        public string StatusName { get; set; }
+        public int CategoryId { get; set; }
+        public int CourseType { get; set; }
+        public string TypeName { get; set; }
+        public string CategoryName { get; set; }
+
+        public List<Module> Modules { get; set; } = [];
+        public List<string> LearningOutcomes { get; set; } = new();
+
+        public class Module {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public string CourseId { get; set; }
+            public int Order { get; set; }
+            public string CourseName { get; set; }
+
+            public List<Lesson> Lessons { get; set; } = [];
+        }
+
+        public class Lesson {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public string UrlVideo { get; set; }
+            public int ModuleId { get; set; }
+            public int Order { get; set; }
+            public string ModuleName { get; set; }
+            public TimeSpan? VideoDuration { get; set; }
+        }
+    }
+
+    public class LearnCourseResponse {
         public string Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }

@@ -10,6 +10,7 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task EnrollCourse(EnrollCourseRequest request);
         Task<List<SearchCourseResponse>> Search(SearchCourseRequest request);
         Task<DetailCourseResponse> Detail(DetailCourseRequest request);
+        Task<LearnCourseResponse> Learn(LearnCourseRequest request, string userEmail);
         Task<PreviewCourseResponse> Preview(DetailCourseRequest request, string userEmail);
     }
 }
