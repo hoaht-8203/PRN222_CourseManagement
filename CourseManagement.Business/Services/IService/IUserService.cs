@@ -13,5 +13,6 @@ namespace CourseManagement.Business.Services.IService
         Task<bool> UpdateUser(string emailId, AppUserVm user);
 
         Task<bool> DeleteUserByEmail(string emailId);
+        Task<bool> SetUserBanStatus(string emailId, bool isBanned);
     }
 }

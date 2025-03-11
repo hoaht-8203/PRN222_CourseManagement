@@ -21,6 +21,10 @@ namespace BlazorAppSecure.Sevices
 
         public Task<FormResult> AddRole(string role);
 
+        Task<FormResult> UpdateRoleAsync(string oldRoleName, string newRoleName);
+
+        Task<FormResult> DeleteRoleAsync(string roleName);
+
         public Task<UserViewModel[]> GetUsers();
 
         public Task<UserViewModel> GetUserByEmail(string userEmailId);
@@ -28,5 +32,7 @@ namespace BlazorAppSecure.Sevices
         public Task<bool> UserUpdate(string userEmailId, UserViewModel user);
 
         public Task<bool> Delete(string userEmailId);
+
+        Task<bool> SetUserBanStatus(string emailId, bool isBanned);
     }
 }

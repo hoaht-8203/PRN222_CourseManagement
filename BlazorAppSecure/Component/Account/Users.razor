@@ -4,7 +4,7 @@
 @using BlazorAppSecure.Sevices
 @using Microsoft.AspNetCore.Authorization
 @using System.ComponentModel
-@using System.ComponentModel.DataAnnotations;
+@using System.ComponentModel.DataAnnotations
 @using AntDesign
 
 @attribute [Authorize(Roles = "Admin")]
@@ -12,6 +12,7 @@
 @inject IAccountManagement Acct
 @inject NavigationManager Navigation
 @inject IMessageService _mess
+@inject ModalService ModelService
 @inject IJSRuntime JS
 
 <div class="mb-2">
@@ -27,74 +28,134 @@
 
 <GridRow Gutter="12">
     <GridCol Span="18">
+        <Form Model="@filterModel" Layout="FormLayout.Horizontal" Class="mb-3">
+            <Row Gutter="16">
+                <Col Span="15">
+                <FormItem>
+                    <Text>Search</Text>
+                    <Input TValue="string" @bind-Value="@filterModel.SearchTerm"
+                        Placeholder="Search by Name, Username, Email, or Phone" Prefix="@searchIcon" />
+                </FormItem>
+                </Col>
+                <Col Span="5">
+                <FormItem>
+                    <Text>Role</Text>
+                    <Select Mode="SelectMode.Default" DataSource="@rolesForFilter" Placeholder="Select Role"
+                        @bind-Value="@filterModel.Role" TItemValue="string" TItem="string" Style="width: 100%;"
+                        AllowClear EnableSearch>
+                    </Select>
+                </FormItem>
+                </Col>
+                <Col Span="4" Class="d-flex align-items-end">
+                <FormItem Class="mb-0">
+                    <div class="d-flex gap-2">
+                        <Button Icon="@IconType.Outline.Clear" OnClick="ClearFilters">Clear</Button>
+                        <Button Icon="@IconType.Outline.Search" Type="ButtonType.Primary"
+                            OnClick="ApplyFilters">Apply</Button>
+                    </div>
+                </FormItem>
+
+                </Col>
+            </Row>
+        </Form>
+
         <div class="table-control">
             <Button Icon="@IconType.Outline.Download" OnClick="ExportToExcel">Export to Excel</Button>
 
-            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadListUser()" Loading="loadingUserList"></Button>
+            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadListUser()"
+                Loading="loadingUserList"></Button>
         </div>
-        <Table DataSource="userList" PageSize="12" ScrollX="1000" ScrollY="400" Loading="loadingUserList" Bordered>
-            <PropertyColumn Property="u=>u.Email" Width="200" Fixed="ColumnFixPlacement.Left" />
-            <PropertyColumn Property="u=>u.FullName" Width="200" Title="FullName">
-                @if (context.FullName != null) {
+        <Table DataSource="@FilteredUsers" PageSize="12" ScrollX="1000" ScrollY="400" Loading="loadingUserList"
+            Bordered>
+            <PropertyColumn Property="u => u.Email" Width="200" Fixed="ColumnFixPlacement.Left" />
+            <PropertyColumn Property="u => u.FullName" Width="200" Title="FullName">
+                @if (context.FullName != null)
+                {
                     @context.FullName
-                } else {
+                }
+                else
+                {
                     <Tag Color="TagColor.Orange">Null</Tag>
                 }
             </PropertyColumn>
-            <PropertyColumn Property="c=>c.UserName" Width="200" Title="UserName" />
-            <PropertyColumn Property="c=>c.Roles" Width="200" Title="Roles">
+            <PropertyColumn Property="c => c.UserName" Width="200" Title="UserName" />
+            <PropertyColumn Property="c => c.Roles" Width="200" Title="Roles">
                 <div class="roles-tag">
-                    @if (context.Roles != null && context.Roles?.Count > 0) {
-                        @foreach (var item in context.Roles) {
+                    @if (context.Roles != null && context.Roles?.Count > 0)
+                    {
+                        @foreach (var item in context.Roles)
+                        {
                             <Tag Style="margin-right: 0px">@item</Tag>
                         }
-                    } else {
+                    }
+                    else
+                    {
                         <Tag Color="TagColor.Orange">Null</Tag>
                     }
                 </div>
             </PropertyColumn>
-            <PropertyColumn Property="c=>c.EmailConfirmed" Width="150" Title="Email Confirmed">
+            <PropertyColumn Property="c => c.EmailConfirmed" Width="150" Title="Email Confirmed">
                 <Switch Checked="@context.EmailConfirmed" Disabled />
             </PropertyColumn>
-            <PropertyColumn Property="c=>c.PhoneNumber" Width="150" Title="Phone Number">
-                @if (context.PhoneNumber != null) {
+            <PropertyColumn Property="c => c.PhoneNumber" Width="150" Title="Phone Number">
+                @if (context.PhoneNumber != null)
+                {
                     @context.PhoneNumber
-                } else {
+                }
+                else
+                {
                     <Tag Color="TagColor.Orange">Null</Tag>
                 }
             </PropertyColumn>
-            <PropertyColumn Property="c=>c.PhoneNumberConfirmed" Width="230" Title="Phone Number Confirmed">
+            <PropertyColumn Property="c => c.PhoneNumberConfirmed" Width="230" Title="Phone Number Confirmed">
                 <Switch Checked="@context.PhoneNumberConfirmed" Disabled />
             </PropertyColumn>
             <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
-                <CellRender Context="cellData">
-                    <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))" Class="ant-btn-edit"></Button>
-                    <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
-                </CellRender>
+
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))"
+                    Class="ant-btn-edit"></Button>
             </ActionColumn>
         </Table>
     </GridCol>
+
     <GridCol Span="6">
         <div class="table-control">
-            <Button Icon="@IconType.Outline.Plus" Type="ButtonType.Primary" @onclick="_=>OpenAddRoleDrawer()">Add Role</Button>
-            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadRoles()" Loading="loadingRoleList"></Button>
+            <Button Icon="@IconType.Outline.Plus" Type="ButtonType.Primary" @onclick="_ => OpenAddRoleDrawer()">Add
+                Role</Button>
+            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadRoles()"
+                Loading="loadingRoleList"></Button>
         </div>
         <Table DataSource="roleList" HidePagination Loading="loadingRoleList" ScrollY="400" Bordered>
             <ColumnDefinitions>
-                <PropertyColumn Property="r=>r.Name" Title="Role Name" />
+                <PropertyColumn Property="r => r.Name" Title="Role Name" Width="40" />
+                <ActionColumn Title="Action" Width="80" Align="ColumnAlign.Center">
+                    <Space>
+                        <SpaceItem>
+                            <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit"
+                                @onclick="@(() => OpenEditRoleDrawer(context))" Class="ant-btn-edit"></Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete"
+                                @onclick="@(() => DeleteRole(context))" Danger></Button>
+                        </SpaceItem>
+                    </Space>
+                </ActionColumn>
             </ColumnDefinitions>
         </Table>
     </GridCol>
+
 </GridRow>
 
-<Drawer Closable="true" Width="400" Visible="addRoleVisiable" Title='("Add new role")' OnClose="_=>CloseAddRoleDrawer()">
+<Drawer Closable="true" Width="400" Visible="addRoleVisiable" Title='("Add new role")'
+    OnClose="_ => CloseAddRoleDrawer()">
     <Template style="height:90%">
         <Form Model="@addNewRoleModel" OnFinish="SubmitNewRole">
             <Row Gutter="16">
                 <AntDesign.Col Span="24">
                     <Text>Role name</Text>
                     <FormItem>
-                        <Input Placeholder="Please enter role name" TValue="string" @bind-Value="@context.RoleName"></Input>
+                        <Input Placeholder="Please enter role name" TValue="string"
+                            @bind-Value="@context.RoleName"></Input>
                     </FormItem>
                 </AntDesign.Col>
             </Row>
@@ -108,24 +169,119 @@
     </Template>
 </Drawer>
 
+<Drawer Closable="true" Width="400" Visible="editRoleVisible" Title='("Edit role")'
+    OnClose="_ => CloseEditRoleDrawer()">
+    <Template style="height:90%">
+        <Form Model="@editRoleModel" OnFinish="SubmitUpdateRole">
+            <Row Gutter="16">
+                <AntDesign.Col Span="24">
+                    <Text>Role name</Text>
+                    <FormItem>
+                        <Input Placeholder="Please enter role name" TValue="string"
+                            @bind-Value="@context.RoleName"></Input>
+                    </FormItem>
+                </AntDesign.Col>
+            </Row>
+            <Row Class="mt-3">
+                <AntDesign.Col Span="24" Class="d-flex justify-content-end gap-2">
+                    <Button Type="ButtonType.Default" @onclick="CloseEditRoleDrawer">Cancel</Button>
+                    <Button Type="ButtonType.Primary" HtmlType="HtmlType.Submit">Update</Button>
+                </AntDesign.Col>
+            </Row>
+        </Form>
+    </Template>
+</Drawer>
+
 @code {
     private IQueryable<UserViewModel> userList;
-    private List<Role> roleList;
-
+    private IQueryable<Role> roleList;
+    private List<string> rolesForFilter = new List<string>();
     private bool loadingUserList = false;
     private bool loadingRoleList = false;
-    bool addRoleVisiable = false;
+    private bool addRoleVisiable = false;
+    private bool editRoleVisible = false;
 
     private AddNewRoleModel addNewRoleModel = new();
+    private EditRoleModel editRoleModel = new();
+    private FilterUserModel filterModel = new();
+
+    private RenderFragment searchIcon = @<Icon Type="search" />;
+
+    public class FilterUserModel
+    {
+        public string SearchTerm { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class UserViewModel
+    {
+        public string Id { get; set; }
+        public string Email { get; set; }
+        public string FullName { get; set; }
+        public string UserName { get; set; }
+        public List<string> Roles { get; set; }
+        public bool EmailConfirmed { get; set; }
+        public string PhoneNumber { get; set; }
+        public bool PhoneNumberConfirmed { get; set; }
+        public DateTimeOffset? LockoutEnd { get; set; }
+    }
+
+    public class AddNewRoleModel
+    {
+        [Required(ErrorMessage = "Role name is required")]
+        public string RoleName { get; set; }
+    }
+
+    public class EditRoleModel
+    {
+        public string Id { get; set; }
+
+        [Required(ErrorMessage = "Role name is required")]
+        public string RoleName { get; set; }
+
+        public string OriginalName { get; set; }
+    }
+
+    public class Role
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    private IQueryable<UserViewModel> FilteredUsers => userList?.Where(u =>
+    (string.IsNullOrEmpty(filterModel.SearchTerm) ||
+    (u.FullName != null && u.FullName.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+    (u.UserName != null && u.UserName.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+    (u.Email != null && u.Email.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+    (u.PhoneNumber != null && u.PhoneNumber.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase))) &&
+    (string.IsNullOrEmpty(filterModel.Role) || (u.Roles != null && u.Roles.Contains(filterModel.Role))))
+    ?? Enumerable.Empty<UserViewModel>().AsQueryable();
 
     void OpenAddRoleDrawer()
     {
         addNewRoleModel = new();
-        this.addRoleVisiable = true;
+        addRoleVisiable = true;
     }
 
-    void CloseAddRoleDrawer() {
-        this.addRoleVisiable = false;
+    void CloseAddRoleDrawer()
+    {
+        addRoleVisiable = false;
+    }
+
+    void OpenEditRoleDrawer(Role role)
+    {
+        editRoleModel = new EditRoleModel
+        {
+            Id = role.Id,
+            RoleName = role.Name,
+            OriginalName = role.Name
+        };
+        editRoleVisible = true;
+    }
+
+    void CloseEditRoleDrawer()
+    {
+        editRoleVisible = false;
     }
 
     protected override async Task OnInitializedAsync()
@@ -134,60 +290,202 @@
         loadingRoleList = true;
         var usersRes = await Acct.GetUsers();
         var rolesRes = await Acct.GetRoles();
-        userList = usersRes.ToList().AsQueryable();
-        roleList = rolesRes.ToList();
-        await base.OnInitializedAsync();
+        userList = usersRes.Select(u => new UserViewModel
+        {
+            Email = u.Email,
+            FullName = u.FullName,
+            UserName = u.UserName,
+            Roles = u.Roles,
+            EmailConfirmed = u.EmailConfirmed,
+            PhoneNumber = u.PhoneNumber,
+            PhoneNumberConfirmed = u.PhoneNumberConfirmed
+        }).AsQueryable();
+        roleList = rolesRes.Select(r => new Role
+        {
+            Id = r.Id,
+            Name = r.Name
+        }).AsQueryable();
+        rolesForFilter = roleList.Select(r => r.Name).ToList();
         loadingUserList = false;
         loadingRoleList = false;
+        await base.OnInitializedAsync();
     }
 
     void Edit(UserViewModel p)
     {
-        Navigation.NavigateTo($"editupdateuser/{p.Email}");        
+        Navigation.NavigateTo($"editupdateuser/{p.Email}");
+    }
+
+
+    bool IsUserBanned(UserViewModel user)
+    {
+        return user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow;
+    }
+
+    async Task ToggleBanUser(UserViewModel user, bool checkedValue)
+    {
+        bool newBanStatus = checkedValue;
+        var response = await Acct.SetUserBanStatus(user.Email, newBanStatus);
+        if (response)
+        {
+            await HandleReloadListUser();
+            await _mess.Success(newBanStatus ? $"User {user.Email} banned." : $"User {user.Email} unbanned.");
+        }
+        else
+        {
+            await _mess.Error("Failed to update user ban status.");
+        }
     }
 
     async void Delete(UserViewModel p)
     {
-        if(await Acct.Delete(p.Email))
+        if (await ModelService.ConfirmAsync(new() { Content = $"Are you sure you want to delete user {p.Email}?" }))
         {
-            var users = await Acct.GetUsers();
-            userList = users.ToList().AsQueryable();
-            StateHasChanged();
+            if (await Acct.Delete(p.Id.ToString()))
+            {
+                await _mess.Success($"User {p.Email} has been deleted.");
+                await HandleReloadListUser();
+            }
+            else
+            {
+                await _mess.Error("Failed to delete user.");
+            }
         }
     }
 
-    async void HandleReloadListUser() {
+    async void DeleteRole(Role role)
+    {
+
+        bool isRoleInUse = userList.Any(u => u.Roles != null && u.Roles.Contains(role.Name));
+
+        if (isRoleInUse)
+        {
+            await _mess.Error($"Cannot delete role '{role.Name}' because it is currently assigned to users.");
+            return;
+        }
+
+        if (await ModelService.ConfirmAsync(new() { Content = $"Are you sure you want to delete role '{role.Name}'?" }))
+        {
+            try
+            {
+                var response = await Acct.DeleteRoleAsync(role.Name);
+                if (response.Succeeded)
+                {
+                    await _mess.Success($"Role '{role.Name}' has been deleted.");
+                    await HandleReloadRoles();
+
+                    await HandleReloadListUser();
+                }
+                else
+                {
+                    response.ErrorList.ForEach(err => _mess.Error(err));
+                }
+            }
+            catch (Exception ex)
+            {
+                await _mess.Error($"Failed to delete role: {ex.Message}");
+            }
+        }
+    }
+
+    async Task HandleReloadListUser()
+    {
         loadingUserList = true;
         var usersRes = await Acct.GetUsers();
-        userList = usersRes.ToList().AsQueryable();
+        userList = usersRes.Select(u => new UserViewModel
+        {
+
+            Email = u.Email,
+            FullName = u.FullName,
+            UserName = u.UserName,
+            Roles = u.Roles,
+            EmailConfirmed = u.EmailConfirmed,
+            PhoneNumber = u.PhoneNumber,
+            PhoneNumberConfirmed = u.PhoneNumberConfirmed
+        }).AsQueryable();
         loadingUserList = false;
         StateHasChanged();
     }
 
-    async void HandleReloadRoles() {
+    async Task HandleReloadRoles()
+    {
         loadingRoleList = true;
         var rolesRes = await Acct.GetRoles();
-        roleList = rolesRes.ToList();
+        roleList = rolesRes.Select(r => new Role
+        {
+            Id = r.Id,
+            Name = r.Name
+        }).AsQueryable();
+        rolesForFilter = roleList.Select(r => r.Name).ToList();
         loadingRoleList = false;
         StateHasChanged();
     }
 
-    async void SubmitNewRole() {
+    async void SubmitNewRole()
+    {
         var response = await Acct.AddRole(addNewRoleModel.RoleName);
-
-        if (response.Succeeded) {
+        if (response.Succeeded)
+        {
             addRoleVisiable = false;
-            StateHasChanged();
-            HandleReloadRoles();
+            await HandleReloadRoles();
             await _mess.Success("Add new role success");
-        } else {
-            response.ErrorList.ForEach((err) =>
-            {
-                _mess.Error(err);
-            });
+        }
+        else
+        {
+            response.ErrorList.ForEach(err => _mess.Error(err));
         }
     }
 
+    async Task SubmitUpdateRole()
+    {
+        if (string.IsNullOrEmpty(editRoleModel.RoleName))
+        {
+            await _mess.Error("Role name cannot be empty");
+            return;
+        }
+
+        if (editRoleModel.RoleName == editRoleModel.OriginalName)
+        {
+            editRoleVisible = false;
+            return;
+        }
+
+        try
+        {
+
+            var response = await Acct.UpdateRoleAsync(editRoleModel.OriginalName, editRoleModel.RoleName);
+            if (response.Succeeded)
+            {
+                editRoleVisible = false;
+                await HandleReloadRoles();
+                await HandleReloadListUser();
+                await _mess.Success($"Role updated successfully from '{editRoleModel.OriginalName}' to '{editRoleModel.RoleName}'");
+            }
+            else
+            {
+                foreach (var err in response.ErrorList)
+                {
+                    await _mess.Error(err);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error updating role: {ex.Message}");
+        }
+    }
+
+    void ClearFilters()
+    {
+        filterModel.SearchTerm = string.Empty;
+        filterModel.Role = string.Empty;
+        StateHasChanged();
+    }
+
+    void ApplyFilters()
+    {
+        StateHasChanged();
+    }
     async void ExportToExcel()
     {
         using var package = new OfficeOpenXml.ExcelPackage();
@@ -261,26 +559,17 @@
         // Convert byte[] thành Base64 để tải về
         await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
     }
-
-    
-
-    public class AddNewRoleModel {
-        [Required(ErrorMessage = "Role name is required")]
-        public string RoleName { get; set; }
-    }
 }
 
 <style>
-    .roles-tag {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
     .table-control {
         display: flex;
         gap: 0.5rem;
         justify-content: end;
         margin-bottom: 10px;
+    }
+
+    .ant-btn-edit {
+        color: #1890ff;
     }
 </style>

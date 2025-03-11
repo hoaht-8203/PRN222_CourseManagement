@@ -376,5 +376,49 @@ namespace BlazorAppSecure.Sevices
 
             return false;
         }
+
+        public async Task<FormResult> UpdateRoleAsync(string oldRoleName, string newRoleName)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Role/UpdateRole", new { oldRoleName, newRoleName });
+                return response.IsSuccessStatusCode
+                    ? new FormResult { Succeeded = true }
+                    : new FormResult { Succeeded = false, ErrorList = ["Role update failed."] };
+            }
+            catch (Exception ex)
+            {
+                return new FormResult { Succeeded = false, ErrorList = [ex.Message] };
+            }
+        }
+
+        public async Task<FormResult> DeleteRoleAsync(string roleName)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"api/Role/DeleteRole/{Uri.EscapeDataString(roleName)}");
+                return response.IsSuccessStatusCode
+                    ? new FormResult { Succeeded = true }
+                    : new FormResult { Succeeded = false, ErrorList = ["Role deletion failed."] };
+            }
+            catch (Exception ex)
+            {
+                return new FormResult { Succeeded = false, ErrorList = [ex.Message] };
+            }
+        }
+
+        public async Task<bool> SetUserBanStatus(string emailId, bool isBanned)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"api/User/{Uri.EscapeDataString(emailId)}/ban?isBanned={isBanned}", new { });
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
     }
 }

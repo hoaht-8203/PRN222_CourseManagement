@@ -16,10 +16,11 @@
         <h3>Pro Course</h3>
     </div>
 
-    <Row Gutter="(16,16)">
-        @if(ListCoursePro != null)
+    <Row Gutter="(16, 16)">
+        @if (ListCoursePro != null)
         {
-            @foreach (var courseItem in ListCoursePro) {
+            @foreach (var courseItem in ListCoursePro)
+            {
                 <GridCol Span="6">
                     <Card Bordered class="course-card">
                         <Cover>
@@ -31,15 +32,22 @@
                             <div class="mt-3 d-flex justify-content-between align-items-center">
                                 <span class="course-type">Pro Course</span>
                                 <div>
-                                    <Button Type="ButtonType.Primary" OnClick="() => HandleNavigateToPreview(courseItem)">Preview</Button>
+                                    <Button Type="ButtonType.Primary"
+                                        OnClick="() => HandleNavigateToPreview(courseItem)">Preview</Button>
                                     <Button OnClick="() => HandleNavigateToLearn(courseItem)">Go to learn</Button>
                                 </div>
                             </div>
                         </ChildContent>
                         <ActionTemplate>
-                            <CardAction><Icon Type="@IconType.Outline.User" /> @courseItem.TotalEnrolled</CardAction>
-                            <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> @courseItem.TotalLesson</CardAction>
-                            <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> @courseItem.TotalTime</CardAction>
+                            <CardAction>
+                                <Icon Type="@IconType.Outline.User" /> @courseItem.TotalEnrolled
+                            </CardAction>
+                            <CardAction>
+                                <Icon Type="@IconType.Outline.PlayCircle" /> @courseItem.TotalLesson
+                            </CardAction>
+                            <CardAction>
+                                <Icon Type="@IconType.Outline.ClockCircle" /> @courseItem.TotalTime
+                            </CardAction>
                         </ActionTemplate>
                     </Card>
                 </GridCol>
@@ -52,9 +60,10 @@
         <h3>Free Course</h3>
     </div>
 
-    <Row Gutter="(16,16)">
-        @if (ListCourseFree != null) {
-            @foreach(var courseItem in ListCourseFree)
+    <Row Gutter="(16, 16)">
+        @if (ListCourseFree != null)
+        {
+            @foreach (var courseItem in ListCourseFree)
             {
                 <GridCol Span="6">
                     <Card Bordered class="course-card">
@@ -68,15 +77,22 @@
                             <div class="mt-3 d-flex justify-content-between align-items-center">
                                 <span class="course-type">Free Course</span>
                                 <div>
-                                    <Button Type="ButtonType.Primary" OnClick="() => HandleNavigateToPreview(courseItem)">Preview</Button>
+                                    <Button Type="ButtonType.Primary"
+                                        OnClick="() => HandleNavigateToPreview(courseItem)">Preview</Button>
                                     <Button OnClick="() => HandleNavigateToLearn(courseItem)">Go to learn</Button>
                                 </div>
                             </div>
                         </ChildContent>
                         <ActionTemplate>
-                            <CardAction><Icon Type="@IconType.Outline.User" /> @courseItem.TotalEnrolled</CardAction>
-                            <CardAction><Icon Type="@IconType.Outline.PlayCircle" /> @courseItem.TotalLesson</CardAction>
-                            <CardAction><Icon Type="@IconType.Outline.ClockCircle" /> @courseItem.TotalTime</CardAction>
+                            <CardAction>
+                                <Icon Type="@IconType.Outline.User" /> @courseItem.TotalEnrolled
+                            </CardAction>
+                            <CardAction>
+                                <Icon Type="@IconType.Outline.PlayCircle" /> @courseItem.TotalLesson
+                            </CardAction>
+                            <CardAction>
+                                <Icon Type="@IconType.Outline.ClockCircle" /> @courseItem.TotalTime
+                            </CardAction>
                         </ActionTemplate>
                     </Card>
                 </GridCol>
@@ -105,8 +121,9 @@
 {
     bool LoadingCourseProList = false;
     bool LoadingCourseFreeList = false;
-    /* 
-    RenderFragment coverTemplate = @<img alt="example" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIK8uoM7XCJ-Od4EQvRQhhwLkXvNy9ZTKQnA&s" />;
+    /*
+    RenderFragment coverTemplate = @<img alt="example"
+    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIK8uoM7XCJ-Od4EQvRQhhwLkXvNy9ZTKQnA&s" />;
 
     BlazoredTextEditor richEditor = default!;
     string toolbar = """"...markup here..."""";
@@ -114,18 +131,18 @@
 
     protected async void HandleSubmit()
     {
-        // Lấy nội dung HTML từ editor
-        string htmlContent = await richEditor.GetHTML();
+    // Lấy nội dung HTML từ editor
+    string htmlContent = await richEditor.GetHTML();
 
-        // Tại đây có thể lưu htmlContent vào database
-        Console.WriteLine(htmlContent);
-        }
+    // Tại đây có thể lưu htmlContent vào database
+    Console.WriteLine(htmlContent);
+    }
     */
 
 
     /*
-        protected override void OnInitialized() {
-        toolbar = """"
+    protected override void OnInitialized() {
+    toolbar = """"
     <select class="ql-header">
     <option selected=""></option>
     <option value="1"></option>
@@ -156,20 +173,22 @@
     </span>
     """";
 
-        body = "<h3>Write something in here</h3>";
-        }
-        */
+    body = "<h3>Write something in here</h3>";
+    }
+    */
 
     HttpClient httpClient;
 
     private IQueryable<SearchCourseResponse>? ListCoursePro;
     private IQueryable<SearchCourseResponse>? ListCourseFree;
 
-    private readonly JsonSerializerOptions jsonSerializerOptions = new() {
+    private readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    protected override async Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync()
+    {
         httpClient = HttpClientFactory.CreateClient("Auth");
 
         FetchListCoursePro();
@@ -177,53 +196,75 @@
         await base.OnInitializedAsync();
     }
 
-    void HandleNavigateToPreview(SearchCourseResponse model) {
+    void HandleNavigateToPreview(SearchCourseResponse model)
+    {
         _nav.NavigateTo($"/preview/{model.Id}");
     }
 
-    void HandleNavigateToLearn(SearchCourseResponse model) {
+    void HandleNavigateToLearn(SearchCourseResponse model)
+    {
         _nav.NavigateTo($"/learning/{model.Id}");
     }
 
-    async void FetchListCoursePro() {
+    async void FetchListCoursePro()
+    {
         LoadingCourseProList = true;
-        try {
+        try
+        {
             var result = await httpClient.GetAsync("/api/Course/search?CourseTypes=1&Statuss=1");
 
-            if (result.IsSuccessStatusCode) {
+            if (result.IsSuccessStatusCode)
+            {
                 var resposne = await result.Content.ReadAsStringAsync();
                 var values = JsonSerializer.Deserialize<SearchCourseResponse[]>(resposne, jsonSerializerOptions);
-                if (values != null) {
+                if (values != null)
+                {
                     ListCoursePro = values.ToList().AsQueryable();
                 }
-            } else {
+            }
+            else
+            {
                 await _mess.Error("Internal server error when load list course");
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             await _mess.Error($"Error loading courses: {ex.Message}");
-        } finally {
+        }
+        finally
+        {
             LoadingCourseProList = false;
             StateHasChanged();
         }
     }
 
-    async void FetchListCourseFree() {
+    async void FetchListCourseFree()
+    {
         LoadingCourseFreeList = true;
-        try {
+        try
+        {
             var result = await httpClient.GetAsync("/api/Course/search?CourseTypes=0&Statuss=1");
 
-            if (result.IsSuccessStatusCode) {
+            if (result.IsSuccessStatusCode)
+            {
                 var resposne = await result.Content.ReadAsStringAsync();
                 var values = JsonSerializer.Deserialize<SearchCourseResponse[]>(resposne, jsonSerializerOptions);
-                if (values != null) {
+                if (values != null)
+                {
                     ListCourseFree = values.ToList().AsQueryable();
                 }
-            } else {
+            }
+            else
+            {
                 await _mess.Error("Internal server error when load list course");
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             await _mess.Error($"Error loading courses: {ex.Message}");
-        } finally {
+        }
+        finally
+        {
             LoadingCourseFreeList = false;
             StateHasChanged();
         }
@@ -238,5 +279,6 @@
     .card-homepage .course-type {
         color: #EC4899;
         font-weight: bolder;
-        font-size: 1.2rem    }
+        font-size: 1.2rem
+    }
 </style>

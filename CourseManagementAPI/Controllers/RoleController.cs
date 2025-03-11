@@ -79,5 +79,29 @@ namespace CourseManagementAPI.Controllers
             return StatusCode((int)HttpStatusCode.Created, result);
         }
 
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("UpdateRole")]
+        public async Task<ActionResult> UpdateRole([FromBody] UpdateRoleRequest request)
+        {
+            var result = await _roleService.UpdateRoleAsync(request.OldRoleName, request.NewRoleName);
+
+            if (!result.Success)
+                return BadRequest(new { Errors = result.Errors });
+
+            return Ok(new { Message = result.Message });
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpDelete("DeleteRole/{roleName}")]
+        public async Task<ActionResult> DeleteRole(string roleName)
+        {
+            var result = await _roleService.DeleteRoleAsync(roleName);
+
+            if (!result.Success)
+                return BadRequest(new { Errors = result.Errors });
+
+            return Ok(new { Message = result.Message });
+        }
+
     }
 }

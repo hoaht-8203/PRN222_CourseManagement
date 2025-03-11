@@ -31,12 +31,19 @@
 <Form Model="@searchForm" Layout="FormLayout.Horizontal">
     <Row Gutter="16">
         <Col Span="8">
-        <FormItem>
+            <FormItem>
+                <Text>Search</Text>
+                <Input TValue="string" Value="@searchTerm"
+                @oninput="@((ChangeEventArgs e) => searchTerm = e.Value.ToString())"
+                placeholder="Search by title"
+                Style="width: 100%;" />
+            </FormItem>
+        @* <FormItem>
             <Text>Search</Text>
             <Input @bind-Value="searchTerm"
                    placeholder="Search by title"
                    Style="width: 100%;" />
-        </FormItem>
+        </FormItem> *@
         </Col>
         <Col Span="6">
             <FormItem>

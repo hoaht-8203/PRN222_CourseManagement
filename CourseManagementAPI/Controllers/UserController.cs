@@ -98,6 +98,17 @@ namespace CourseManagementAPI.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPut("{emailId}/ban")]
+        public async Task<IActionResult> BanUser(string emailId, [FromQuery] bool isBanned)
+        {
+            var result = await _userService.SetUserBanStatus(emailId, isBanned);
+            if (!result)
+            {
+                return BadRequest();
+            }
+            return Ok(new { Message = isBanned ? "User banned successfully." : "User unbanned successfully." });
+        }
 
     }
 }

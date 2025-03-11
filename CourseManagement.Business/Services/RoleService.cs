@@ -11,7 +11,7 @@ namespace CourseManagementAPI.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<AppUser> _userManager;
 
-        public RoleService(RoleManager<IdentityRole> roleManager, 
+        public RoleService(RoleManager<IdentityRole> roleManager,
             UserManager<AppUser> userManager)
         {
             _roleManager = roleManager;
@@ -19,16 +19,16 @@ namespace CourseManagementAPI.Services
         }
         public async Task<List<RoleVm>> GetRolesAsync()
         {
-            var roleList = _roleManager.Roles.Select(x => 
+            var roleList = _roleManager.Roles.Select(x =>
             new RoleVm { Id = Guid.Parse(x.Id), Name = x.Name }).ToList();
             return roleList;
         }
 
         public async Task<List<string>> GetUserRolesAsync(string emailId)
         {
-           var user = await _userManager.FindByEmailAsync(emailId);
+            var user = await _userManager.FindByEmailAsync(emailId);
 
-           var userRoles = await _userManager.GetRolesAsync(user);
+            var userRoles = await _userManager.GetRolesAsync(user);
             return userRoles.ToList();
         }
         public async Task<List<string>> AddRolesAsync(string[] roles)
@@ -36,7 +36,7 @@ namespace CourseManagementAPI.Services
             var rolesList = new List<string>();
             foreach (var role in roles)
             {
-               if(!await _roleManager.RoleExistsAsync(role))
+                if (!await _roleManager.RoleExistsAsync(role))
                 {
                     await _roleManager.CreateAsync(new IdentityRole(role));
                     rolesList.Add(role);
@@ -45,10 +45,12 @@ namespace CourseManagementAPI.Services
             return rolesList;
         }
 
-        public async Task<ApiRes> AddRoleAsync(string role) {
+        public async Task<ApiRes> AddRoleAsync(string role)
+        {
             var result = await _roleManager.CreateAsync(new IdentityRole(role));
 
-            if (!result.Succeeded) {
+            if (!result.Succeeded)
+            {
                 return new ApiRes { Success = false, Errors = result.Errors.Select(p => p.Description).ToList() };
             }
 
@@ -61,7 +63,7 @@ namespace CourseManagementAPI.Services
 
             var exitsRoles = await ExistsRolesAsync(roles);
 
-            if(user != null && exitsRoles.Count == roles.Length)
+            if (user != null && exitsRoles.Count == roles.Length)
             {
                 var assginRoles = await _userManager.AddToRolesAsync(user, exitsRoles);
                 return assginRoles.Succeeded;
@@ -85,5 +87,34 @@ namespace CourseManagementAPI.Services
             return rolesList;
 
         }
+        public async Task<ApiRes> UpdateRoleAsync(string oldRoleName, string newRoleName)
+        {
+            var role = await _roleManager.FindByNameAsync(oldRoleName);
+            if (role == null)
+                return new ApiRes { Success = false, Errors = ["Role not found."] };
+
+            role.Name = newRoleName;
+            var result = await _roleManager.UpdateAsync(role);
+
+            if (!result.Succeeded)
+                return new ApiRes { Success = false, Errors = result.Errors.Select(e => e.Description).ToList() };
+
+            return new ApiRes { Success = true, Message = "Role updated successfully." };
+        }
+
+        public async Task<ApiRes> DeleteRoleAsync(string roleName)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+                return new ApiRes { Success = false, Errors = ["Role not found."] };
+
+            var result = await _roleManager.DeleteAsync(role);
+
+            if (!result.Succeeded)
+                return new ApiRes { Success = false, Errors = result.Errors.Select(e => e.Description).ToList() };
+
+            return new ApiRes { Success = true, Message = "Role deleted successfully." };
+        }
+
     }
 }
