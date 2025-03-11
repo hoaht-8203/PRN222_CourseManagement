@@ -82,4 +82,14 @@ namespace CourseManagement.Model.DTOs {
 
         public int ModuleId { get; set; }
     }
+
+    public class CompletedLessonRequest {
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class NotCompletedLessonRequest {
+        [Required]
+        public int LessonId { get; set; }
+    }
 }

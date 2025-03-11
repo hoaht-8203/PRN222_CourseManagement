@@ -209,5 +209,34 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             return res;
         }
+
+        public async Task CompletedLesson(CompletedLessonRequest req, string userEmail) {
+            var founedLesson = await _context.Lessons.SingleOrDefaultAsync(l=> l.Id == req.LessonId && l.Status != LessonStatus.Delete)
+                ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            LessonProgress newLessonProgress = new() {
+                LessonId = founedLesson.Id,
+                UserId = userFound.Id,
+                IsCompleted = true
+            };
+
+            _context.LessonProgresses.Add(newLessonProgress);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task NotCompletedLesson(NotCompletedLessonRequest req, string userEmail) {
+            var foundedLessonProgress = await _context.LessonProgresses.SingleOrDefaultAsync(l => l.LessonId == req.LessonId)
+                ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            foundedLessonProgress.IsCompleted = false;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
