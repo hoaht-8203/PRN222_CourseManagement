@@ -1,6 +1,4 @@
-﻿
-
-using CourseManagement.Model.DTOs;
+﻿using CourseManagement.Model.DTOs;
 using CourseManagement.Model.ViewModel;
 
 namespace CourseManagement.Business.Services.IService
@@ -17,5 +15,9 @@ namespace CourseManagement.Business.Services.IService
 
         Task<bool> AddUserRoleAsync(string userEmail, string[] roles);
 
+      
+        Task<ApiRes> UpdateRoleAsync(string oldRoleName, string newRoleName);
+
+        Task<ApiRes> DeleteRoleAsync(string roleName);
     }
 }

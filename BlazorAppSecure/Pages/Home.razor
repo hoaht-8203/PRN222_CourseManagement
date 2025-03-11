@@ -142,9 +142,131 @@
     </Row>
 </div>
 
+<h1>Blazored.TextEditor Usage Examples</h1>
+
+<h3>Basic Example</h3>
+<BlazoredTextEditor @ref="@richEditor">
+    <ToolbarContent>
+        @((MarkupString)toolbar)
+    </ToolbarContent>
+    <EditorContent>
+        @((MarkupString)body)
+    </EditorContent>
+</BlazoredTextEditor>
+<br />
+<br />
+<h3>Show the Toolbar Below the Editor</h3>
+<BlazoredTextEditor BottomToolbar="true"
+                    @ref="@richEditor">
+    <ToolbarContent>
+        @((MarkupString)toolbar)
+    </ToolbarContent>
+    <EditorContent>
+        @((MarkupString)body)
+    </EditorContent>
+</BlazoredTextEditor>
+<br />
+<br />
+<h3>Styled Toolbar</h3>
+<BlazoredTextEditor @ref="@richEditor"
+                    ToolbarCSSClass="rounded colored-border"
+                    ToolbarCssStyle="background: lightpink">
+    <ToolbarContent>
+        @((MarkupString)toolbar)
+    </ToolbarContent>
+    <EditorContent>
+        @((MarkupString)body)
+    </EditorContent>
+</BlazoredTextEditor>
+<br />
+<br />
+<h3>Styled Editor</h3>
+<BlazoredTextEditor EditorCSSClass="rounded colored-border"
+                    EditorCssStyle="padding: 10px; background: lightpink"
+                    @ref="@richEditor">
+    <ToolbarContent>
+        @((MarkupString)toolbar)
+    </ToolbarContent>
+    <EditorContent>
+        @((MarkupString)body)
+    </EditorContent>
+</BlazoredTextEditor>
+
+<br />
+<br />
+
+<hr />
+
+<h3>Syntax</h3>
+<p>See <a href="https://quilljs.com/docs/modules/syntax" target="_blank">Syntax Highlighter Module</a>.</p>
+<p>Off</p>
+<BlazoredTextEditor @ref="@richEditor">
+    <ToolbarContent>
+        @((MarkupString)toolbar)
+    </ToolbarContent>
+    <EditorContent>
+<pre class="ql-syntax" spellcheck="false">const <span class="hljs-keyword">language</span> <span class="hljs-operator">=</span> "JavaScript";
+console.<span class="hljs-built_in">log</span>("I love " <span class="hljs-operator">+</span> <span class="hljs-keyword">language</span> <span class="hljs-operator">+</span> "!");</pre>
+    </EditorContent>
+</BlazoredTextEditor>
+<p>On</p>
+<BlazoredTextEditor Syntax="true"
+                    @ref="@richEditor">
+    <ToolbarContent>
+        @((MarkupString)toolbar)
+    </ToolbarContent>
+    <EditorContent>
+<pre class="ql-syntax" spellcheck="false">const <span class="hljs-keyword">language</span> <span class="hljs-operator">=</span> "JavaScript";
+console.<span class="hljs-built_in">log</span>("I love " <span class="hljs-operator">+</span> <span class="hljs-keyword">language</span> <span class="hljs-operator">+</span> "!");</pre>
+    </EditorContent>
+</BlazoredTextEditor>
+
 @code
 {
     RenderFragment coverTemplate = @<img alt="example" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIK8uoM7XCJ-Od4EQvRQhhwLkXvNy9ZTKQnA&s" />;
+
+    BlazoredTextEditor richEditor = default!;
+    string toolbar = """"...markup here..."""";
+    string body = """"...markup here..."""";
+
+    protected override void OnInitialized()
+    {
+        toolbar = """"
+            <select class="ql-header">
+                <option selected=""></option>
+                <option value="1"></option>
+                <option value="2"></option>
+                <option value="3"></option>
+                <option value="4"></option>
+                <option value="5"></option>
+            </select>
+            <span class="ql-formats">
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+                <button class="ql-strike"></button>
+            </span>
+            <span class="ql-formats">
+                <select class="ql-color"></select>
+                <select class="ql-background"></select>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-list" value="ordered"></button>
+                <button class="ql-list" value="bullet"></button>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-link"></button>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-code-block"></button>
+            </span>
+            """";
+
+        body = """"
+            <h4>This Toolbar works with HTML</h4>
+            <a href="https://BlazorHelpWebsite.com">BlazorHelpWebsite.com</a>
+            """";
+    }
 }
 
 <style>
@@ -155,5 +277,6 @@
     .card-homepage .course-type {
         color: #EC4899;
         font-weight: bolder;
-        font-size: 1.2rem    }
+        font-size: 1.2rem
+    }
 </style>

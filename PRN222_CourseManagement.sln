@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CourseManagement.Business",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CourseManagement.DataAccess", "CourseManagement.DataAccess\CourseManagement.DataAccess.csproj", "{50854AE6-52F2-407E-B56F-C17DA04252D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CourseManagement.Model", "CourseManagement.Model\CourseManagement.Model.csproj", "{DE1E39D8-E437-4206-B18C-0D999B06DFDD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourseManagement.Model", "CourseManagement.Model\CourseManagement.Model.csproj", "{F957E8ED-7B6B-4A30-9C89-54E98D05D9F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +35,10 @@ Global
 		{50854AE6-52F2-407E-B56F-C17DA04252D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{50854AE6-52F2-407E-B56F-C17DA04252D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{50854AE6-52F2-407E-B56F-C17DA04252D6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DE1E39D8-E437-4206-B18C-0D999B06DFDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DE1E39D8-E437-4206-B18C-0D999B06DFDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DE1E39D8-E437-4206-B18C-0D999B06DFDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DE1E39D8-E437-4206-B18C-0D999B06DFDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F957E8ED-7B6B-4A30-9C89-54E98D05D9F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F957E8ED-7B6B-4A30-9C89-54E98D05D9F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F957E8ED-7B6B-4A30-9C89-54E98D05D9F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F957E8ED-7B6B-4A30-9C89-54E98D05D9F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

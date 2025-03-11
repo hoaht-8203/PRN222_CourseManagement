@@ -32,7 +32,7 @@
         <Col Span="8">
             <FormItem>
                 <Text>Search</Text>
-                <Input value="@searchTerm"
+                <Input TValue="string" Value="@searchTerm"
                 @oninput="@((ChangeEventArgs e) => searchTerm = e.Value.ToString())"
                 placeholder="Search by title"
                 Style="width: 100%;" />
