@@ -5,6 +5,8 @@ using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using CourseManagement.Model.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace CourseManagement.DataAccess.Repositorys {
     public class CourseRepository : ICourseRepository {
@@ -30,6 +32,9 @@ namespace CourseManagement.DataAccess.Repositorys {
                 Status = CourseStatus.InProgress,
                 CourseType = request.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse,
                 CategoryId = foundCategory.Id,
+                LearningOutcomes = request.LearningOutcomes.Select(o => new CourseLearningOutcome {
+                    Outcome = o
+                }).ToList()
             };
 
             _context.Courses.Add(newCourse);
@@ -39,6 +44,7 @@ namespace CourseManagement.DataAccess.Repositorys {
         public async Task<DetailCourseResponse> Detail(DetailCourseRequest request) {
             var course = await _context.Courses
                     .Include(c => c.Category)
+                    .Include(c => c.LearningOutcomes)
                     .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
                         .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
                     .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
@@ -53,8 +59,10 @@ namespace CourseManagement.DataAccess.Repositorys {
                 module.Lessons = module.Lessons.OrderBy(l => l.Order).ToList();
             }
 
-            // Note: This will need AutoMapper to be injected into the repository
-            return _mapper.Map<DetailCourseResponse>(course);
+            var response = _mapper.Map<DetailCourseResponse>(course);
+            response.LearningOutcomes = course.LearningOutcomes.Select(lo => lo.Outcome).ToList();
+
+            return response;
         }
 
         public async Task RemoveCourse(RemoveCourseRequest request) {
@@ -71,24 +79,15 @@ namespace CourseManagement.DataAccess.Repositorys {
         }
 
         public async Task<List<SearchCourseResponse>> Search(SearchCourseRequest request) {
+            // First query: Get basic course information
             var query = _context.Courses
+                .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
+                    .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                .Include(c => c.Enrollments)
                 .Include(c => c.Category)
-                .Select(c => new SearchCourseResponse {
-                    Id = c.Id.ToString(),
-                    Title = c.Title,
-                    Description = c.Description,
-                    PreviewImage = c.PreviewImage,
-                    PreviewVideoUrl = c.PreviewVideoUrl,
-                    Level = c.Level,
-                    LevelName = c.Level.ToString(),
-                    Status = c.Status,
-                    StatusName = c.Status.ToString(),
-                    CategoryId = c.CategoryId,
-                    CourseType = c.CourseType,
-                    TypeName = c.CourseType.ToString(),
-                    CategoryName = c.Category.Name,
-                });
+                .Where(c => c.Status != CourseStatus.UnAvailable);  // Only include available courses
 
+            // Apply filters
             if (!string.IsNullOrEmpty(request.Title)) {
                 query = query.Where(c => c.Title.ToLower().Contains(request.Title.ToLower()));
             }
@@ -109,13 +108,46 @@ namespace CourseManagement.DataAccess.Repositorys {
                 query = query.Where(c => request.CategoryIds.Contains(c.CategoryId));
             }
 
-            var results = await query.ToListAsync();
+            // Execute the query and load the data
+            var courses = await query.ToListAsync();
 
-            for (int i = 0; i < results.Count; i++) {
-                results[i].Index = i;
-            }
+            // Second part: Process the data in memory
+            var results = courses.Select((c, index) => new SearchCourseResponse {
+                Index = index,
+                Id = c.Id.ToString(),
+                Title = c.Title,
+                Description = c.Description,
+                PreviewImage = c.PreviewImage,
+                PreviewVideoUrl = c.PreviewVideoUrl,
+                Level = c.Level,
+                LevelName = c.Level.ToString(),
+                Status = c.Status,
+                StatusName = c.Status.ToString(),
+                CategoryId = c.CategoryId,
+                CourseType = c.CourseType,
+                TypeName = c.CourseType.ToString(),
+                CategoryName = c.Category.Name,
+                TotalEnrolled = c.Enrollments.Count,
+                TotalLesson = c.Modules
+                    .Where(m => m.Status == ModuleStatus.Active)
+                    .SelectMany(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Count(),
+                TotalTime = CalculateTotalTime(c.Modules
+                    .Where(m => m.Status == ModuleStatus.Active)
+                    .SelectMany(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Where(l => l.VideoDuration.HasValue)
+                    .Select(l => l.VideoDuration.Value))
+            }).ToList();
 
             return results;
+        }
+
+        // Helper method to calculate total time
+        private TimeSpan CalculateTotalTime(IEnumerable<TimeSpan> durations) {
+            if (!durations.Any()) return TimeSpan.Zero;
+
+            long totalTicks = durations.Sum(d => d.Ticks);
+            return new TimeSpan(totalTicks);
         }
 
         public async Task UpdateCourse(UpdateCourseRequest request) {
@@ -134,7 +166,40 @@ namespace CourseManagement.DataAccess.Repositorys {
             courseFounded.Level = request.Level;
             courseFounded.CourseType = request.IsProCourse ? CourseType.ProCourse : CourseType.FreeCourse;
             courseFounded.CategoryId = request.CategoryId;
-                
+
+            _context.CourseLearningOutcomes.RemoveRange(courseFounded.LearningOutcomes);
+            courseFounded.LearningOutcomes = request.LearningOutcomes.Select(o => new CourseLearningOutcome {
+                Outcome = o,
+                CourseId = courseFounded.Id
+            }).ToList();
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateStatus(UpdateStatusRequest request) {
+            var courseFounded = await _context.Courses
+               .SingleOrDefaultAsync(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+               ?? throw new ArgumentException($"Course with id {request.CourseId} not exsited or removed");
+
+            courseFounded.Status = request.newStatus;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task EnrollCourse(EnrollCourseRequest request) {
+            var courseFounded = await _context.Courses
+               .SingleOrDefaultAsync(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+               ?? throw new ArgumentException($"Course with id {request.CourseId} not exsited or removed");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == request.UserEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            Enrollment enrollment = new Enrollment() {
+                CourseId = courseFounded.Id,
+                UserId = userFound.Id
+            };
+
+            _context.enrollments.Add(enrollment);
             await _context.SaveChangesAsync();
         }
     }

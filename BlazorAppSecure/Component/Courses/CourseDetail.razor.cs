@@ -2,9 +2,12 @@
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using OfficeOpenXml.Style;
+using OfficeOpenXml;
 using Org.BouncyCastle.Ocsp;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.JSInterop;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace BlazorAppSecure.Component.Courses;
@@ -28,6 +31,9 @@ public class CourseDetailBase : ComponentBase {
 
     [Inject]
     protected NavigationManager _nav { get; set; }
+
+    [Inject]
+    protected IJSRuntime JSRuntime { get; set; }
 
     protected HttpClient httpClient;
     protected CollapseExpandIconPosition expandIconPosition = CollapseExpandIconPosition.Left;
@@ -70,6 +76,73 @@ public class CourseDetailBase : ComponentBase {
     protected SearchLessonResponse? _searchLessonResponseDragging;
     protected int? _draggedIndexLesson;
     protected int? _targetIndexLesson;
+
+    protected DetailCourseResponse.Lesson? PreviousLesson = null;
+    protected DetailCourseResponse.Lesson? NextLesson = null;
+
+    protected string[] ActiveModuleKeys { get; set; } = new[] { "1" };
+    protected int? LastModuleId { get; set; }
+
+    protected void NavigateToPreviousLesson() {
+        if (PreviousLesson != null) {
+            CurrentLesson = PreviousLesson;
+            UpdateNavigationLessons();
+            EnsureModuleExpanded(PreviousLesson.ModuleId);
+        }
+    }
+
+    protected void NavigateToNextLesson() {
+        if (NextLesson != null) {
+            CurrentLesson = NextLesson;
+            UpdateNavigationLessons();
+            EnsureModuleExpanded(NextLesson.ModuleId);
+        }
+    }
+
+    protected void UpdateNavigationLessons() {
+        if (CourseDetailModel == null || CurrentLesson == null) return;
+
+        PreviousLesson = null;
+        NextLesson = null;
+
+        // Find the current module
+        var currentModule = CourseDetailModel.Modules.FirstOrDefault(m => m.Id == CurrentLesson.ModuleId);
+        if (currentModule == null) return;
+
+        // Find the index of the current lesson in the current module
+        var currentLessonIndex = currentModule.Lessons.FindIndex(l => l.Id == CurrentLesson.Id);
+        if (currentLessonIndex == -1) return;
+
+        // Check for previous lesson in the same module
+        if (currentLessonIndex > 0) {
+            PreviousLesson = currentModule.Lessons[currentLessonIndex - 1];
+        }
+        // If no previous lesson in the same module, check the previous module
+        else {
+            var currentModuleIndex = CourseDetailModel.Modules.FindIndex(m => m.Id == currentModule.Id);
+            if (currentModuleIndex > 0) {
+                var previousModule = CourseDetailModel.Modules[currentModuleIndex - 1];
+                if (previousModule.Lessons.Count > 0) {
+                    PreviousLesson = previousModule.Lessons[previousModule.Lessons.Count - 1];
+                }
+            }
+        }
+
+        // Check for next lesson in the same module
+        if (currentLessonIndex < currentModule.Lessons.Count - 1) {
+            NextLesson = currentModule.Lessons[currentLessonIndex + 1];
+        }
+        // If no next lesson in the same module, check the next module
+        else {
+            var currentModuleIndex = CourseDetailModel.Modules.FindIndex(m => m.Id == currentModule.Id);
+            if (currentModuleIndex < CourseDetailModel.Modules.Count - 1) {
+                var nextModule = CourseDetailModel.Modules[currentModuleIndex + 1];
+                if (nextModule.Lessons.Count > 0) {
+                    NextLesson = nextModule.Lessons[0];
+                }
+            }
+        }
+    }
 
     protected string FormatDuration(TimeSpan duration) {
         if (duration.Hours > 0) {
@@ -142,11 +215,27 @@ public class CourseDetailBase : ComponentBase {
     }
 
     protected void Callback(string[] keys) {
+        ActiveModuleKeys = keys;
         Console.WriteLine(string.Join(',', keys));
     }
 
     protected void HandleLessonClick(DetailCourseResponse.Lesson lesson) {
         CurrentLesson = lesson;
+        UpdateNavigationLessons();
+        EnsureModuleExpanded(lesson.ModuleId);
+    }
+
+    protected void EnsureModuleExpanded(int moduleId) {
+        if (LastModuleId != moduleId) {
+            // Find the module by ID
+            var module = CourseDetailModel?.Modules.FirstOrDefault(m => m.Id == moduleId);
+            if (module != null) {
+                // Set the active key to the module's order
+                ActiveModuleKeys = new[] { module.Order.ToString() };
+                LastModuleId = moduleId;
+                StateHasChanged();
+            }
+        }
     }
 
     protected void handleClose() {
@@ -277,6 +366,7 @@ public class CourseDetailBase : ComponentBase {
                 var firstLesson = firstModule.Lessons.SingleOrDefault(l => l.Order == 1);
                 if (firstLesson != null) {
                     CurrentLesson = firstLesson;
+                    UpdateNavigationLessons();
                 }
             }
         }
@@ -641,4 +731,70 @@ public class CourseDetailBase : ComponentBase {
 
         return $"https://www.youtube.com/embed/{videoId}";
     }
+    protected async Task ExportLessonsToExcel()
+    {
+        if (CourseDetailModel == null || CourseDetailModel.Modules == null)
+        {
+            await _mess.Warning("No data available to export.");
+            return;
+        }
+
+        using var package = new ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Lessons");
+
+        // Tiêu đề cột
+        worksheet.Cells[1, 1].Value = "Module Title";
+        worksheet.Cells[1, 2].Value = "Lesson Title";
+        worksheet.Cells[1, 3].Value = "Video URL";
+
+        using (var range = worksheet.Cells[1, 1, 1, 3])
+        {
+            range.Style.Font.Bold = true;
+            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+        }
+
+        int row = 2; // Bắt đầu ghi dữ liệu từ dòng 2
+        foreach (var module in CourseDetailModel.Modules)
+        {
+            int startRow = row;
+            if (module.Lessons != null && module.Lessons.Any())
+            {
+                // Ghi tất cả bài học của module
+                foreach (var lesson in module.Lessons)
+                {
+                    worksheet.Cells[row, 1].Value = module.Title;
+                    worksheet.Cells[row, 2].Value = lesson.Title;
+                    worksheet.Cells[row, 3].Value = lesson.UrlVideo;
+                    row++;
+                }
+            }
+            else
+            {
+                // Module không có bài học
+                worksheet.Cells[row, 1].Value = module.Title;
+                worksheet.Cells[row, 2].Value = "Không có lesson";
+                worksheet.Cells[row, 3].Value = "";
+                row++;
+            }
+
+            // Merge các ô trong cột Module Title nếu có nhiều dòng
+            if (row - startRow > 1)
+            {
+                worksheet.Cells[startRow, 1, row - 1, 1].Merge = true;
+                worksheet.Cells[startRow, 1, row - 1, 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            }
+        }
+
+        worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+        var stream = new MemoryStream();
+        await package.SaveAsAsync(stream);
+        var fileBytes = stream.ToArray();
+        var fileBase64 = Convert.ToBase64String(fileBytes);
+
+        var fileName = $"Course_{Id}_Lessons.xlsx";
+        await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, fileBase64);
+    }
+
 }

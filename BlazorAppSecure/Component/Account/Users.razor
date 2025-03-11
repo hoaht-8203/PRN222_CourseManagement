@@ -13,6 +13,7 @@
 @inject NavigationManager Navigation
 @inject IMessageService _mess
 @inject ModalService ModelService
+@inject IJSRuntime JS
 
 <div class="mb-2">
     <Breadcrumb>
@@ -49,7 +50,8 @@
                 <FormItem Class="mb-0">
                     <div class="d-flex gap-2">
                         <Button Icon="@IconType.Outline.Clear" OnClick="ClearFilters">Clear</Button>
-                        <Button Icon="@IconType.Outline.Search" Type="ButtonType.Primary" OnClick="ApplyFilters">Apply</Button>
+                        <Button Icon="@IconType.Outline.Search" Type="ButtonType.Primary"
+                            OnClick="ApplyFilters">Apply</Button>
                     </div>
                 </FormItem>
 
@@ -58,6 +60,8 @@
         </Form>
 
         <div class="table-control">
+            <Button Icon="@IconType.Outline.Download" OnClick="ExportToExcel">Export to Excel</Button>
+
             <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadListUser()"
                 Loading="loadingUserList"></Button>
         </div>
@@ -108,7 +112,8 @@
             </PropertyColumn>
             <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
 
-                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))" Class="ant-btn-edit"></Button>
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))"
+                    Class="ant-btn-edit"></Button>
             </ActionColumn>
         </Table>
     </GridCol>
@@ -164,7 +169,8 @@
     </Template>
 </Drawer>
 
-<Drawer Closable="true" Width="400" Visible="editRoleVisible" Title='("Edit role")' OnClose="_ => CloseEditRoleDrawer()">
+<Drawer Closable="true" Width="400" Visible="editRoleVisible" Title='("Edit role")'
+    OnClose="_ => CloseEditRoleDrawer()">
     <Template style="height:90%">
         <Form Model="@editRoleModel" OnFinish="SubmitUpdateRole">
             <Row Gutter="16">
@@ -446,7 +452,7 @@
 
         try
         {
-           
+
             var response = await Acct.UpdateRoleAsync(editRoleModel.OriginalName, editRoleModel.RoleName);
             if (response.Succeeded)
             {
@@ -479,6 +485,79 @@
     void ApplyFilters()
     {
         StateHasChanged();
+    }
+    async void ExportToExcel()
+    {
+        using var package = new OfficeOpenXml.ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Users");
+
+        // Header Row Styling
+        using (var headerRange = worksheet.Cells["A1:G1"])
+        {
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+            headerRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            headerRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            headerRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Medium);
+        }
+
+        // Thêm tiêu đề cột
+        worksheet.Cells[1, 1].Value = "Email";
+        worksheet.Cells[1, 2].Value = "Full Name";
+        worksheet.Cells[1, 3].Value = "User Name";
+        worksheet.Cells[1, 4].Value = "Roles";
+        worksheet.Cells[1, 5].Value = "Email Confirmed";
+        worksheet.Cells[1, 6].Value = "Phone Number";
+        worksheet.Cells[1, 7].Value = "Phone Confirmed";
+
+        // Thêm dữ liệu từ danh sách userList
+        int row = 2;
+        foreach (var user in userList)
+        {
+            worksheet.Cells[row, 1].Value = user.Email;
+            worksheet.Cells[row, 2].Value = user.FullName ?? "N/A";
+            worksheet.Cells[row, 3].Value = user.UserName;
+            worksheet.Cells[row, 4].Value = user.Roles != null ? string.Join(", ", user.Roles) : "N/A";
+            worksheet.Cells[row, 5].Value = user.EmailConfirmed ? "Yes" : "No";
+            worksheet.Cells[row, 6].Value = user.PhoneNumber ?? "N/A";
+            worksheet.Cells[row, 7].Value = user.PhoneNumberConfirmed ? "Yes" : "No";
+
+            // Alternating row colors for readability
+            if (row % 2 == 0)
+            {
+                using (var rowRange = worksheet.Cells[$"A{row}:G{row}"])
+                {
+                    rowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    rowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                }
+            }
+
+            // Add borders to each cell
+            using (var cellRange = worksheet.Cells[$"A{row}:G{row}"])
+            {
+                cellRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+            }
+
+            row++;
+        }
+
+        // AutoFit Columns
+        worksheet.Cells.AutoFitColumns();
+
+        // Xuất file
+        var fileContent = package.GetAsByteArray();
+        var fileName = "UsersList.xlsx";
+        if (fileContent == null || fileContent.Length == 0)
+        {
+            await _mess.Error("File generation failed!");
+            return;
+        }
+
+        var base64 = Convert.ToBase64String(fileContent);
+
+        // Convert byte[] thành Base64 để tải về
+        await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
     }
 }
 

@@ -23,5 +23,6 @@ namespace CourseManagement.Model.Model
 
         public ICollection<Enrollment> Enrollments { get; set; }
         public ICollection<Module> Modules { get; set; }
+        public List<CourseLearningOutcome> LearningOutcomes { get; set; } = new();
     }
 }

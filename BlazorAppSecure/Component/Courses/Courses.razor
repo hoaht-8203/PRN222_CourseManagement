@@ -11,6 +11,7 @@
 @inject IMessageService _mess
 @inject ModalService ModelService
 @inject NavigationManager _nav
+@inject IJSRuntime JS
 
 <div class="mb-2">
     <Breadcrumb>
@@ -125,6 +126,7 @@
         <h6>Total course: @courseList?.Count()</h6>
     </div>
     <div class="mb-2">
+        <Button Icon="@IconType.Outline.Download" OnClick="ExportToExcel">Export to Excel</Button>
         <Tooltip Title="Reload course data" Placement="Placement.Left">
             <Button Icon="@IconType.Outline.Reload" @onclick="FetchListCourse" />
         </Tooltip>
@@ -194,7 +196,23 @@ class="table-list-course">
             <CellRender Context="cellData">
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Eye" @onclick="@(() => HandleNavigateToDetail(context))"></Button>
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit" OnClick="() => OpenUpdateCourseDrawer(context.Id)"></Button>
-                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
+                @if (context.Status != CourseStatus.Publish) {
+                    <Popconfirm Title="Are you sure you want to publish this course?"
+                                OnConfirm="() => HandlePublishCourse(context.Id)"
+                                OkText="Yes"
+                                CancelText="No">
+                        <Button Type="ButtonType.Text" Icon="@IconType.Outline.Upload"></Button>
+                    </Popconfirm>
+                }
+
+                @if (context.Status == CourseStatus.Publish) {
+                    <Popconfirm Title="Are you sure you want to unpublish this course?"
+                                OnConfirm="() => HandleUnpublishCourse(context.Id)"
+                                OkText="Yes"
+                                CancelText="No">
+                        <Button Type="ButtonType.Text" Icon="@IconType.Outline.Download"></Button>
+                    </Popconfirm>
+                }
             </CellRender>
         </ActionColumn>
     </ColumnDefinitions>
@@ -297,6 +315,29 @@ Width="500"
                         <SegmentedItem Value="true" Label="Pro Course" />
                         <SegmentedItem Value="false" Label="Free Course" />
                     </Segmented>
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>What You'll Learn</Text>
+                <FormItem>
+                    <div class="d-flex gap-2 mb-2">
+                        <Input @bind-Value="newOutcome" Placeholder="Enter a learning outcome" />
+                        <Button Type="ButtonType.Primary" OnClick="AddLearningOutcome">Add</Button>
+                    </div>
+                    @if (context.LearningOutcomes.Any()) {
+                        <ul class="learning-outcomes-list">
+                            @foreach (var outcome in context.LearningOutcomes) {
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span>@outcome</span>
+                                    <Button Type="ButtonType.Link" Danger OnClick="() => RemoveLearningOutcome(outcome)">
+                                        <Icon Type="delete" />
+                                    </Button>
+                                </li>
+                            }
+                        </ul>
+                    }
                 </FormItem>
             </AntDesign.Col>
         </Row>
@@ -408,6 +449,29 @@ Width="500">
                 </FormItem>
             </AntDesign.Col>
         </Row>
+        <Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <Text>What You'll Learn</Text>
+                <FormItem>
+                    <div class="d-flex gap-2 mb-2">
+                        <Input @bind-Value="newUpdateOutcome" Placeholder="Enter a learning outcome" />
+                        <Button Type="ButtonType.Primary" OnClick="AddUpdateLearningOutcome">Add</Button>
+                    </div>
+                    @if (context.LearningOutcomes.Any()) {
+                        <ul class="learning-outcomes-list">
+                            @foreach (var outcome in context.LearningOutcomes) {
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span>@outcome</span>
+                                    <Button Type="ButtonType.Link" Danger OnClick="() => RemoveUpdateLearningOutcome(outcome)">
+                                        <Icon Type="delete" />
+                                    </Button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </FormItem>
+            </AntDesign.Col>
+        </Row>
         <Row Class="mt-3">
             <Col Span="24" Class="d-flex justify-content-end gap-2">
                 <Button Type="ButtonType.Default" @onclick="close">Cancel</Button>
@@ -439,6 +503,30 @@ Width="500">
     bool LoadingCourseDetail = false;
 
     private Form<CategoryModel> _form;
+    private string newOutcome = "";
+    private string newUpdateOutcome = "";
+
+    private void AddLearningOutcome() {
+        if (!string.IsNullOrWhiteSpace(newOutcome)) {
+            courseModel.LearningOutcomes.Add(newOutcome);
+            newOutcome = "";
+        }
+    }
+
+    private void RemoveLearningOutcome(string outcome) {
+        courseModel.LearningOutcomes.Remove(outcome);
+    }
+
+    private void AddUpdateLearningOutcome() {
+        if (!string.IsNullOrWhiteSpace(newUpdateOutcome)) {
+            updateCourseModel.LearningOutcomes.Add(newUpdateOutcome);
+            newUpdateOutcome = "";
+        }
+    }
+
+    private void RemoveUpdateLearningOutcome(string outcome) {
+        updateCourseModel.LearningOutcomes.Remove(outcome);
+    }
 
     RenderFragment FormTemplate() {
         return
@@ -489,11 +577,9 @@ Width="500">
         _nav.NavigateTo($"/courses/detail/{model.Id}");
     }
 
-    async Task OpenUpdateCourseDrawer(string courseId)
-    {
+    async Task OpenUpdateCourseDrawer(string courseId) {
         var courseDetailRes = await FetchCourseDetail(courseId);
-        if (courseDetailRes != null)
-        {
+        if (courseDetailRes != null) {
             updateCourseModel = new() {
                     Id = courseDetailRes.Id,
                     Title = courseDetailRes.Title,
@@ -502,11 +588,11 @@ Width="500">
                     PreviewVideoUrl = courseDetailRes.PreviewVideoUrl,
                     Level = (CourseLevel)courseDetailRes.Level,
                     CategoryId = courseDetailRes.CategoryId,
-                    IsProCourse = (int)courseDetailRes.CourseType == (int)CourseType.ProCourse
+                    IsProCourse = (int)courseDetailRes.CourseType == (int)CourseType.ProCourse,
+                    LearningOutcomes = courseDetailRes.LearningOutcomes ?? new List<string>()
                 };
             visibleUpdateCourse = true;
-        } else
-        {
+        } else {
             await _mess.Error($"Course with id {courseId} is not existed");
         }
     }
@@ -751,6 +837,89 @@ Width="500">
         return $"https://www.youtube.com/embed/{videoId}";
     }
 
+    async void ExportToExcel()
+    {
+        using var package = new OfficeOpenXml.ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Courses");
+
+        // Header Row Styling
+        using (var headerRange = worksheet.Cells["A1:G1"])
+        {
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+            headerRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            headerRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            headerRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Medium);
+        }
+
+        // Thêm tiêu đề cột
+        worksheet.Cells[1, 1].Value = "Title";
+        worksheet.Cells[1, 2].Value = "Description";
+        worksheet.Cells[1, 3].Value = "Level";
+        worksheet.Cells[1, 4].Value = "Status";
+        worksheet.Cells[1, 5].Value = "Course Type";
+        worksheet.Cells[1, 6].Value = "Category";
+        worksheet.Cells[1, 7].Value = "Total Enrolled";
+
+        // Thêm dữ liệu từ danh sách coursesList
+        int row = 2;
+        foreach (var course in courseList)
+        {
+            worksheet.Cells[row, 1].Value = course.Title;
+            worksheet.Cells[row, 2].Value = course.Description ?? "N/A";
+            worksheet.Cells[row, 3].Value = course.Level;
+            // Chuyển đổi CourseStatus thành chuỗi hiển thị
+            worksheet.Cells[row, 4].Value = course.Status switch
+            {
+                CourseStatus.Publish => "Publish",
+                CourseStatus.UnAvailable => "Unavailable",
+                CourseStatus.InProgress => "In Progress",
+                _ => "Unknown"
+            };
+
+            worksheet.Cells[row, 5].Value = course.CourseType;
+            worksheet.Cells[row, 6].Value = course.CategoryName;
+            worksheet.Cells[row, 7].Value = 0;
+
+            // Alternating row colors for readability
+            if (row % 2 == 0)
+            {
+                using (var rowRange = worksheet.Cells[$"A{row}:H{row}"])
+                {
+                    rowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    rowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                }
+            }
+
+            // Add borders to each cell
+            using (var cellRange = worksheet.Cells[$"A{row}:G{row}"])
+            {
+                cellRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+            }
+
+            row++;
+        }
+
+        // AutoFit Columns
+        worksheet.Cells.AutoFitColumns();
+
+        // Xuất file
+        var fileContent = package.GetAsByteArray();
+        var fileName = "CoursesList.xlsx";
+        if (fileContent == null || fileContent.Length == 0)
+        {
+            await _mess.Error("File generation failed!");
+            return;
+        }
+
+        var base64 = Convert.ToBase64String(fileContent);
+
+        // Convert byte[] thành Base64 để tải về
+        await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
+    }
+
+
     public class CourseSearchModel {
         public string? Title { get; set; }
         public IEnumerable<int>? Levels { get; set; }
@@ -758,10 +927,80 @@ Width="500">
         public IEnumerable<int>? CategoryIds { get; set; }
         public IEnumerable<int>? CourseTypes { get; set; }
     }
+
+    private async Task HandlePublishCourse(string courseId)
+    {
+        try
+        {
+            var request = new UpdateStatusRequest
+            {
+                CourseId = courseId,
+                newStatus = CourseStatus.Publish
+            };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Course/update-status", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                FetchListCourse(); // Refresh the list
+                await _mess.Success("Course published successfully");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await _mess.Error($"Failed to publish course: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleUnpublishCourse(string courseId)
+    {
+        try
+        {
+            var request = new UpdateStatusRequest
+            {
+                CourseId = courseId,
+                newStatus = CourseStatus.InProgress
+            };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Course/update-status", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                FetchListCourse(); // Refresh the list
+                await _mess.Success("Course unpublished successfully");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await _mess.Error($"Failed to unpublish course: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
 }
 
 <style>
     .total-course h6 {
         color: darkorange
     }
+
+    .learning-outcomes-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .learning-outcomes-list li {
+            padding: 8px;
+            border: 1px solid #f0f0f0;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
 </style>

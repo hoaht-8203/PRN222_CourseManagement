@@ -17,11 +17,19 @@ namespace CourseManagement.Model.DTOs {
         public bool IsProCourse { get; set; }
         [Required]
         public int CategoryId { get; set; }
+        [Required]
+        public List<string> LearningOutcomes { get; set; } = new();
     }
 
     public class RemoveCourseRequest {
         [Required]
         public string CourseId { get; set; }
+    }
+
+    public class UpdateStatusRequest {
+        [Required]
+        public string CourseId { get; set; }
+        public CourseStatus newStatus { get; set; }
     }
 
     public class DetailCourseRequest {
@@ -45,6 +53,7 @@ namespace CourseManagement.Model.DTOs {
         public string CategoryName { get; set; }
 
         public List<Module> Modules { get; set; } = [];
+        public List<string> LearningOutcomes { get; set; } = new();
 
         public class Module {
             public int Id { get; set; }
@@ -90,6 +99,11 @@ namespace CourseManagement.Model.DTOs {
         public CourseType CourseType { get; set; }
         public string TypeName { get; set; }
         public string CategoryName { get; set; }
+        public int TotalEnrolled { get; set; }
+        public int TotalLesson { get; set; }
+        public TimeSpan TotalTime { get; set; }
+
+        public List<string> LearningOutcomes { get; set; } = new();
     }
 
     public class UpdateCourseRequest() {
@@ -109,5 +123,19 @@ namespace CourseManagement.Model.DTOs {
         public bool IsProCourse { get; set; }
         [Required]
         public int CategoryId { get; set; }
+        [Required]
+        public List<string> LearningOutcomes { get; set; } = new();
+    }
+
+    public class EnrollCourseRequestModel {
+        [Required]
+        public string CourseId;
+    }
+
+    public class EnrollCourseRequest {
+        [Required]
+        public string CourseId;
+        [Required]
+        public string UserEmail;
     }
 }

@@ -8,6 +8,7 @@ using CourseManagement.Model.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace CourseManagementAPI.Controllers {
     [Route("api/[controller]")]
@@ -36,7 +37,7 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
+        [AllowAnonymous]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchCourseRequest req) {
             try {
@@ -60,7 +61,7 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
+        [Authorize]
         [HttpGet("detail")]
         public async Task<IActionResult> Detail([FromQuery] DetailCourseRequest req) {
             try {
@@ -83,6 +84,39 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while updating course details" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("update-status")]
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusRequest req) {
+            try {
+                await _courseRepository.UpdateStatus(req);
+                return Ok(new { Message = "Update course status successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while updating course status" });
+            }
+        }
+
+        [Authorize(Roles = Role.Role_User_Admin)]
+        [HttpPost("enroll-course")]
+        public async Task<IActionResult> EnrollCourse([FromBody] EnrollCourseRequestModel req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await _courseRepository.EnrollCourse(new() {
+                    CourseId = req.CourseId,
+                    UserEmail = userEmail.Value
+                });
+                return Ok(new { Message = "Enroll course successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while enroll course" });
             }
         }
     }

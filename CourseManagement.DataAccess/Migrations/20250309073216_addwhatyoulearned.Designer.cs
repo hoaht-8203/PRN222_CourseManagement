@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250309073216_addwhatyoulearned")]
+    partial class addwhatyoulearned
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,16 +112,16 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "111602a8-3c6e-4994-bfb7-a305c90acd7c",
+                            ConcurrencyStamp = "151347a0-0742-4ebe-9242-18099ffc83dd",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             FullName = "Admin",
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN@ADMIN.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJAsHtVxRbtPi7SRJXD/W3FDT+PUYvmZiS9VdO6ad4gB3WXSf3eiFIDTz+NigTtQ5Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHmAjohybmRZNmUC9cdg36C6x/OLXKcPGYilp6P5tWh7IAnbL85UgwelnBWizlMYXQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f82ccc12-2511-4947-9ada-551d5af8c766",
+                            SecurityStamp = "bb69c3e7-a79b-46d9-84d1-6ead1e6c1c94",
                             TwoFactorEnabled = false,
                             UserName = "admin@admin.com"
                         },
@@ -126,16 +129,16 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "e404e498-c930-4a45-9b22-c35d2f333d37",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "226ac58c-fbe3-4ae3-ac02-88f0e5df8fc5",
+                            ConcurrencyStamp = "d957ce30-002f-4920-b3d0-7dcc445ddb6e",
                             Email = "user@user.com",
                             EmailConfirmed = true,
                             FullName = "User",
                             LockoutEnabled = true,
                             NormalizedEmail = "USER@USER.COM",
                             NormalizedUserName = "USER@USER.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJc72OsuCPe7CJyn4PA3Fsr30YBRy5EV8gl77P/e5wrZq6Beu0mCldTN/zEOZC4Kig==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOD6M8BMxngx6q2vh2z6SV1xFh36jaKBhpH2n/gNPRH5ZWAuQHTkJd0AN+98fJkmcQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6fe14a42-a3d9-4484-81d8-daec8e94c185",
+                            SecurityStamp = "24c479e7-3c52-462f-9287-221cdd393119",
                             TwoFactorEnabled = false,
                             UserName = "user@user.com"
                         });
@@ -338,7 +341,7 @@ namespace CourseManagement.DataAccess.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("enrollments");
+                    b.ToTable("Enrollment");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.Lesson", b =>

@@ -1,0 +1,409 @@
+﻿@page "/learning/{Id}"
+@using CourseManagement.Model.DTOs
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IMessageService _mess
+@inject NavigationManager _nav
+
+<div class="learning-container">
+    @if (CourseDetail == null || LoadingCourseDetail)
+    {
+        <Spin Spinning="true" Tip="Loading...">
+            <div style="min-height: 200px;"></div>
+        </Spin>
+    }
+    else
+    {
+        <div class="course-header">
+            <div>
+                <Title Level="3">@CourseDetail.Title</Title>
+            </div>
+            <Button Type="ButtonType.Link" OnClick="@(() => _nav.NavigateTo($"/preview/{Id}"))">
+                <Icon Type="arrow-left" /> Back to Course
+            </Button>
+        </div>
+
+        <GridRow>
+            <GridCol Span="17">
+                <div class="video-section">
+                    @if (CurrentLesson != null)
+                    {
+                        <div class="video-container">
+                            <iframe src="@GetYouTubeEmbedUrl(CurrentLesson.UrlVideo)"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div class="lesson-info">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <Title Level="4">@CurrentLesson.Title</Title>
+                                <Button Type="@(IsLessonCompleted(CurrentLesson.Id) ? ButtonType.Default : ButtonType.Primary)"
+                                        OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
+                                    @if (IsLessonCompleted(CurrentLesson.Id)) {
+                                        <span><Icon Type="check" /> Completed</span>
+                                    } else {
+                                        <span>Mark as Complete</span>
+                                    }
+                                </Button>
+                            </div>
+                            <Paragraph>@CurrentLesson.Description</Paragraph>
+                        </div>
+                    }
+                </div>
+            </GridCol>
+            <GridCol Span="7">
+                <div class="course-content">
+                    <div class="content-header">
+                        <div>
+                            <Title Level="4">Course content</Title>
+                            <div class="course-stats">
+                                <Text>@CourseDetail.Modules.Count module • @GetTotalLessons() lesson • @GetTotalDuration()</Text>
+                            </div>
+                        </div>
+                        <div class="progress-circle">
+                            <Progress Type="ProgressType.Circle"
+                                      Percent="@CalculateProgress()"
+                                      Size="ProgressSize.Small"
+                                      Format="@(percent => $"{completedLessons.Count}/{GetTotalLessons()}")" />
+                        </div>
+                    </div>
+
+                    <Collapse DefaultActiveKey="@ActivePanelKeys"
+                              ExpandIconPosition="CollapseExpandIconPosition.Right"
+                              Style="@($"max-height: 650px; overflow: auto;")">
+                        @foreach (var module in CourseDetail.Modules.OrderBy(m => m.Order)) {
+                            <Panel Header="@($"{module.Order}. {module.Title}")"
+                                   Key="@module.Order.ToString()"
+                                   Extra="@($"{GetCompletedLessonsInModule(module)}/{module.Lessons.Count}")">
+                                <AntList DataSource="@module.Lessons.OrderBy(l => l.Order)">
+                                    <ChildContent Context="lesson">
+                                        <ListItem Class="@GetLessonClass(lesson)"
+                                                  OnClick="@(() => HandleLessonClick(lesson))">
+                                            <div class="lesson-item">
+                                                <div>
+                                                    @if (IsLessonCompleted(lesson.Id)) {
+                                                        <Icon Type="check-circle" Theme="IconThemeType.Fill" Style="color: #52c41a;" />
+                                                    } else {
+                                                        <Icon Type="play-circle" Theme="IconThemeType.Outline" />
+                                                    }
+                                                    <span class="ml-2">@lesson.Title</span>
+                                                </div>
+                                                @if (lesson.VideoDuration.HasValue) {
+                                                    <Tag Color="TagColor.Blue">@FormatDuration(lesson.VideoDuration.Value)</Tag>
+                                                }
+                                            </div>
+                                        </ListItem>
+                                    </ChildContent>
+                                </AntList>
+                            </Panel>
+                        }
+                    </Collapse>
+                </div>
+            </GridCol>
+        </GridRow>
+    }
+</div>
+
+<style>
+    .learning-container {
+        padding: 0px;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .video-section {
+        padding-right: 24px;
+    }
+
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    .lesson-info {
+        margin-top: 24px;
+        padding: 24px;
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+    }
+
+    .course-content {
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+        padding: 24px;
+        height: 100%;
+    }
+
+    .course-stats {
+        margin: 16px 0;
+        color: #666;
+    }
+
+    .lesson-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .active {
+        background-color: #e6f7ff;
+    }
+
+    :deep(.ant-collapse-content-box) {
+        padding: 0 !important;
+    }
+
+    :deep(.ant-list-item) {
+        padding: 0 !important;
+    }
+
+    .ant-collapse-content-box {
+        padding: 0px !important;
+    }
+
+    .lesson-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .completed {
+        background-color: #f6ffed;
+    }
+
+    .active {
+        background-color: #e6f7ff !important;
+    }
+
+        .active.completed {
+            background-color: #b7eb8f !important;
+        }
+
+    .ml-2 {
+        margin-left: 8px;
+    }
+
+    .mb-4 {
+        margin-bottom: 16px;
+    }
+
+    .mb-3 {
+        margin-bottom: 12px;
+    }
+
+    .course-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .progress-circle {
+        padding-top: 4px;
+    }
+
+    :deep(.ant-progress-circle) {
+        width: 80px !important;
+        height: 80px !important;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private DetailCourseResponse CourseDetail { get; set; }
+    private DetailCourseResponse.Lesson CurrentLesson { get; set; }
+    private bool LoadingCourseDetail = true;
+    private string[] ActivePanelKeys = new[] { "1" };
+    private HttpClient httpClient;
+    private HashSet<int> completedLessons = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = HttpClientFactory.CreateClient("Auth");
+        await FetchCourseDetail();
+        await LoadCompletedLessons();
+    }
+
+    private async Task LoadCompletedLessons() {
+        try {
+            // TODO: Replace with actual API call
+            // var response = await httpClient.GetAsync($"/api/Learning/completed-lessons?courseId={Id}");
+            // if (response.IsSuccessStatusCode)
+            // {
+            //     var lessons = await response.Content.ReadFromJsonAsync<List<int>>();
+            //     completedLessons = new HashSet<int>(lessons);
+            // }
+        } catch (Exception ex) {
+            await _mess.Error($"Error loading progress: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleLessonComplete(DetailCourseResponse.Lesson lesson) {
+        try {
+            if (IsLessonCompleted(lesson.Id)) {
+                completedLessons.Remove(lesson.Id);
+            } else {
+                completedLessons.Add(lesson.Id);
+            }
+
+            // TODO: Replace with actual API call
+            // var request = new { LessonId = lesson.Id, IsCompleted = IsLessonCompleted(lesson.Id) };
+            // await httpClient.PostAsJsonAsync("/api/Learning/update-progress", request);
+
+            StateHasChanged();
+        } catch (Exception ex) {
+            await _mess.Error($"Error updating progress: {ex.Message}");
+        }
+    }
+
+    private bool IsLessonCompleted(int lessonId) {
+        return completedLessons.Contains(lessonId);
+    }
+
+    private string GetLessonClass(DetailCourseResponse.Lesson lesson) {
+        var classes = new List<string>();
+
+        if (CurrentLesson?.Id == lesson.Id)
+            classes.Add("active");
+
+        if (IsLessonCompleted(lesson.Id))
+            classes.Add("completed");
+
+        return string.Join(" ", classes);
+    }
+
+    private int GetCompletedLessonsInModule(DetailCourseResponse.Module module) {
+        return module.Lessons.Count(l => IsLessonCompleted(l.Id));
+    }
+
+    private double CalculateProgress() {
+        if (CourseDetail == null) return 0;
+
+        var totalLessons = GetTotalLessons();
+        if (totalLessons == 0) return 0;
+
+        return Math.Round((double)completedLessons.Count / totalLessons * 100, 1);
+    }
+
+    private async Task FetchCourseDetail()
+    {
+        try
+        {
+            var response = await httpClient.GetAsync($"/api/Course/detail?CourseId={Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                CourseDetail = await response.Content.ReadFromJsonAsync<DetailCourseResponse>();
+                if (CourseDetail?.Modules.Any() == true)
+                {
+                    var firstModule = CourseDetail.Modules.OrderBy(m => m.Order).First();
+                    if (firstModule.Lessons.Any())
+                    {
+                        CurrentLesson = firstModule.Lessons.OrderBy(l => l.Order).First();
+                    }
+                }
+            }
+            else
+            {
+                await _mess.Error("Failed to load course details");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+        finally
+        {
+            LoadingCourseDetail = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleLessonClick(DetailCourseResponse.Lesson lesson)
+    {
+        CurrentLesson = lesson;
+        var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
+        ActivePanelKeys = new[] { module.Order.ToString() };
+    }
+
+    private int GetTotalLessons()
+    {
+        return CourseDetail.Modules.Sum(m => m.Lessons.Count);
+    }
+
+    private string GetTotalDuration()
+    {
+        var totalDuration = TimeSpan.Zero;
+        foreach (var module in CourseDetail.Modules)
+        {
+            foreach (var lesson in module.Lessons)
+            {
+                if (lesson.VideoDuration.HasValue)
+                {
+                    totalDuration += lesson.VideoDuration.Value;
+                }
+            }
+        }
+        return FormatDuration(totalDuration);
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        if (duration.Hours > 0)
+        {
+            return $"{duration.Hours}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+        }
+        return $"{duration.Minutes}:{duration.Seconds:D2}";
+    }
+
+    private string GetYouTubeEmbedUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return "";
+
+        string videoId = "";
+
+        if (url.Contains("youtube.com/watch"))
+        {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            videoId = query["v"];
+        }
+        else if (url.Contains("youtu.be"))
+        {
+            videoId = url.Split('/').Last();
+        }
+        else if (url.Length == 11)
+        {
+            videoId = url;
+        }
+
+        return $"https://www.youtube.com/embed/{videoId}";
+    }
+}
