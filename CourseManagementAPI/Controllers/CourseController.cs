@@ -74,6 +74,23 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
+        [Authorize]
+        [HttpGet("learn")]
+        public async Task<IActionResult> Learn([FromQuery] LearnCourseRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var response = await _courseRepository.Learn(req, userEmail.Value);
+                return Ok(response);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while getting learning details" });
+            }
+        }
+
         [HttpGet("preview")]
         public async Task<IActionResult> Preview([FromQuery] DetailCourseRequest req) {
             try {

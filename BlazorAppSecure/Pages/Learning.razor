@@ -6,11 +6,14 @@
 @inject NavigationManager _nav
 
 <div class="learning-container">
-    @if (CourseDetail == null || LoadingCourseDetail)
+    @if (LoadingCourseDetail)
     {
         <Spin Spinning="true" Tip="Loading...">
             <div style="min-height: 200px;"></div>
         </Spin>
+    } else if (CourseDetail == null)
+    {
+        <Empty/>
     }
     else
     {
@@ -30,15 +33,15 @@
                     {
                         <div class="video-container">
                             <iframe src="@GetYouTubeEmbedUrl(CurrentLesson.UrlVideo)"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
                             </iframe>
                         </div>
                         <div class="lesson-info">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <Title Level="4">@CurrentLesson.Title</Title>
                                 <Button Type="@(IsLessonCompleted(CurrentLesson.Id) ? ButtonType.Default : ButtonType.Primary)"
-                                        OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
+                                OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
                                     @if (IsLessonCompleted(CurrentLesson.Id)) {
                                         <span><Icon Type="check" /> Completed</span>
                                     } else {
@@ -62,23 +65,23 @@
                         </div>
                         <div class="progress-circle">
                             <Progress Type="ProgressType.Circle"
-                                      Percent="@CalculateProgress()"
-                                      Size="ProgressSize.Small"
-                                      Format="@(percent => $"{completedLessons.Count}/{GetTotalLessons()}")" />
+                            Percent="@CalculateProgress()"
+                            Size="ProgressSize.Small"
+                            Format="@(percent => $"{completedLessons.Count}/{GetTotalLessons()}")" />
                         </div>
                     </div>
 
                     <Collapse DefaultActiveKey="@ActivePanelKeys"
-                              ExpandIconPosition="CollapseExpandIconPosition.Right"
-                              Style="@($"max-height: 650px; overflow: auto;")">
+                    ExpandIconPosition="CollapseExpandIconPosition.Right"
+                    Style="@($"max-height: 650px; overflow: auto;")">
                         @foreach (var module in CourseDetail.Modules.OrderBy(m => m.Order)) {
                             <Panel Header="@($"{module.Order}. {module.Title}")"
-                                   Key="@module.Order.ToString()"
-                                   Extra="@($"{GetCompletedLessonsInModule(module)}/{module.Lessons.Count}")">
+                            Key="@module.Order.ToString()"
+                            Extra="@($"{GetCompletedLessonsInModule(module)}/{module.Lessons.Count}")">
                                 <AntList DataSource="@module.Lessons.OrderBy(l => l.Order)">
                                     <ChildContent Context="lesson">
                                         <ListItem Class="@GetLessonClass(lesson)"
-                                                  OnClick="@(() => HandleLessonClick(lesson))">
+                                        OnClick="@(() => HandleLessonClick(lesson))">
                                             <div class="lesson-item">
                                                 <div>
                                                     @if (IsLessonCompleted(lesson.Id)) {
@@ -106,131 +109,131 @@
 
 <style>
     .learning-container {
-        padding: 0px;
-        max-width: 1600px;
-        margin: 0 auto;
+    padding: 0px;
+    max-width: 1600px;
+    margin: 0 auto;
     }
 
     .video-section {
-        padding-right: 24px;
+    padding-right: 24px;
     }
 
     .video-container {
-        position: relative;
-        padding-bottom: 56.25%;
-        height: 0;
-        overflow: hidden;
-        border-radius: 8px;
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
     }
 
     .video-container iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
     }
 
     .lesson-info {
-        margin-top: 24px;
-        padding: 24px;
-        background: #fff;
-        border-radius: 8px;
-        border: 1px solid #f0f0f0;
+    margin-top: 24px;
+    padding: 24px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
     }
 
     .course-content {
-        background: #fff;
-        border-radius: 8px;
-        border: 1px solid #f0f0f0;
-        padding: 24px;
-        height: 100%;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    padding: 24px;
+    height: 100%;
     }
 
     .course-stats {
-        margin: 16px 0;
-        color: #666;
+    margin: 16px 0;
+    color: #666;
     }
 
     .lesson-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        cursor: pointer;
-        padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    padding: 8px;
     }
 
     .active {
-        background-color: #e6f7ff;
+    background-color: #e6f7ff;
     }
 
     :deep(.ant-collapse-content-box) {
-        padding: 0 !important;
+    padding: 0 !important;
     }
 
     :deep(.ant-list-item) {
-        padding: 0 !important;
+    padding: 0 !important;
     }
 
     .ant-collapse-content-box {
-        padding: 0px !important;
+    padding: 0px !important;
     }
 
     .lesson-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        cursor: pointer;
-        padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    padding: 8px;
     }
 
     .completed {
-        background-color: #f6ffed;
+    background-color: #f6ffed;
     }
 
     .active {
-        background-color: #e6f7ff !important;
+    background-color: #e6f7ff !important;
     }
 
-        .active.completed {
-            background-color: #b7eb8f !important;
-        }
+    .active.completed {
+    background-color: #b7eb8f !important;
+    }
 
     .ml-2 {
-        margin-left: 8px;
+    margin-left: 8px;
     }
 
     .mb-4 {
-        margin-bottom: 16px;
+    margin-bottom: 16px;
     }
 
     .mb-3 {
-        margin-bottom: 12px;
+    margin-bottom: 12px;
     }
 
     .course-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     }
 
     .content-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
     }
 
     .progress-circle {
-        padding-top: 4px;
+    padding-top: 4px;
     }
 
     :deep(.ant-progress-circle) {
-        width: 80px !important;
-        height: 80px !important;
+    width: 80px !important;
+    height: 80px !important;
     }
 </style>
 
@@ -238,8 +241,8 @@
     [Parameter]
     public string Id { get; set; }
 
-    private DetailCourseResponse CourseDetail { get; set; }
-    private DetailCourseResponse.Lesson CurrentLesson { get; set; }
+    private LearnCourseResponse CourseDetail { get; set; }
+    private LearnCourseResponse.Lesson CurrentLesson { get; set; }
     private bool LoadingCourseDetail = true;
     private string[] ActivePanelKeys = new[] { "1" };
     private HttpClient httpClient;
@@ -266,7 +269,7 @@
         }
     }
 
-    private async Task ToggleLessonComplete(DetailCourseResponse.Lesson lesson) {
+    private async Task ToggleLessonComplete(LearnCourseResponse.Lesson lesson) {
         try {
             if (IsLessonCompleted(lesson.Id)) {
                 completedLessons.Remove(lesson.Id);
@@ -288,7 +291,7 @@
         return completedLessons.Contains(lessonId);
     }
 
-    private string GetLessonClass(DetailCourseResponse.Lesson lesson) {
+    private string GetLessonClass(LearnCourseResponse.Lesson lesson) {
         var classes = new List<string>();
 
         if (CurrentLesson?.Id == lesson.Id)
@@ -300,7 +303,7 @@
         return string.Join(" ", classes);
     }
 
-    private int GetCompletedLessonsInModule(DetailCourseResponse.Module module) {
+    private int GetCompletedLessonsInModule(LearnCourseResponse.Module module) {
         return module.Lessons.Count(l => IsLessonCompleted(l.Id));
     }
 
@@ -317,10 +320,10 @@
     {
         try
         {
-            var response = await httpClient.GetAsync($"/api/Course/detail?CourseId={Id}");
+            var response = await httpClient.GetAsync($"/api/Course/learn?CourseId={Id}");
             if (response.IsSuccessStatusCode)
             {
-                CourseDetail = await response.Content.ReadFromJsonAsync<DetailCourseResponse>();
+                CourseDetail = await response.Content.ReadFromJsonAsync<LearnCourseResponse>();
                 if (CourseDetail?.Modules.Any() == true)
                 {
                     var firstModule = CourseDetail.Modules.OrderBy(m => m.Order).First();
@@ -332,11 +335,12 @@
             }
             else
             {
-                await _mess.Error("Failed to load course details");
+                _nav.NavigateTo("/?error=You must enroll in this course first");
             }
         }
         catch (Exception ex)
         {
+            LoadingCourseDetail = false;
             await _mess.Error($"Error: {ex.Message}");
         }
         finally
@@ -346,7 +350,7 @@
         }
     }
 
-    private void HandleLessonClick(DetailCourseResponse.Lesson lesson)
+    private void HandleLessonClick(LearnCourseResponse.Lesson lesson)
     {
         CurrentLesson = lesson;
         var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
