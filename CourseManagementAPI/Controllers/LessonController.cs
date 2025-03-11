@@ -96,6 +96,23 @@ namespace CourseManagementAPI.Controllers {
         }
 
         [Authorize]
+        [HttpGet("get-lessons-completed")]
+        public async Task<IActionResult> LessonCompleted([FromQuery] GetLessonsCompletedRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var res = await lessonRepository.GetLessonsCompleted(req, userEmail.Value);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while get list lesson completed: {ex}" });
+            }
+        }
+
+        [Authorize]
         [HttpGet("lesson-completed")]
         public async Task<IActionResult> LessonCompleted([FromQuery] CompletedLessonRequest req) {
             try {

@@ -61,7 +61,7 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("detail")]
         public async Task<IActionResult> Detail([FromQuery] DetailCourseRequest req) {
             try {

@@ -210,12 +210,52 @@ namespace CourseManagement.DataAccess.Repositorys {
             return res;
         }
 
+        public async Task<GetLessonsCompletedResponse> GetLessonsCompleted(GetLessonsCompletedRequest req, string userEmail) {
+            var foundedCourse = await _context.Courses.SingleOrDefaultAsync(c => c.Id.ToString() == req.CourseId && c.Status != CourseStatus.UnAvailable)
+                ?? throw new ArgumentException($"Course with id {req.CourseId} not found or not active");
+
+            var foundEnrollment = await _context.enrollments.AnyAsync(e => e.CourseId.ToString() == req.CourseId);
+
+            if (!foundEnrollment) {
+                throw new ArgumentException($"You are not enroll this course, can't get list lesson completed");
+            }
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException($"User not found");
+
+            var listLessonCompleted = await _context.LessonProgresses
+                .Include(lp => lp.Lesson)
+                    .ThenInclude(l => l.Module)
+                        .ThenInclude(m => m.Course)
+                        .Where(lp => lp.UserId == userFound.Id && 
+                                     lp.Lesson.Module.Course.Id.ToString() == req.CourseId && 
+                                     lp.IsCompleted == true)
+                        .Select(lp => lp.LessonId)
+                        .ToListAsync();
+
+            var response = new GetLessonsCompletedResponse {
+                ListLessonId = new HashSet<int>(listLessonCompleted)
+            };
+
+            return response;
+        }
+
         public async Task CompletedLesson(CompletedLessonRequest req, string userEmail) {
-            var founedLesson = await _context.Lessons.SingleOrDefaultAsync(l=> l.Id == req.LessonId && l.Status != LessonStatus.Delete)
-                ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+            var founedLesson = await _context.Lessons
+                    .Include(l => l.Module)
+                        .ThenInclude(m => m.Course)
+                    .SingleOrDefaultAsync(l => l.Id == req.LessonId && l.Status != LessonStatus.Delete)
+                    ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
 
             var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
                  ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            var isEnrolled = await _context.enrollments
+                    .AnyAsync(e => e.UserId == userFound.Id && e.CourseId == founedLesson.Module.CourseId);
+
+            if (!isEnrolled) {
+                throw new ArgumentException("You must enroll in this course before marking lessons as completed");
+            }
 
             LessonProgress newLessonProgress = new() {
                 LessonId = founedLesson.Id,
@@ -228,11 +268,22 @@ namespace CourseManagement.DataAccess.Repositorys {
         }
 
         public async Task NotCompletedLesson(NotCompletedLessonRequest req, string userEmail) {
-            var foundedLessonProgress = await _context.LessonProgresses.SingleOrDefaultAsync(l => l.LessonId == req.LessonId)
-                ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+            var foundedLessonProgress = await _context.LessonProgresses
+                    .Include(lp => lp.Lesson)
+                        .ThenInclude(l => l.Module)
+                            .ThenInclude(m => m.Course)
+                    .SingleOrDefaultAsync(l => l.LessonId == req.LessonId)
+                    ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
 
             var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
                  ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            var isEnrolled = await _context.enrollments
+                    .AnyAsync(e => e.UserId == userFound.Id && e.CourseId == foundedLessonProgress.Lesson.Module.CourseId);
+
+            if (!isEnrolled) {
+                throw new ArgumentException("You must enroll in this course before modifying lesson progress");
+            }
 
             foundedLessonProgress.IsCompleted = false;
 
