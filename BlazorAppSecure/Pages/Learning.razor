@@ -248,22 +248,24 @@
     private HttpClient httpClient;
     private HashSet<int> completedLessons = new();
 
-    protected override async Task OnInitializedAsync()
-    {
+    protected override async Task OnInitializedAsync() {
         httpClient = HttpClientFactory.CreateClient("Auth");
         await FetchCourseDetail();
-        await LoadCompletedLessons();
+        if (CourseDetail != null)  // Chỉ load completed lessons nếu course detail load thành công
+        {
+            await LoadCompletedLessons();
+        }
     }
 
     private async Task LoadCompletedLessons() {
         try {
-            // TODO: Replace with actual API call
-            // var response = await httpClient.GetAsync($"/api/Learning/completed-lessons?courseId={Id}");
-            // if (response.IsSuccessStatusCode)
-            // {
-            //     var lessons = await response.Content.ReadFromJsonAsync<List<int>>();
-            //     completedLessons = new HashSet<int>(lessons);
-            // }
+            var response = await httpClient.GetAsync($"/api/Lesson/get-lessons-completed?CourseId={Id}");
+            if (response.IsSuccessStatusCode) {
+                var result = await response.Content.ReadFromJsonAsync<GetLessonsCompletedResponse>();
+                if (result != null) {
+                    completedLessons = result.ListLessonId;
+                }
+            }
         } catch (Exception ex) {
             await _mess.Error($"Error loading progress: {ex.Message}");
         }
@@ -272,18 +274,30 @@
     private async Task ToggleLessonComplete(LearnCourseResponse.Lesson lesson) {
         try {
             if (IsLessonCompleted(lesson.Id)) {
-                completedLessons.Remove(lesson.Id);
+                // Gọi API để đánh dấu lesson chưa hoàn thành
+                var response = await httpClient.GetAsync($"/api/Lesson/lesson-not-completed?LessonId={lesson.Id}");
+                if (response.IsSuccessStatusCode) {
+                    completedLessons.Remove(lesson.Id);
+                    _mess.Success("Lesson marked as not completed");
+                } else {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _mess.Error($"Failed to update lesson status: {error}");
+                }
             } else {
-                completedLessons.Add(lesson.Id);
+                // Gọi API để đánh dấu lesson đã hoàn thành
+                var response = await httpClient.GetAsync($"/api/Lesson/lesson-completed?LessonId={lesson.Id}");
+                if (response.IsSuccessStatusCode) {
+                    completedLessons.Add(lesson.Id);
+                    _mess.Success("Lesson marked as completed");
+                } else {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _mess.Error($"Failed to update lesson status: {error}");
+                }
             }
-
-            // TODO: Replace with actual API call
-            // var request = new { LessonId = lesson.Id, IsCompleted = IsLessonCompleted(lesson.Id) };
-            // await httpClient.PostAsJsonAsync("/api/Learning/update-progress", request);
 
             StateHasChanged();
         } catch (Exception ex) {
-            await _mess.Error($"Error updating progress: {ex.Message}");
+            _mess.Error($"Error updating progress: {ex.Message}");
         }
     }
 
@@ -316,45 +330,74 @@
         return Math.Round((double)completedLessons.Count / totalLessons * 100, 1);
     }
 
-    private async Task FetchCourseDetail()
-    {
-        try
-        {
+    private async Task FetchCourseDetail() {
+        try {
             var response = await httpClient.GetAsync($"/api/Course/learn?CourseId={Id}");
-            if (response.IsSuccessStatusCode)
-            {
+            if (response.IsSuccessStatusCode) {
                 CourseDetail = await response.Content.ReadFromJsonAsync<LearnCourseResponse>();
-                if (CourseDetail?.Modules.Any() == true)
-                {
-                    var firstModule = CourseDetail.Modules.OrderBy(m => m.Order).First();
-                    if (firstModule.Lessons.Any())
-                    {
-                        CurrentLesson = firstModule.Lessons.OrderBy(l => l.Order).First();
-                    }
+                if (CourseDetail?.Modules.Any() == true) {
+                    await LoadLastViewedLesson();
                 }
-            }
-            else
-            {
+            } else {
                 _nav.NavigateTo("/?error=You must enroll in this course first");
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             LoadingCourseDetail = false;
             await _mess.Error($"Error: {ex.Message}");
-        }
-        finally
-        {
+        } finally {
             LoadingCourseDetail = false;
             StateHasChanged();
         }
     }
 
-    private void HandleLessonClick(LearnCourseResponse.Lesson lesson)
-    {
+    private async Task LoadLastViewedLesson() {
+        try {
+            var response = await httpClient.GetAsync($"/api/Lesson/get-last-viewed?CourseId={Id}");
+            if (response.IsSuccessStatusCode) {
+                var result = await response.Content.ReadFromJsonAsync<GetLastViewedResponse>();
+
+                if (result?.LastViewedLessonId != null) {
+                    var lesson = CourseDetail.Modules
+                        .SelectMany(m => m.Lessons)
+                        .FirstOrDefault(l => l.Id == result.LastViewedLessonId);
+
+                    if (lesson != null) {
+                        CurrentLesson = lesson;
+                        var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
+                        ActivePanelKeys = new[] { module.Order.ToString() };
+                        return;
+                    }
+                }
+
+                var firstModule = CourseDetail.Modules.OrderBy(m => m.Order).FirstOrDefault();
+                if (firstModule?.Lessons.Any() == true) {
+                    var firstLesson = firstModule.Lessons.OrderBy(l => l.Order).First();
+                    CurrentLesson = firstLesson;
+                    ActivePanelKeys = new[] { firstModule.Order.ToString() };
+                }
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error loading last viewed lesson: {ex.Message}");
+        }
+    }
+
+    private async Task UpdateLastViewedLesson(LearnCourseResponse.Lesson lesson) {
+        try {
+            var request = new UpdateLastViewedRequest {
+                    CourseId = Id,
+                    LessonId = lesson.Id
+                };
+            await httpClient.PostAsJsonAsync("/api/Lesson/update-last-viewed", request);
+        } catch (Exception ex) {
+            await _mess.Error($"Error updating last viewed lesson: {ex.Message}");
+        }
+    }
+
+    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) {
         CurrentLesson = lesson;
         var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
         ActivePanelKeys = new[] { module.Order.ToString() };
+        await UpdateLastViewedLesson(lesson);
     }
 
     private int GetTotalLessons()
