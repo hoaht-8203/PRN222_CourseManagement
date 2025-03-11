@@ -38,7 +38,7 @@
                 placeholder="Search by title"
                 Style="width: 100%;" />
             </FormItem>
-        @* <FormItem>
+            @* <FormItem>
             <Text>Search</Text>
             <Input @bind-Value="searchTerm"
                    placeholder="Search by title"
@@ -101,9 +101,9 @@
         <PropertyColumn Property="b => b.UrlImage" Width="250" Title="Image">
             <Image Src="@(string.IsNullOrEmpty(context.UrlImage) ? defaultImageUrl : context.UrlImage)" Fallback="@errorImageUrl" />
         </PropertyColumn>
-        <PropertyColumn Property="b => b.Content" Width="350" Title="Content">
+        @* <PropertyColumn Property="b => b.Content" Width="350" Title="Content">
             @(string.IsNullOrEmpty(context.Content) ? "No Content" : context.Content.Substring(0, Math.Min(context.Content.Length, 50)) + "...")
-        </PropertyColumn>
+        </PropertyColumn> *@
         <PropertyColumn Property="b => b.CreatedAt" Title="Created At" Width="160" />
         <PropertyColumn Property="b => b.Categories" Width="250" Title="Categories">
             <Tag>
@@ -143,7 +143,16 @@ OnClose="@CloseCreateModal">
             <ValidationMessage For="@(() => newBlog.Title)" />
         </FormItem>
         <FormItem Label="Content" Required>
-            <TextArea @bind-Value="@newBlog.Content" Placeholder="Enter blog content" Rows="6" />
+            <div>
+                <BlazoredTextEditor @ref="@richEditor">
+                    <ToolbarContent>
+                        @((MarkupString)toolbar)
+                    </ToolbarContent>
+                    <EditorContent>
+                        @((MarkupString)body)
+                    </EditorContent>
+                </BlazoredTextEditor>
+            </div>
             <ValidationMessage For="@(() => newBlog.Content)" Style="color: #ff4d4f;" />
         </FormItem>
         <FormItem Label="Preview Image">
@@ -156,13 +165,13 @@ OnClose="@CloseCreateModal">
         <FormItem Label="Categories">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <Select Mode="SelectMode.Multiple"
-                        Placeholder="Please select category"
-                        @bind-Values="@newBlog.CategoryIds"
-                        TItemValue="int"
-                        TItem="string"
-                        EnableSearch
-                        AllowClear
-                        Style="width: 200px;">
+                Placeholder="Please select category"
+                @bind-Values="@newBlog.CategoryIds"
+                TItemValue="int"
+                TItem="string"
+                EnableSearch
+                AllowClear
+                Style="width: 200px;">
                     <SelectOptions>
                         @if (categoryList != null)
                         {
@@ -186,18 +195,27 @@ OnClose="@CloseCreateModal">
 </Drawer>
 
 <Drawer Closable="true"
-        @bind-Visible="isEditModalVisible"
-        Placement="DrawerPlacement.Right"
-        Title='("Edit blog")'
-        Width="500"
-        OnClose="@CloseEditModal">
+@bind-Visible="isEditModalVisible"
+Placement="DrawerPlacement.Right"
+Title='("Edit blog")'
+Width="500"
+OnClose="@CloseEditModal">
     <Form Model="@editBlog" OnFinish="@HandleEdit" Layout="FormLayout.Vertical">
         <FormItem Label="Title" Required>
             <Input @bind-Value="@editBlog.Title" Placeholder="Enter blog title" />
             <ValidationMessage For="@(() => editBlog.Title)" />
         </FormItem>
         <FormItem Label="Content" Required>
-            <TextArea @bind-Value="@editBlog.Content" Placeholder="Enter blog content" Rows="6" />
+            <div>
+                <BlazoredTextEditor @ref="@richEditor">
+                    <ToolbarContent>
+                        @((MarkupString)toolbar)
+                    </ToolbarContent>
+                    <EditorContent>
+                        @((MarkupString)body)
+                    </EditorContent>
+                </BlazoredTextEditor>
+            </div>
             <ValidationMessage For="@(() => editBlog.Content)" Style="color: #ff4d4f;" />
         </FormItem>
         <FormItem Label="Preview Image">
@@ -209,12 +227,12 @@ OnClose="@CloseCreateModal">
         </FormItem>
         <FormItem Label="Categories">
             <Select Mode="SelectMode.Multiple"
-                    Placeholder="Please select category"
-                    @bind-Values="@editBlog.CategoryIds"
-                    TItemValue="int"
-                    TItem="string"
-                    EnableSearch
-                    AllowClear>
+            Placeholder="Please select category"
+            @bind-Values="@editBlog.CategoryIds"
+            TItemValue="int"
+            TItem="string"
+            EnableSearch
+            AllowClear>
                 <SelectOptions>
                     @if (categoryList != null)
                     {
@@ -228,15 +246,15 @@ OnClose="@CloseCreateModal">
         </FormItem>
         <FormItem Label="Status">
             <Select @bind-Value="@editBlog.Status"
-                    Placeholder="Select status"
-                    TItemValue="BlogStatus"
-                    TItem="string">
+            Placeholder="Select status"
+            TItemValue="BlogStatus"
+            TItem="string">
                 <SelectOptions>
                     @foreach (BlogStatus status in Enum.GetValues(typeof(BlogStatus)))
                     {
                         <SelectOption TItemValue="BlogStatus" TItem="string"
-                                      Value="@status"
-                                      Label="@status.ToString()" />
+                        Value="@status"
+                        Label="@status.ToString()" />
                     }
                 </SelectOptions>
             </Select>
@@ -249,6 +267,9 @@ OnClose="@CloseCreateModal">
 </Drawer>
 
 @code {
+    BlazoredTextEditor richEditor = default!;
+    string toolbar = """"...markup here..."""";
+    string body = """"...markup here..."""";
 
     private bool loadingBlogs = false;
     private bool loadingListCategory = false;
@@ -283,9 +304,9 @@ OnClose="@CloseCreateModal">
                     <Text>Title</Text>
                     <FormItem >
                         <Input Placeholder="Please enter name" TValue="string" @bind-Value="@context.Name"></Input>
-                       
+
                     </FormItem>
-               
+
             </AntDesign.Col>
             </Row>
             <Row Gutter="16">
@@ -306,6 +327,39 @@ OnClose="@CloseCreateModal">
 
     protected override async Task OnInitializedAsync()
     {
+        toolbar = """"
+            <select class="ql-header">
+                <option selected=""></option>
+                <option value="1"></option>
+                <option value="2"></option>
+                <option value="3"></option>
+                <option value="4"></option>
+                <option value="5"></option>
+            </select>
+            <span class="ql-formats">
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+                <button class="ql-strike"></button>
+            </span>
+            <span class="ql-formats">
+                <select class="ql-color"></select>
+                <select class="ql-background"></select>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-list" value="ordered"></button>
+                <button class="ql-list" value="bullet"></button>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-link"></button>
+            </span>
+            <span class="ql-formats">
+                <button class="ql-code-block"></button>
+            </span>
+            """";
+
+        body = "<h3>Write something in here</h3>";
+
         await LoadBlogs();
         await LoadCategories();
     }
@@ -356,9 +410,14 @@ OnClose="@CloseCreateModal">
 
     private async Task ShowCreateModal()
     {
+        await richEditor.LoadHTMLContent("<h3>Write content in here</h3>");
         newBlog = new BlogVm { CategoryIds = new List<int>() };
         isCreateModalVisible = true;
         StateHasChanged();
+        await Task.Delay(100);
+        if (richEditor != null) {
+            await richEditor.LoadHTMLContent("<h3>Write content in here</h3>");
+        }
     }
 
     private async Task CloseCreateModal()
@@ -375,8 +434,9 @@ OnClose="@CloseCreateModal">
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(newBlog.Content))
-        {
+        string htmlContent = await richEditor.GetHTML();
+
+        if (string.IsNullOrWhiteSpace(htmlContent)) {
             await _mess.Error("Content is required!");
             return;
         }
@@ -384,12 +444,15 @@ OnClose="@CloseCreateModal">
         try
         {
             isSubmitting = true;
+
+            newBlog.Content = htmlContent;
+
             var result = await BlogService.AddBlog(newBlog);
             if (result)
             {
-                await _mess.Success("Blog created successfully!");
                 await LoadBlogs();
                 await CloseCreateModal();
+                await _mess.Success("Blog created successfully!");
             }
             else
             {
@@ -449,6 +512,10 @@ OnClose="@CloseCreateModal">
                     };
                 isEditModalVisible = true;
                 StateHasChanged();
+                await Task.Delay(100);
+                if (richEditor != null) {
+                    await richEditor.LoadHTMLContent(blogToEdit.Content);
+                }
             }
             else
             {
@@ -475,8 +542,9 @@ OnClose="@CloseCreateModal">
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(editBlog.Content))
-        {
+        string htmlContent = await richEditor.GetHTML();
+
+        if (string.IsNullOrWhiteSpace(htmlContent)) {
             await _mess.Error("Content is required!");
             return;
         }
@@ -484,10 +552,11 @@ OnClose="@CloseCreateModal">
         try
         {
             isSubmitting = true;
+            editBlog.Content = htmlContent;
             await BlogService.UpdateBlog(editBlog.Id, editBlog);
-            await _mess.Success("Blog updated successfully!");
             await LoadBlogs();
             await CloseEditModal();
+            await _mess.Success("Blog updated successfully!");
         }
         catch (Exception ex)
         {

@@ -44,6 +44,37 @@ else
             <Body>
                 <h1 style="margin-bottom: 24px; font-weight: 600; color: #333;">@blog.Title</h1>
 
+                <Card Style="background: #fafafa; border-radius: 8px;" Bordered="false">
+                    <Space Direction="SpaceDirection.Vertical">
+                        <span style="font-size: 14px; color: #666;">
+                            <strong>Created At:</strong> @blog.CreatedAt.ToString("MMMM dd, yyyy HH:mm")
+                        </span>
+                        <span style="font-size: 14px; color: #666;">
+                            <strong>Views:</strong> @blog.ViewCount
+                        </span>
+                        <span style="font-size: 14px; color: #666;">
+                            <strong>Status:</strong>
+                            @if (blog.Status == BlogStatus.Draft) {
+                                <Tag Color="TagColor.Yellow">Draft</Tag>
+                            } else if (blog.Status == BlogStatus.Published) {
+                                <Tag Color="TagColor.Green">Published</Tag>
+                            }
+                        </span>
+                        @if (blog.Categories != null && blog.Categories.Any()) {
+                            <Space Wrap="true">
+
+                                <span style="font-size: 14px; color: #666; margin-right: 12px;">
+
+                                    <strong>Categories:  </strong>
+                                </span>
+                                @foreach (var category in blog.Categories) {
+                                    <Tag Color="TagColor.Blue" Style="margin-right: 12px;">@category.Name</Tag>
+                                }
+                            </Space>
+                        }
+                    </Space>
+                </Card>
+
                 @if (!string.IsNullOrEmpty(blog.UrlImage))
                 {
                     <div style="display: flex; justify-content: center; align-items: center;">
@@ -56,42 +87,6 @@ else
                 <p style="margin-bottom: 32px; line-height: 1.8; font-size: 16px; color: #444;">
                     @((MarkupString)blog.Content.Replace("\n", "<br>"))
                 </p>
-
-                <Card Style="background: #fafafa; border-radius: 8px;" Bordered="false">
-                    <Space Direction="SpaceDirection.Vertical">
-                        <span style="font-size: 14px; color: #666;">
-                            <strong>Created At:</strong> @blog.CreatedAt.ToString("MMMM dd, yyyy HH:mm")
-                        </span>
-                        <span style="font-size: 14px; color: #666;">
-                            <strong>Views:</strong> @blog.ViewCount
-                        </span>
-                        <span style="font-size: 14px; color: #666;">
-                            <strong>Status:</strong>
-                            @if (blog.Status == BlogStatus.Draft)
-                            {
-                                <Tag Color="TagColor.Yellow">Draft</Tag>
-                            }
-                            else if (blog.Status == BlogStatus.Published)
-                            {
-                                <Tag Color="TagColor.Green">Published</Tag>
-                            }
-                        </span>
-                        @if (blog.Categories != null && blog.Categories.Any())
-                        {
-                            <Space Wrap="true">
-
-                                <span style="font-size: 14px; color: #666; margin-right: 12px;">
-
-                                    <strong>Categories:  </strong>
-                                </span>
-                                @foreach (var category in blog.Categories)
-                                {
-                                    <Tag Color="TagColor.Blue" Style="margin-right: 12px;">@category.Name</Tag>
-                                }
-                            </Space>
-                        }
-                    </Space>
-                </Card>
             </Body>
         </Card>
     </div>
