@@ -18,6 +18,7 @@ namespace CourseManagement.DataAccess.Data
         public DbSet<Enrollment> enrollments { get; set; }
         public DbSet<CourseLearningOutcome> CourseLearningOutcomes { get; set; }
         public DbSet<LessonProgress> LessonProgresses { get; set; }
+        public DbSet<CourseProgress> CourseProgresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +72,28 @@ namespace CourseManagement.DataAccess.Data
                 .WithMany(c => c.LearningOutcomes)
                 .HasForeignKey(clo => clo.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CourseProgress>()
+            .HasOne(cp => cp.User)
+            .WithMany(u => u.CourseProgresses)
+            .HasForeignKey(cp => cp.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CourseProgress>()
+                .HasOne(cp => cp.Course)
+                .WithMany()
+                .HasForeignKey(cp => cp.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CourseProgress>()
+                .HasOne(cp => cp.LastViewedLesson)
+                .WithMany()
+                .HasForeignKey(cp => cp.LastViewedLessonId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CourseProgress>()
+                .HasIndex(cp => new { cp.UserId, cp.CourseId })
+                .IsUnique();
 
             DataSeed.InsertData(modelBuilder);
         }

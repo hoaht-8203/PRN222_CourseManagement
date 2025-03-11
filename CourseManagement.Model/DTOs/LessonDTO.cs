@@ -102,4 +102,20 @@ namespace CourseManagement.Model.DTOs {
         [Required]
         public int LessonId { get; set; }
     }
+
+    public class UpdateLastViewedRequest {
+        [Required]
+        public string CourseId { get; set; }
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class GetLastViewedRequest {
+        [Required]
+        public string CourseId { get; set; }
+    }
+
+    public class GetLastViewedResponse {
+        public int? LastViewedLessonId { get; set; }
+    }
 }

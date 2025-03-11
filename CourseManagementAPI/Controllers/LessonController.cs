@@ -124,8 +124,8 @@ namespace CourseManagementAPI.Controllers {
                 return Ok(new { Message = "Lesson completed successfully" });
             } catch (ArgumentException ex) {
                 return BadRequest(new { Error = ex.Message });
-            } catch (Exception) {
-                return StatusCode(500, new { Error = "An error occurred while completed this lesson" });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while completed this lesson: {ex}" });
             }
         }
 
@@ -143,6 +143,40 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while not completed this lesson" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("get-last-viewed")]
+        public async Task<IActionResult> GetLastViewed([FromQuery] GetLastViewedRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var res = await lessonRepository.GetLastViewed(req, userEmail.Value);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("update-last-viewed")]
+        public async Task<IActionResult> UpdateLastViewed([FromBody] UpdateLastViewedRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.UpdateLastViewed(req, userEmail.Value);
+                return Ok(new { Message = "Last viewed lesson updated successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
             }
         }
     }

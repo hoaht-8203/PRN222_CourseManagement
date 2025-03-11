@@ -10,5 +10,6 @@ namespace CourseManagement.Model.Model
         public ICollection<Comment>? Comments { get; set; }
         public ICollection<Blog> Blogs { get; set; }
         public ICollection<LessonProgress> LessonProgresses { get; set; }
+        public virtual ICollection<CourseProgress> CourseProgresses { get; set; }
     }
 }

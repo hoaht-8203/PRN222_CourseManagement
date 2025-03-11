@@ -18,5 +18,7 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task<List<SearchLessonResponse>> SearchLesson(SearchLessonRequest req);
         Task<GetLessonsCompletedResponse> GetLessonsCompleted(GetLessonsCompletedRequest req, string userEmail);
         Task<DetailLessonResponse> Detail(DetailLessonRequest req);
+        Task<GetLastViewedResponse> GetLastViewed(GetLastViewedRequest req, string userEmail);
+        Task UpdateLastViewed(UpdateLastViewedRequest req, string userEmail);
     }
 }

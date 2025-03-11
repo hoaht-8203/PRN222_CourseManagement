@@ -257,13 +257,19 @@ namespace CourseManagement.DataAccess.Repositorys {
                 throw new ArgumentException("You must enroll in this course before marking lessons as completed");
             }
 
-            LessonProgress newLessonProgress = new() {
-                LessonId = founedLesson.Id,
-                UserId = userFound.Id,
-                IsCompleted = true
-            };
+            var isExistedLessonProgress = await _context.LessonProgresses.SingleOrDefaultAsync(lp => lp.LessonId == req.LessonId && lp.UserId == userFound.Id);
 
-            _context.LessonProgresses.Add(newLessonProgress);
+            if (isExistedLessonProgress != null) {
+                isExistedLessonProgress.IsCompleted = true;
+            } else {
+                LessonProgress newLessonProgress = new() {
+                    LessonId = founedLesson.Id,
+                    UserId = userFound.Id,
+                    IsCompleted = true
+                };
+                _context.LessonProgresses.Add(newLessonProgress);
+            }
+
             await _context.SaveChangesAsync();
         }
 
@@ -286,6 +292,41 @@ namespace CourseManagement.DataAccess.Repositorys {
             }
 
             foundedLessonProgress.IsCompleted = false;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<GetLastViewedResponse> GetLastViewed(GetLastViewedRequest req, string userEmail) {
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException($"User not found");
+
+            var lastViewed = await _context.CourseProgresses
+                .Where(cp => cp.CourseId.ToString() == req.CourseId && cp.UserId == userFound.Id)
+                .Select(cp => cp.LastViewedLessonId)
+                .FirstOrDefaultAsync();
+
+            return new GetLastViewedResponse {
+                LastViewedLessonId = lastViewed
+            };
+        }
+
+        public async Task UpdateLastViewed(UpdateLastViewedRequest req, string userEmail) {
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException($"User not found");
+
+            var courseProgress = await _context.CourseProgresses
+                .FirstOrDefaultAsync(cp => cp.CourseId.ToString() == req.CourseId && cp.UserId == userFound.Id);
+
+            if (courseProgress == null) {
+                courseProgress = new CourseProgress {
+                    CourseId = Guid.Parse(req.CourseId),
+                    UserId = userFound.Id,
+                    LastViewedLessonId = req.LessonId
+                };
+                _context.CourseProgresses.Add(courseProgress);
+            } else {
+                courseProgress.LastViewedLessonId = req.LessonId;
+            }
 
             await _context.SaveChangesAsync();
         }
