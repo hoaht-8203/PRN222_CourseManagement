@@ -4,6 +4,7 @@ using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace CourseManagementAPI.Controllers {
@@ -91,6 +92,40 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while get detail the lesson" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("lesson-completed")]
+        public async Task<IActionResult> LessonCompleted([FromQuery] CompletedLessonRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.CompletedLesson(req, userEmail.Value);
+                return Ok(new { Message = "Lesson completed successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while completed this lesson" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("lesson-not-completed")]
+        public async Task<IActionResult> LessonNotCompleted([FromQuery] NotCompletedLessonRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.NotCompletedLesson(req, userEmail.Value);
+                return Ok(new { Message = "Lesson not completed successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while not completed this lesson" });
             }
         }
     }

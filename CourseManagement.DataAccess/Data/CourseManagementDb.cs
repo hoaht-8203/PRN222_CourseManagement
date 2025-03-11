@@ -17,7 +17,7 @@ namespace CourseManagement.DataAccess.Data
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<Enrollment> enrollments { get; set; }
         public DbSet<CourseLearningOutcome> CourseLearningOutcomes { get; set; }
-      
+        public DbSet<LessonProgress> LessonProgresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
