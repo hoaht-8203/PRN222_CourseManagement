@@ -74,6 +74,23 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
+        [HttpGet("preview")]
+        public async Task<IActionResult> Preview([FromQuery] DetailCourseRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                var response = await _courseRepository.Preview(req, userEmail.Value);
+                return Ok(response);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while getting course preview: {ex}" });
+            }
+        }
+
         [Authorize(Roles = Role.Role_User_Admin)]
         [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] UpdateCourseRequest req) {
@@ -100,9 +117,9 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
+        [Authorize]
         [HttpPost("enroll-course")]
-        public async Task<IActionResult> EnrollCourse([FromBody] EnrollCourseRequestModel req) {
+        public async Task<IActionResult> EnrollCourse([FromBody] JoinCourseRequest req) {
             try {
                 var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
                 if (userEmail is null) {

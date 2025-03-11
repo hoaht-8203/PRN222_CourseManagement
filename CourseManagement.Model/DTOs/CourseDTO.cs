@@ -1,5 +1,6 @@
 ﻿using CourseManagement.Model.Constant;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CourseManagement.Model.DTOs {
     public class AddCourseRequest {
@@ -22,6 +23,11 @@ namespace CourseManagement.Model.DTOs {
     }
 
     public class RemoveCourseRequest {
+        [Required]
+        public string CourseId { get; set; }
+    }
+
+    public class JoinCourseRequest {
         [Required]
         public string CourseId { get; set; }
     }
@@ -64,11 +70,52 @@ namespace CourseManagement.Model.DTOs {
 
             public List<Lesson> Lessons { get; set; } = [];
         }
+
         public class Lesson {
             public int Id { get; set; }
             public string Title { get; set; }
             public string Description { get; set; }
             public string UrlVideo { get; set; }
+            public int ModuleId { get; set; }
+            public int Order { get; set; }
+            public string ModuleName { get; set; }
+            public TimeSpan? VideoDuration { get; set; }
+        }
+    }
+
+    public class PreviewCourseResponse {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string PreviewImage { get; set; }
+        public string PreviewVideoUrl { get; set; }
+        public int Level { get; set; }
+        public string LevelName { get; set; }
+        public int Status { get; set; }
+        public string StatusName { get; set; }
+        public int CategoryId { get; set; }
+        public int CourseType { get; set; }
+        public string TypeName { get; set; }
+        public string CategoryName { get; set; }
+        public bool IsEnrolled { get; set; }
+
+        public List<ModulePreview> Modules { get; set; } = [];
+        public List<string> LearningOutcomes { get; set; } = new();
+
+        public class ModulePreview {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public string CourseId { get; set; }
+            public int Order { get; set; }
+            public string CourseName { get; set; }
+
+            public List<LessonPreview> Lessons { get; set; } = [];
+        }
+
+        public class LessonPreview {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public string Description { get; set; }
             public int ModuleId { get; set; }
             public int Order { get; set; }
             public string ModuleName { get; set; }
@@ -125,11 +172,6 @@ namespace CourseManagement.Model.DTOs {
         public int CategoryId { get; set; }
         [Required]
         public List<string> LearningOutcomes { get; set; } = new();
-    }
-
-    public class EnrollCourseRequestModel {
-        [Required]
-        public string CourseId;
     }
 
     public class EnrollCourseRequest {

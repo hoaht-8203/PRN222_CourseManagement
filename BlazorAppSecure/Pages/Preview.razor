@@ -63,13 +63,15 @@
                         {
                             <div class="video-container mb-4">
                                 <iframe src="@GetYouTubeEmbedUrl(CourseDetail.PreviewVideoUrl)"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowfullscreen>
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
                                 </iframe>
                             </div>
                         }
                         <Title Level="2">@(CourseDetail.CourseType == 0 ? "Miễn phí" : "Pro")</Title>
-                        <Button Type="ButtonType.Primary" Block Size="ButtonSize.Large">REGISTER FOR COURSE</Button>
+                        <Button Type="ButtonType.Primary" Block Size="ButtonSize.Large" OnClick="() => HandleEnrollCourse(CourseDetail.Id)">
+                            <span>@(CourseDetail.IsEnrolled ? "CONTINUE LEARNING" : "REGISTER FOR COURSE")</span>
+                        </Button>
 
                         <ul class="course-features">
                             <li><Icon Type="check-circle" /> Level @CourseDetail.LevelName</li>
