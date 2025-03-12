@@ -330,5 +330,43 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task AddNote(AddNoteRequest req, string userEmail) {
+            var lesson = await _context.Lessons
+                .FirstOrDefaultAsync(l => l.Id == req.LessonId && l.Status == LessonStatus.Active)
+                ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException("User not found");
+
+            var note = new Note {
+                Content = req.Content,
+                LessonId = req.LessonId,
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notes.Add(note);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<GetNotesResponse> GetNotes(GetNotesRequest req, string userEmail) {
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException("User not found");
+
+            var notes = await _context.Notes
+                .Where(n => n.LessonId == req.LessonId && n.UserId == user.Id)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NoteResponse {
+                    Id = n.Id,
+                    Content = n.Content,
+                    CreatedAt = n.CreatedAt
+                })
+                .ToListAsync();
+
+            return new GetNotesResponse { Notes = notes };
+        }
     }
 }
