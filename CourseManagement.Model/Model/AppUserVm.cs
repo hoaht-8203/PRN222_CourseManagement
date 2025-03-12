@@ -1,5 +1,6 @@
 ﻿
 using CourseManagement.Model.Model;
+using System.Text.Json.Serialization;
 
 namespace CourseManagement.Model.ViewModel
 {
@@ -15,6 +16,7 @@ namespace CourseManagement.Model.ViewModel
         public bool PhoneNumberConfirmed { get; set; }
         public List<string> Roles { get; set; }
         public List<Enrollment>? Enrollments { get; set; }
+        [JsonIgnore]
         public List<Comment>? Comments { get; set; }
     }
 
