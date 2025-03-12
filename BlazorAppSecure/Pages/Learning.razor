@@ -1,9 +1,16 @@
 ﻿@page "/learning/{Id}"
 @using CourseManagement.Model.DTOs
+@using Microsoft.AspNetCore.SignalR.Client
+@using CourseManagement.Model.Model
+@using System.Security.Claims;
 
 @inject IHttpClientFactory HttpClientFactory
 @inject IMessageService _mess
 @inject NavigationManager _nav
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject HubConnection HubConnection
 
 <div class="learning-container">
     @if (LoadingCourseDetail)
@@ -79,6 +86,11 @@
                         </div>
                     }
                 </div>
+                <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+                    <Button Type="ButtonType.Primary" Class="question-button" OnClick="ShowQnA">
+                        <Icon Type="message" /> Comments
+                    </Button>
+                </div>
             </GridCol>
             <GridCol Span="7">
                 <div class="course-content">
@@ -132,6 +144,44 @@
         </GridRow>
     }
 </div>
+<Drawer Closable="true"
+        @bind-Visible="showDrawer"
+        Placement="DrawerPlacement.Right"
+        Title='("Comments")'
+        Width="500"
+        OnClose="@CloseQnA">
+        <div class="comments-section">
+            <!-- Ô nhập comment -->
+        <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+            <Avatar Icon="user" />
+            <TextArea @bind-Value="newComment"
+                    Placeholder="Write a comment..."
+                    Style="flex-grow: 1;" />
+            
+        </div>
+        <div style="margin-top: 12px; display:flex ;justify-content:flex-end">
+            <Button Type="ButtonType.Primary" OnClick="SubmitComment">Submit</Button>
+
+        </div>
+            <Divider />
+
+            <!-- Danh sách comment -->
+            <div class="comments-list">
+                @foreach (var comment in comments)
+                {
+                    <div class="comment-item">
+                        <div style="margin-bottom: 8px">
+                        <Avatar Icon="user" />
+                        <strong>@comment.Username</strong>
+                        </div>
+                                                <p>@comment.Content</p>
+                        <Divider />
+                    </div>
+                }
+            </div>
+        </div>
+    
+</Drawer>
 
 @code {
     [Parameter]
@@ -147,6 +197,12 @@
     private string newNote = "";
     private bool loadingNotes = false;
     private bool addingNote = false;
+    private bool showDrawer = false;
+    private List<CommentDTO> comments = new();
+    private string newComment = "";
+
+    private void ShowQnA() => showDrawer = true;
+    private void CloseQnA() => showDrawer = false;
 
     protected override async Task OnInitializedAsync() {
         httpClient = HttpClientFactory.CreateClient("Auth");
@@ -155,6 +211,33 @@
         {
             await LoadCompletedLessons();
         }
+
+        await LoadComments();
+        await HubConnection.StartAsync();
+        if (HubConnection.State != HubConnectionState.Connected)
+        {
+            await _mess.Error("SignalR is not connected.");
+        }
+
+
+        HubConnection.On<CommentDTO>("ReceiveComment", async (comment) =>
+        {
+            _mess.Success("New comment received");
+            if(comment.LessonId == CurrentLesson.Id)
+            {
+                comments.Add(new CommentDTO
+                {
+                    Content = comment.Content,
+                    LessonId = comment.LessonId,
+                    Username = comment.Username
+
+                });
+                StateHasChanged();
+            }
+        });
+
+
+        await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
     }
 
     private async Task LoadCompletedLessons() {
@@ -398,6 +481,37 @@
         }
 
         return $"https://www.youtube.com/embed/{videoId}";
+    }
+
+    private async Task LoadComments()
+    {
+        try
+        {
+            var response = await httpClient.GetAsync($"/api/Comment?lessonId={CurrentLesson.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                comments = await response.Content.ReadFromJsonAsync<List<CommentDTO>>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error loading comments: {ex.Message}");
+        }
+    }
+
+    private async Task SubmitComment()
+    {
+        if (string.IsNullOrWhiteSpace(newComment)) return;
+
+        var Username = (await AuthState.GetAuthenticationStateAsync()).User.Identity.Name;
+        var comment = new CourseManagement.Model.DTOs.CommentDTO { LessonId = CurrentLesson.Id, Content = newComment, Username = Username ?? "Anonymous" };
+        var jsonComment = System.Text.Json.JsonSerializer.Serialize(comment);
+        await httpClient.PostAsJsonAsync("/api/Comment", comment);
+        newComment = "";
+        StateHasChanged();
+        await HubConnection.SendAsync("SendComment",comment);
+        
     }
 }
 
