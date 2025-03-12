@@ -41,7 +41,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <Title Level="4">@CurrentLesson.Title</Title>
                                 <Button Type="@(IsLessonCompleted(CurrentLesson.Id) ? ButtonType.Default : ButtonType.Primary)"
-                                OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
+                                        OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
                                     @if (IsLessonCompleted(CurrentLesson.Id)) {
                                         <span><Icon Type="check" /> Completed</span>
                                     } else {
@@ -50,6 +50,32 @@
                                 </Button>
                             </div>
                             <Paragraph>@CurrentLesson.Description</Paragraph>
+
+                            @* Thêm phần Notes *@
+                            <div class="notes-section mt-4">
+                                <Title Level="5">My Notes</Title>
+                                <div class="d-flex gap-2 mb-3">
+                                    <TextArea @bind-Value="@newNote" Placeholder="Add a note..." AutoSize="true" />
+                                    <Button Type="ButtonType.Primary" OnClick="AddNote" Loading="@addingNote">Add Note</Button>
+                                </div>
+
+                                @if (loadingNotes) {
+                                    <Spin />
+                                } else if (notes?.Any() == true) {
+                                    <AntList DataSource="@notes" Size="ListSize.Small">
+                                        <ChildContent Context="note">
+                                            <ListItem>
+                                                <div class="note-item">
+                                                    <div class="note-content">@note.Content</div>
+                                                    <div class="note-date">@note.CreatedAt.ToLocalTime().ToString("g")</div>
+                                                </div>
+                                            </ListItem>
+                                        </ChildContent>
+                                    </AntList>
+                                } else {
+                                    <Empty />
+                                }
+                            </div>
                         </div>
                     }
                 </div>
@@ -107,136 +133,6 @@
     }
 </div>
 
-<style>
-    .learning-container {
-    padding: 0px;
-    max-width: 1600px;
-    margin: 0 auto;
-    }
-
-    .video-section {
-    padding-right: 24px;
-    }
-
-    .video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-    border-radius: 8px;
-    }
-
-    .video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    }
-
-    .lesson-info {
-    margin-top: 24px;
-    padding: 24px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #f0f0f0;
-    }
-
-    .course-content {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #f0f0f0;
-    padding: 24px;
-    height: 100%;
-    }
-
-    .course-stats {
-    margin: 16px 0;
-    color: #666;
-    }
-
-    .lesson-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    cursor: pointer;
-    padding: 8px;
-    }
-
-    .active {
-    background-color: #e6f7ff;
-    }
-
-    :deep(.ant-collapse-content-box) {
-    padding: 0 !important;
-    }
-
-    :deep(.ant-list-item) {
-    padding: 0 !important;
-    }
-
-    .ant-collapse-content-box {
-    padding: 0px !important;
-    }
-
-    .lesson-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    cursor: pointer;
-    padding: 8px;
-    }
-
-    .completed {
-    background-color: #f6ffed;
-    }
-
-    .active {
-    background-color: #e6f7ff !important;
-    }
-
-    .active.completed {
-    background-color: #b7eb8f !important;
-    }
-
-    .ml-2 {
-    margin-left: 8px;
-    }
-
-    .mb-4 {
-    margin-bottom: 16px;
-    }
-
-    .mb-3 {
-    margin-bottom: 12px;
-    }
-
-    .course-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    }
-
-    .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-    }
-
-    .progress-circle {
-    padding-top: 4px;
-    }
-
-    :deep(.ant-progress-circle) {
-    width: 80px !important;
-    height: 80px !important;
-    }
-</style>
-
 @code {
     [Parameter]
     public string Id { get; set; }
@@ -247,6 +143,10 @@
     private string[] ActivePanelKeys = new[] { "1" };
     private HttpClient httpClient;
     private HashSet<int> completedLessons = new();
+    private List<NoteResponse> notes = new();
+    private string newNote = "";
+    private bool loadingNotes = false;
+    private bool addingNote = false;
 
     protected override async Task OnInitializedAsync() {
         httpClient = HttpClientFactory.CreateClient("Auth");
@@ -330,6 +230,59 @@
         return Math.Round((double)completedLessons.Count / totalLessons * 100, 1);
     }
 
+    private async Task LoadNotes() {
+        if (CurrentLesson == null) return;
+
+        loadingNotes = true;
+        try {
+            var response = await httpClient.GetAsync($"/api/Lesson/get-notes?LessonId={CurrentLesson.Id}");
+            if (response.IsSuccessStatusCode) {
+                var result = await response.Content.ReadFromJsonAsync<GetNotesResponse>();
+                notes = result?.Notes ?? new();
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error loading notes: {ex.Message}");
+        } finally {
+            loadingNotes = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddNote() {
+        if (string.IsNullOrWhiteSpace(newNote) || CurrentLesson == null) return;
+
+        addingNote = true;
+        try {
+            var request = new AddNoteRequest {
+                    LessonId = CurrentLesson.Id,
+                    Content = newNote
+                };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Lesson/add-note", request);
+            if (response.IsSuccessStatusCode) {
+                _mess.Success("Note added successfully");
+                newNote = "";
+                await LoadNotes();
+            } else {
+                var error = await response.Content.ReadAsStringAsync();
+                _mess.Error($"Failed to add note: {error}");
+            }
+        } catch (Exception ex) {
+            _mess.Error($"Error adding note: {ex.Message}");
+        } finally {
+            addingNote = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) {
+        CurrentLesson = lesson;
+        var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
+        ActivePanelKeys = new[] { module.Order.ToString() };
+        await UpdateLastViewedLesson(lesson);
+        await LoadNotes();
+    }
+
     private async Task FetchCourseDetail() {
         try {
             var response = await httpClient.GetAsync($"/api/Course/learn?CourseId={Id}");
@@ -393,13 +346,6 @@
         }
     }
 
-    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) {
-        CurrentLesson = lesson;
-        var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
-        ActivePanelKeys = new[] { module.Order.ToString() };
-        await UpdateLastViewedLesson(lesson);
-    }
-
     private int GetTotalLessons()
     {
         return CourseDetail.Modules.Sum(m => m.Lessons.Count);
@@ -454,3 +400,152 @@
         return $"https://www.youtube.com/embed/{videoId}";
     }
 }
+
+<style>
+    .learning-container {
+        padding: 0px;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .video-section {
+        padding-right: 24px;
+    }
+
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+    .lesson-info {
+        margin-top: 24px;
+        padding: 24px;
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+    }
+
+    .course-content {
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+        padding: 24px;
+        height: 100%;
+    }
+
+    .course-stats {
+        margin: 16px 0;
+        color: #666;
+    }
+
+    .lesson-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .active {
+        background-color: #e6f7ff;
+    }
+
+    :deep(.ant-collapse-content-box) {
+        padding: 0 !important;
+    }
+
+    :deep(.ant-list-item) {
+        padding: 0 !important;
+    }
+
+    .ant-collapse-content-box {
+        padding: 0px !important;
+    }
+
+    .lesson-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .completed {
+        background-color: #f6ffed;
+    }
+
+    .active {
+        background-color: #e6f7ff !important;
+    }
+
+        .active.completed {
+            background-color: #b7eb8f !important;
+        }
+
+    .ml-2 {
+        margin-left: 8px;
+    }
+
+    .mb-4 {
+        margin-bottom: 16px;
+    }
+
+    .mb-3 {
+        margin-bottom: 12px;
+    }
+
+    .course-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .progress-circle {
+        padding-top: 4px;
+    }
+
+    :deep(.ant-progress-circle) {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+    .notes-section {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+
+    .note-item {
+        width: 100%;
+    }
+
+    .note-content {
+        white-space: pre-wrap;
+    }
+
+    .note-date {
+        font-size: 0.8rem;
+        color: #8c8c8c;
+        margin-top: 0.5rem;
+    }
+</style>
