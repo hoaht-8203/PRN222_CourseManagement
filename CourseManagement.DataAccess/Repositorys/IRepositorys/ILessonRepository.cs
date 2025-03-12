@@ -13,7 +13,14 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task UpdateLesson(UpdateLessonRequest req);
         Task RemoveLesson(RemoveLessonRequest req);
         Task ReorderLessons(ReorderLessonsRequest req);
+        Task CompletedLesson(CompletedLessonRequest req, string userEmail);
+        Task NotCompletedLesson(NotCompletedLessonRequest req, string userEmail);
         Task<List<SearchLessonResponse>> SearchLesson(SearchLessonRequest req);
+        Task<GetLessonsCompletedResponse> GetLessonsCompleted(GetLessonsCompletedRequest req, string userEmail);
         Task<DetailLessonResponse> Detail(DetailLessonRequest req);
+        Task<GetLastViewedResponse> GetLastViewed(GetLastViewedRequest req, string userEmail);
+        Task UpdateLastViewed(UpdateLastViewedRequest req, string userEmail);
+        Task AddNote(AddNoteRequest req, string userEmail);
+        Task<GetNotesResponse> GetNotes(GetNotesRequest req, string userEmail);
     }
 }

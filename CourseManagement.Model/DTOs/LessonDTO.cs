@@ -82,4 +82,63 @@ namespace CourseManagement.Model.DTOs {
 
         public int ModuleId { get; set; }
     }
+
+    public class GetLessonsCompletedRequest {
+        [Required]
+        public string CourseId { get; set; }
+    }
+
+    public class GetLessonsCompletedResponse {
+        [Required]
+        public HashSet<int> ListLessonId { get; set; }
+    }
+
+    public class CompletedLessonRequest {
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class NotCompletedLessonRequest {
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class UpdateLastViewedRequest {
+        [Required]
+        public string CourseId { get; set; }
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class GetLastViewedRequest {
+        [Required]
+        public string CourseId { get; set; }
+    }
+
+    public class GetLastViewedResponse {
+        public int? LastViewedLessonId { get; set; }
+    }
+
+    public class AddNoteRequest {
+        [Required]
+        public int LessonId { get; set; }
+
+        [Required]
+        public string Content { get; set; }
+    }
+
+    public class GetNotesRequest {
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class NoteResponse {
+        public int Id { get; set; }
+        public string Content { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class GetNotesResponse {
+        public List<NoteResponse> Notes { get; set; }
+    }
 }

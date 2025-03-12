@@ -1,15 +1,36 @@
-﻿
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using System.Net;
+using Microsoft.AspNetCore.Components;
 
 namespace BlazorAppSecure.Sevices
 {
     public class CutomHttpHandler : DelegatingHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        private readonly NavigationManager _navigationManager;
+
+        public CutomHttpHandler(NavigationManager navigationManager)
+        {
+            _navigationManager = navigationManager;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
             request.Headers.Add("X-Requested-With", ["XMLHttpRequest"]);
-            return base.SendAsync(request, cancellationToken);
+            
+            var response = await base.SendAsync(request, cancellationToken);
+            
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                var currentUri = _navigationManager.Uri;
+                // Chỉ redirect nếu không phải đang ở trang login và register
+                if (!currentUri.Contains("/login") && !currentUri.Contains("/register"))
+                {
+                    _navigationManager.NavigateTo("/login", true);
+                }
+            }
+            
+            return response;
         }
     }
 }

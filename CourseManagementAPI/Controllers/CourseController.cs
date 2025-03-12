@@ -61,7 +61,7 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("detail")]
         public async Task<IActionResult> Detail([FromQuery] DetailCourseRequest req) {
             try {
@@ -71,6 +71,40 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while getting course details" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("learn")]
+        public async Task<IActionResult> Learn([FromQuery] LearnCourseRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var response = await _courseRepository.Learn(req, userEmail.Value);
+                return Ok(response);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while getting learning details" });
+            }
+        }
+
+        [HttpGet("preview")]
+        public async Task<IActionResult> Preview([FromQuery] DetailCourseRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                var response = await _courseRepository.Preview(req, userEmail.Value);
+                return Ok(response);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while getting course preview: {ex}" });
             }
         }
 
@@ -100,9 +134,9 @@ namespace CourseManagementAPI.Controllers {
             }
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
+        [Authorize]
         [HttpPost("enroll-course")]
-        public async Task<IActionResult> EnrollCourse([FromBody] EnrollCourseRequestModel req) {
+        public async Task<IActionResult> EnrollCourse([FromBody] JoinCourseRequest req) {
             try {
                 var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
                 if (userEmail is null) {

@@ -209,5 +209,164 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             return res;
         }
+
+        public async Task<GetLessonsCompletedResponse> GetLessonsCompleted(GetLessonsCompletedRequest req, string userEmail) {
+            var foundedCourse = await _context.Courses.SingleOrDefaultAsync(c => c.Id.ToString() == req.CourseId && c.Status != CourseStatus.UnAvailable)
+                ?? throw new ArgumentException($"Course with id {req.CourseId} not found or not active");
+
+            var foundEnrollment = await _context.enrollments.AnyAsync(e => e.CourseId.ToString() == req.CourseId);
+
+            if (!foundEnrollment) {
+                throw new ArgumentException($"You are not enroll this course, can't get list lesson completed");
+            }
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException($"User not found");
+
+            var listLessonCompleted = await _context.LessonProgresses
+                .Include(lp => lp.Lesson)
+                    .ThenInclude(l => l.Module)
+                        .ThenInclude(m => m.Course)
+                        .Where(lp => lp.UserId == userFound.Id && 
+                                     lp.Lesson.Module.Course.Id.ToString() == req.CourseId && 
+                                     lp.IsCompleted == true)
+                        .Select(lp => lp.LessonId)
+                        .ToListAsync();
+
+            var response = new GetLessonsCompletedResponse {
+                ListLessonId = new HashSet<int>(listLessonCompleted)
+            };
+
+            return response;
+        }
+
+        public async Task CompletedLesson(CompletedLessonRequest req, string userEmail) {
+            var founedLesson = await _context.Lessons
+                    .Include(l => l.Module)
+                        .ThenInclude(m => m.Course)
+                    .SingleOrDefaultAsync(l => l.Id == req.LessonId && l.Status != LessonStatus.Delete)
+                    ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            var isEnrolled = await _context.enrollments
+                    .AnyAsync(e => e.UserId == userFound.Id && e.CourseId == founedLesson.Module.CourseId);
+
+            if (!isEnrolled) {
+                throw new ArgumentException("You must enroll in this course before marking lessons as completed");
+            }
+
+            var isExistedLessonProgress = await _context.LessonProgresses.SingleOrDefaultAsync(lp => lp.LessonId == req.LessonId && lp.UserId == userFound.Id);
+
+            if (isExistedLessonProgress != null) {
+                isExistedLessonProgress.IsCompleted = true;
+            } else {
+                LessonProgress newLessonProgress = new() {
+                    LessonId = founedLesson.Id,
+                    UserId = userFound.Id,
+                    IsCompleted = true
+                };
+                _context.LessonProgresses.Add(newLessonProgress);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task NotCompletedLesson(NotCompletedLessonRequest req, string userEmail) {
+            var foundedLessonProgress = await _context.LessonProgresses
+                    .Include(lp => lp.Lesson)
+                        .ThenInclude(l => l.Module)
+                            .ThenInclude(m => m.Course)
+                    .SingleOrDefaultAsync(l => l.LessonId == req.LessonId)
+                    ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            var isEnrolled = await _context.enrollments
+                    .AnyAsync(e => e.UserId == userFound.Id && e.CourseId == foundedLessonProgress.Lesson.Module.CourseId);
+
+            if (!isEnrolled) {
+                throw new ArgumentException("You must enroll in this course before modifying lesson progress");
+            }
+
+            foundedLessonProgress.IsCompleted = false;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<GetLastViewedResponse> GetLastViewed(GetLastViewedRequest req, string userEmail) {
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException($"User not found");
+
+            var lastViewed = await _context.CourseProgresses
+                .Where(cp => cp.CourseId.ToString() == req.CourseId && cp.UserId == userFound.Id)
+                .Select(cp => cp.LastViewedLessonId)
+                .FirstOrDefaultAsync();
+
+            return new GetLastViewedResponse {
+                LastViewedLessonId = lastViewed
+            };
+        }
+
+        public async Task UpdateLastViewed(UpdateLastViewedRequest req, string userEmail) {
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException($"User not found");
+
+            var courseProgress = await _context.CourseProgresses
+                .FirstOrDefaultAsync(cp => cp.CourseId.ToString() == req.CourseId && cp.UserId == userFound.Id);
+
+            if (courseProgress == null) {
+                courseProgress = new CourseProgress {
+                    CourseId = Guid.Parse(req.CourseId),
+                    UserId = userFound.Id,
+                    LastViewedLessonId = req.LessonId
+                };
+                _context.CourseProgresses.Add(courseProgress);
+            } else {
+                courseProgress.LastViewedLessonId = req.LessonId;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddNote(AddNoteRequest req, string userEmail) {
+            var lesson = await _context.Lessons
+                .FirstOrDefaultAsync(l => l.Id == req.LessonId && l.Status == LessonStatus.Active)
+                ?? throw new ArgumentException($"Lesson with id {req.LessonId} not found or not active");
+
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException("User not found");
+
+            var note = new Note {
+                Content = req.Content,
+                LessonId = req.LessonId,
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notes.Add(note);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<GetNotesResponse> GetNotes(GetNotesRequest req, string userEmail) {
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException("User not found");
+
+            var notes = await _context.Notes
+                .Where(n => n.LessonId == req.LessonId && n.UserId == user.Id)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NoteResponse {
+                    Id = n.Id,
+                    Content = n.Content,
+                    CreatedAt = n.CreatedAt
+                })
+                .ToListAsync();
+
+            return new GetNotesResponse { Notes = notes };
+        }
     }
 }

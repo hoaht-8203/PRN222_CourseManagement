@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250311180817_AddCourseProgress")]
+    partial class AddCourseProgress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,16 +112,16 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "635375f0-6395-4c59-b31e-3ae026f855c3",
+                            ConcurrencyStamp = "60676bc7-d464-408f-bce0-36e26ffe577d",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             FullName = "Admin",
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN@ADMIN.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKs+mDAleHj0nNqbni8g+A3jKxTOsDWcjiZ9cQPzYZR9jNf73wz65VPZHrQO9rBAJg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH4EKJzyhCslni9SU5Yvv/eDvClAOa+YWXDtH+THdXbNKwrOHS5rF94Y4rzlIgofzQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "01623f11-e2cf-4f6d-abe6-b3f7efec7d5f",
+                            SecurityStamp = "c384c5eb-55f5-47f5-913e-84eff422256a",
                             TwoFactorEnabled = false,
                             UserName = "admin@admin.com"
                         },
@@ -126,16 +129,16 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "e404e498-c930-4a45-9b22-c35d2f333d37",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "56f2b3e9-17ea-48a4-bc60-2213a6723d08",
+                            ConcurrencyStamp = "35b206a2-209f-4d2d-8734-a008bd6910d1",
                             Email = "user@user.com",
                             EmailConfirmed = true,
                             FullName = "User",
                             LockoutEnabled = true,
                             NormalizedEmail = "USER@USER.COM",
                             NormalizedUserName = "USER@USER.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGo5l6MmBdEw8EShx5nzxdfERbEDgoiGtJxjnNJsGstrXJazCnKccVNyHfMmjJXsTg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDExjTohNg6x+Pa+TieL+hLxObJvdhiFXa72e7zFchXLMNWsZWhOFUEv/oSrE6Yk1Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4e7f0ef4-3626-47f6-b751-aab4655e1e84",
+                            SecurityStamp = "71afd12e-d149-4b7a-bf3b-b6b0e633fe81",
                             TwoFactorEnabled = false,
                             UserName = "user@user.com"
                         });
@@ -454,37 +457,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasIndex("CourseId");
 
                     b.ToTable("Modules");
-                });
-
-            modelBuilder.Entity("CourseManagement.Model.Model.Note", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("LessonId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LessonId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -810,25 +782,6 @@ namespace CourseManagement.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
-                });
-
-            modelBuilder.Entity("CourseManagement.Model.Model.Note", b =>
-                {
-                    b.HasOne("CourseManagement.Model.Model.Lesson", "Lesson")
-                        .WithMany()
-                        .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CourseManagement.Model.Model.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lesson");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

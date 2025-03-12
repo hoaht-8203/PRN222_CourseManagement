@@ -4,6 +4,7 @@ using CourseManagement.Model.Constant;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using static CourseManagement.Model.DTOs.ModuleDTO;
 
 namespace CourseManagementAPI.Controllers {
@@ -91,6 +92,125 @@ namespace CourseManagementAPI.Controllers {
                 return BadRequest(new { Error = ex.Message });
             } catch (Exception) {
                 return StatusCode(500, new { Error = "An error occurred while get detail the lesson" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("get-lessons-completed")]
+        public async Task<IActionResult> LessonCompleted([FromQuery] GetLessonsCompletedRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var res = await lessonRepository.GetLessonsCompleted(req, userEmail.Value);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while get list lesson completed: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("lesson-completed")]
+        public async Task<IActionResult> LessonCompleted([FromQuery] CompletedLessonRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.CompletedLesson(req, userEmail.Value);
+                return Ok(new { Message = "Lesson completed successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred while completed this lesson: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("lesson-not-completed")]
+        public async Task<IActionResult> LessonNotCompleted([FromQuery] NotCompletedLessonRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.NotCompletedLesson(req, userEmail.Value);
+                return Ok(new { Message = "Lesson not completed successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception) {
+                return StatusCode(500, new { Error = "An error occurred while not completed this lesson" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("get-last-viewed")]
+        public async Task<IActionResult> GetLastViewed([FromQuery] GetLastViewedRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var res = await lessonRepository.GetLastViewed(req, userEmail.Value);
+                return Ok(res);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("update-last-viewed")]
+        public async Task<IActionResult> UpdateLastViewed([FromBody] UpdateLastViewedRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.UpdateLastViewed(req, userEmail.Value);
+                return Ok(new { Message = "Last viewed lesson updated successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("add-note")]
+        public async Task<IActionResult> AddNote([FromBody] AddNoteRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.AddNote(req, userEmail.Value);
+                return Ok(new { Message = "Note added successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("get-notes")]
+        public async Task<IActionResult> GetNotes([FromQuery] GetNotesRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var notes = await lessonRepository.GetNotes(req, userEmail.Value);
+                return Ok(notes);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
             }
         }
     }

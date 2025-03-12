@@ -17,7 +17,9 @@ namespace CourseManagement.DataAccess.Data
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<Enrollment> enrollments { get; set; }
         public DbSet<CourseLearningOutcome> CourseLearningOutcomes { get; set; }
-      
+        public DbSet<LessonProgress> LessonProgresses { get; set; }
+        public DbSet<CourseProgress> CourseProgresses { get; set; }
+        public DbSet<Note> Notes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -70,6 +72,40 @@ namespace CourseManagement.DataAccess.Data
                 .HasOne(clo => clo.Course)
                 .WithMany(c => c.LearningOutcomes)
                 .HasForeignKey(clo => clo.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CourseProgress>()
+            .HasOne(cp => cp.User)
+            .WithMany(u => u.CourseProgresses)
+            .HasForeignKey(cp => cp.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CourseProgress>()
+                .HasOne(cp => cp.Course)
+                .WithMany()
+                .HasForeignKey(cp => cp.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CourseProgress>()
+                .HasOne(cp => cp.LastViewedLesson)
+                .WithMany()
+                .HasForeignKey(cp => cp.LastViewedLessonId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CourseProgress>()
+                .HasIndex(cp => new { cp.UserId, cp.CourseId })
+                .IsUnique();
+
+            modelBuilder.Entity<Note>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Note>()
+                .HasOne(n => n.Lesson)
+                .WithMany()
+                .HasForeignKey(n => n.LessonId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             DataSeed.InsertData(modelBuilder);

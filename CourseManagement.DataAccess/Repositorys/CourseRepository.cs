@@ -65,6 +65,39 @@ namespace CourseManagement.DataAccess.Repositorys {
             return response;
         }
 
+        public async Task<PreviewCourseResponse> Preview(DetailCourseRequest request, string userEmail) {
+            var course = await _context.Courses
+                    .Include(c => c.Category)
+                    .Include(c => c.LearningOutcomes)
+                    .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
+                        .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                    .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+                    .SingleOrDefaultAsync();
+
+            if (course == null) {
+                throw new ArgumentException($"Course {request.CourseId} is not existed or removed");
+            }
+
+            course.Modules = course.Modules.OrderBy(m => m.Order).ToList();
+            foreach (var module in course.Modules) {
+                module.Lessons = module.Lessons.OrderBy(l => l.Order).ToList();
+            }
+
+            var response = _mapper.Map<PreviewCourseResponse>(course);
+            response.LearningOutcomes = course.LearningOutcomes.Select(lo => lo.Outcome).ToList();
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                 ?? throw new ArgumentException($"Internal server error when user enroll course");
+
+            var foundEnrollment = await _context.enrollments
+                .SingleOrDefaultAsync(e => e.CourseId.ToString() == request.CourseId && 
+                e.UserId == userFound.Id);
+
+            response.IsEnrolled = foundEnrollment != null;
+
+            return response;
+        }
+
         public async Task RemoveCourse(RemoveCourseRequest request) {
             var courseFounded = await _context.Courses
                 .SingleOrDefaultAsync(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable);
@@ -187,6 +220,8 @@ namespace CourseManagement.DataAccess.Repositorys {
         }
 
         public async Task EnrollCourse(EnrollCourseRequest request) {
+            Console.WriteLine($"CourseId: {request.CourseId}");
+
             var courseFounded = await _context.Courses
                .SingleOrDefaultAsync(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
                ?? throw new ArgumentException($"Course with id {request.CourseId} not exsited or removed");
@@ -196,11 +231,39 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             Enrollment enrollment = new Enrollment() {
                 CourseId = courseFounded.Id,
-                UserId = userFound.Id
+                UserId = userFound.Id,
+                EnrollmentDate = DateTime.Today
             };
 
             _context.enrollments.Add(enrollment);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<LearnCourseResponse> Learn(LearnCourseRequest request, string userEmail) {
+            var course = await _context.Courses
+                   .Include(c => c.Category)
+                   .Include(c => c.LearningOutcomes)
+                   .Include(c => c.Modules.Where(m => m.Status == ModuleStatus.Active))
+                       .ThenInclude(m => m.Lessons.Where(l => l.Status == LessonStatus.Active))
+                   .Where(c => c.Id.ToString() == request.CourseId && c.Status != CourseStatus.UnAvailable)
+                   .SingleOrDefaultAsync() ?? throw new ArgumentException($"Course {request.CourseId} is not existed or removed");
+
+            var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == userEmail)
+                 ?? throw new ArgumentException($"Internal server error when user learn course");
+
+            var foundEnrollment = await _context.enrollments
+                .SingleOrDefaultAsync(e => e.CourseId.ToString() == request.CourseId &&
+                e.UserId == userFound.Id) ?? throw new ArgumentException($"You need to enroll in this course before learning it");
+
+            course.Modules = course.Modules.OrderBy(m => m.Order).ToList();
+            foreach (var module in course.Modules) {
+                module.Lessons = module.Lessons.OrderBy(l => l.Order).ToList();
+            }
+
+            var response = _mapper.Map<LearnCourseResponse>(course);
+            response.LearningOutcomes = course.LearningOutcomes.Select(lo => lo.Outcome).ToList();
+
+            return response;
         }
     }
 }

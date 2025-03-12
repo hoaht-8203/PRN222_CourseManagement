@@ -1,6 +1,8 @@
 using AntDesign;
+using BlazorAppSecure.Model;
 using CourseManagement.Model.DTOs;
 using Microsoft.AspNetCore.Components;
+using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace BlazorAppSecure.Pages;
@@ -17,12 +19,14 @@ public class PreviewBase : ComponentBase
 
     [Inject]
     protected IMessageService _mess { get; set; }
+    [Inject]
+    protected NavigationManager nav { get; set; }
 
     [Parameter]
     public string Id { get; set; }
 
     protected HttpClient httpClient;
-    protected DetailCourseResponse CourseDetail { get; set; }
+    protected PreviewCourseResponse CourseDetail { get; set; }
     protected bool LoadingCourseDetail = false;
     protected string[] ActivePanelKeys { get; set; } = new[] { "1" };
 
@@ -38,12 +42,12 @@ public class PreviewBase : ComponentBase
         LoadingCourseDetail = true;
         try
         {
-            var result = await httpClient.GetAsync($"/api/Course/detail?CourseId={courseId}");
+            var result = await httpClient.GetAsync($"/api/Course/preview?CourseId={courseId}");
 
             if (result.IsSuccessStatusCode)
             {
                 var response = await result.Content.ReadAsStringAsync();
-                var value = JsonSerializer.Deserialize<DetailCourseResponse>(response, jsonSerializerOptions);
+                var value = JsonSerializer.Deserialize<PreviewCourseResponse>(response, jsonSerializerOptions);
                 if (value != null)
                 {
                     CourseDetail = value;
@@ -64,6 +68,32 @@ public class PreviewBase : ComponentBase
             StateHasChanged();
         }
     }
+
+    protected async Task HandleEnrollCourse(string courseId)  // Đổi thành Task thay vì void
+    {
+        if (CourseDetail.IsEnrolled) {
+            nav.NavigateTo($"/learning/{courseId}");
+            return;
+        }
+
+        try {
+            JoinCourseRequest req = new() {
+                CourseId = courseId
+            };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Course/enroll-course", req);
+
+            if (response.IsSuccessStatusCode) {
+                nav.NavigateTo($"/learning/{courseId}");
+            } else {
+                var error = await response.Content.ReadAsStringAsync();
+                await _mess.Error($"Failed to enroll this course: {error}");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
 
     protected string GetTotalDuration()
     {

@@ -98,5 +98,19 @@ namespace CourseManagementAPI.Services
             }
             return false;
         }
+
+        public async Task<bool> SetUserBanStatus(string emailId, bool isBanned)
+        {
+            var user = await _userManager.FindByEmailAsync(emailId);
+            if (user == null)
+                return false;
+
+            user.LockoutEnabled = isBanned;
+            user.LockoutEnd = isBanned ? DateTimeOffset.MaxValue : null;
+
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
+
     }
 }
