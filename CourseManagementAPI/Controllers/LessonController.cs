@@ -179,5 +179,39 @@ namespace CourseManagementAPI.Controllers {
                 return StatusCode(500, new { Error = $"An error occurred: {ex}" });
             }
         }
+
+        [Authorize]
+        [HttpPost("add-note")]
+        public async Task<IActionResult> AddNote([FromBody] AddNoteRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.AddNote(req, userEmail.Value);
+                return Ok(new { Message = "Note added successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("get-notes")]
+        public async Task<IActionResult> GetNotes([FromQuery] GetNotesRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                var notes = await lessonRepository.GetNotes(req, userEmail.Value);
+                return Ok(notes);
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
     }
 }

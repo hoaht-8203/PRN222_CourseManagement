@@ -20,5 +20,7 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task<DetailLessonResponse> Detail(DetailLessonRequest req);
         Task<GetLastViewedResponse> GetLastViewed(GetLastViewedRequest req, string userEmail);
         Task UpdateLastViewed(UpdateLastViewedRequest req, string userEmail);
+        Task AddNote(AddNoteRequest req, string userEmail);
+        Task<GetNotesResponse> GetNotes(GetNotesRequest req, string userEmail);
     }
 }

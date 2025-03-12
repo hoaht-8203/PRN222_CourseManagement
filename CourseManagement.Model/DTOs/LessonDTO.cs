@@ -118,4 +118,27 @@ namespace CourseManagement.Model.DTOs {
     public class GetLastViewedResponse {
         public int? LastViewedLessonId { get; set; }
     }
+
+    public class AddNoteRequest {
+        [Required]
+        public int LessonId { get; set; }
+
+        [Required]
+        public string Content { get; set; }
+    }
+
+    public class GetNotesRequest {
+        [Required]
+        public int LessonId { get; set; }
+    }
+
+    public class NoteResponse {
+        public int Id { get; set; }
+        public string Content { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class GetNotesResponse {
+        public List<NoteResponse> Notes { get; set; }
+    }
 }
