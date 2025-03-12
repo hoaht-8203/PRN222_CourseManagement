@@ -221,7 +221,6 @@
 
         HubConnection.On<CommentDTO>("ReceiveComment", async (comment) =>
         {
-            _mess.Success("New comment received");
             if(comment.LessonId == CurrentLesson.Id)
             {
                 comments.Add(new CommentDTO
@@ -357,12 +356,42 @@
         }
     }
 
-    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) {
+    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) 
+    {
+        if (HubConnection != null && CurrentLesson != null)
+        {
+            try
+            {
+                await HubConnection.SendAsync("LeaveLessonGroup", CurrentLesson.Id.ToString());
+            }
+            catch (Exception ex)
+            {
+                await _mess.Error($"Error leaving lesson group: {ex.Message}");
+            }
+        }
         CurrentLesson = lesson;
         var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
         ActivePanelKeys = new[] { module.Order.ToString() };
         await UpdateLastViewedLesson(lesson);
         await LoadNotes();
+        if (HubConnection != null)
+        {
+            try
+            {
+                await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+            }
+            catch (Exception ex)
+            {
+                await _mess.Error($"Error joining lesson group: {ex.Message}");
+            }
+        }
+        else
+        {
+            _mess.Error("HubConnection is null");
+        }
+
+        await LoadComments();
+        StateHasChanged();
     }
 
     private async Task FetchCourseDetail() {
