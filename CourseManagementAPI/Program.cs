@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using CourseManagementAPI.Mappings;
 using CourseManagementAPI.Hubs;
+using Amazon.S3;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,7 @@ builder.Services.AddIdentityApiEndpoints<AppUser>().
     AddRoles<IdentityRole>().
     AddEntityFrameworkStores<CourseManagementDb>();
 
+builder.Services.AddScoped<MinioFileService>();
 builder.Services.AddScoped<IModuleRepository, ModuleRepository>();
 builder.Services.AddScoped<ModuleRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
@@ -71,6 +73,7 @@ builder.Services.AddCors(option => option.AddPolicy("wasm",
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowCredentials()
+    .WithExposedHeaders("Content-Disposition")
     ));
 
 
