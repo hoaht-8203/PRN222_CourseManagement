@@ -461,7 +461,6 @@
         {
             try
             {
-                _mess.Success("Joining lesson group" + CurrentLesson.Id.ToString());
                 await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
             }
             catch (Exception ex)
