@@ -4,9 +4,11 @@ using BlazorAppSecure.Sevices;
 using BlazorAppSecure.Sevices.Blog;
 using BlazorAppSecure.Sevices.Category;
 using BlazorAppSecure.Sevices.Profile;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.SignalR.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -34,5 +36,14 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress =
 builder.Services.AddHttpClient("Auth", opt => opt.BaseAddress =
 new Uri(builder.Configuration["BackendUrl"] ?? "https://localhost:7030"))
     .AddHttpMessageHandler<CutomHttpHandler>();
+
+builder.Services.AddSingleton(sp =>
+    new HubConnectionBuilder()
+        .WithUrl("https://localhost:7239/commentHub", options =>
+        {
+            options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+        })
+        .Build());
+
 
 await builder.Build().RunAsync();

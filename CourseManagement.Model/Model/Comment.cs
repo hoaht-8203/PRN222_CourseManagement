@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace CourseManagement.Model.Model
 {
@@ -14,6 +15,7 @@ namespace CourseManagement.Model.Model
         public AppUser User { get; set; }
 
         public int LessonId { get; set; }
+        [JsonIgnore]
         [ForeignKey("LessonId")]
         public Lesson Lesson { get; set; }
     }
