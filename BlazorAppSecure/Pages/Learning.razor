@@ -48,7 +48,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <Title Level="4">@CurrentLesson.Title</Title>
                                 <Button Type="@(IsLessonCompleted(CurrentLesson.Id) ? ButtonType.Default : ButtonType.Primary)"
-                                        OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
+                                OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
                                     @if (IsLessonCompleted(CurrentLesson.Id)) {
                                         <span><Icon Type="check" /> Completed</span>
                                     } else {
@@ -145,42 +145,42 @@
     }
 </div>
 <Drawer Closable="true"
-        @bind-Visible="showDrawer"
-        Placement="DrawerPlacement.Right"
-        Title='("Comments")'
-        Width="500"
-        OnClose="@CloseQnA">
-        <div class="comments-section">
-            <!-- Ô nhập comment -->
+@bind-Visible="showDrawer"
+Placement="DrawerPlacement.Right"
+Title='("Comments")'
+Width="500"
+OnClose="@CloseQnA">
+    <div class="comments-section">
+        <!-- Ô nhập comment -->
         <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
             <Avatar Icon="user" />
             <TextArea @bind-Value="newComment"
-                    Placeholder="Write a comment..."
-                    Style="flex-grow: 1;" />
-            
+            Placeholder="Write a comment..."
+            Style="flex-grow: 1;" />
+
         </div>
         <div style="margin-top: 12px; display:flex ;justify-content:flex-end">
             <Button Type="ButtonType.Primary" OnClick="SubmitComment">Submit</Button>
 
         </div>
-            <Divider />
+        <Divider />
 
-            <!-- Danh sách comment -->
-            <div class="comments-list">
-                @foreach (var comment in comments)
-                {
-                    <div class="comment-item">
-                        <div style="margin-bottom: 8px">
+        <!-- Danh sách comment -->
+        <div class="comments-list">
+            @foreach (var comment in comments)
+            {
+                <div class="comment-item">
+                    <div style="margin-bottom: 8px">
                         <Avatar Icon="user" />
                         <strong>@comment.Username</strong>
-                        </div>
-                                                <p>@comment.Content</p>
-                        <Divider />
                     </div>
-                }
-            </div>
+                    <p>@comment.Content</p>
+                    <Divider />
+                </div>
+            }
         </div>
-    
+    </div>
+
 </Drawer>
 
 @code {
@@ -205,37 +205,39 @@
     private void CloseQnA() => showDrawer = false;
 
     protected override async Task OnInitializedAsync() {
-        httpClient = HttpClientFactory.CreateClient("Auth");
-        await FetchCourseDetail();
-        if (CourseDetail != null)  // Chỉ load completed lessons nếu course detail load thành công
+        try
         {
-            await LoadCompletedLessons();
-        }
-        await LoadComments();
-        await HubConnection.StartAsync();
-        if (HubConnection.State != HubConnectionState.Connected)
-        {
-            await _mess.Error("SignalR is not connected.");
-        }
-
-
-        HubConnection.On<CommentDTO>("ReceiveComment", async (comment) =>
-        {
-            if(comment.LessonId == CurrentLesson.Id)
+            httpClient = HttpClientFactory.CreateClient("Auth");
+            await FetchCourseDetail();
+            if (CourseDetail != null)  // Chỉ load completed lessons nếu course detail load thành công
             {
-                comments.Add(new CommentDTO
-                {
-                    Content = comment.Content,
-                    LessonId = comment.LessonId,
-                    Username = comment.Username
-
-                });
-                StateHasChanged();
+                await LoadCompletedLessons();
             }
-        });
+            await LoadComments();
+            await HubConnection.StartAsync();
+            if (HubConnection.State != HubConnectionState.Connected) {
+                await _mess.Error("SignalR is not connected.");
+            }
 
 
-        await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+            HubConnection.On<CommentDTO>("ReceiveComment", async (comment) => {
+                if (comment.LessonId == CurrentLesson.Id) {
+                    comments.Add(new CommentDTO {
+                            Content = comment.Content,
+                            LessonId = comment.LessonId,
+                            Username = comment.Username
+
+                        });
+                    StateHasChanged();
+                }
+            });
+
+
+            await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+        } catch (Exception)
+        {
+            
+        }
     }
 
     private async Task LoadCompletedLessons() {

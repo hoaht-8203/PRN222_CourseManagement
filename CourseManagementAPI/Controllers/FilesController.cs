@@ -28,9 +28,20 @@ namespace CourseManagementAPI.Controllers
                     return BadRequest("File size exceeds maximum limit (10MB).");
 
                 // Kiểm tra loại file
-                var allowedTypes = new[] { "image/jpeg", "image/png", "application/pdf" };
-                if (!allowedTypes.Contains(file.ContentType.ToLower()))
-                    return BadRequest("File type not allowed.");
+                var allowedTypes = new[] {
+                            "image/jpeg",
+                            "image/png",
+                            "application/pdf",
+                            "application/msword",                     // .doc
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+                            "application/json",                       // .json
+                            "application/xml",                        // .xml
+                            "text/xml"                               // .xml (alternative content type)
+                        };
+
+                if (!allowedTypes.Contains(file.ContentType.ToLower())) {
+                    return BadRequest($"File type not allowed. Allowed types are: JPEG, PNG, PDF, DOC, DOCX, JSON, XML");
+                }
 
                 var fileName = await _fileService.UploadFileAsync(file);
                 return Ok(new { fileName });

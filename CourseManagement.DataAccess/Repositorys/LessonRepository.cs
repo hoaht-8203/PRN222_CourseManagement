@@ -27,18 +27,41 @@ namespace CourseManagement.DataAccess.Repositorys {
                 .Where(l => l.ModuleId == req.ModuleId && l.Status == LessonStatus.Active)
                 .MaxAsync(l => (int?)l.Order) ?? 0;
 
-            var newLesson = new Lesson {
-                Title = req.Title,
-                Description = req.Description,
-                UrlVideo = req.UrlVideo,
-                ModuleId = req.ModuleId,
-                Order = maxLessonOrder + 1,
-                Status = LessonStatus.Active,
-                VideoDuration = req.Duration
-            };
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try {
+                var newLesson = new Lesson {
+                    Title = req.Title,
+                    Description = req.Description,
+                    UrlVideo = req.UrlVideo,
+                    ModuleId = req.ModuleId,
+                    Order = maxLessonOrder + 1,
+                    Status = LessonStatus.Active,
+                    VideoDuration = req.Duration
+                };
 
-            _context.Lessons.Add(newLesson);
-            await _context.SaveChangesAsync();
+                _context.Lessons.Add(newLesson);
+                await _context.SaveChangesAsync();
+
+                // Thêm documents nếu có
+                if (req.Documents != null && req.Documents.Any()) {
+                    var documents = req.Documents.Select(doc => new Document {
+                        LessonId = newLesson.Id,
+                        Name = doc.FileName,
+                        Type = doc.FileType,
+                        File = doc.MinIOFileName,
+                        FileSize = doc.FileSize,
+                        UploadedAt = DateTime.UtcNow
+                    }).ToList();
+
+                    _context.Documents.AddRange(documents);
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+            } catch {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task UpdateLesson(UpdateLessonRequest req) {
