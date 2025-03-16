@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.415.16" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CourseManagement.DataAccess\CourseManagement.DataAccess.csproj" />
     <ProjectReference Include="..\CourseManagement.Model\CourseManagement.Model.csproj" />
   </ItemGroup>

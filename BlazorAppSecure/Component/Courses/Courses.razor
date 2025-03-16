@@ -198,18 +198,18 @@ class="table-list-course">
                 <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" class="ant-btn-edit" OnClick="() => OpenUpdateCourseDrawer(context.Id)"></Button>
                 @if (context.Status != CourseStatus.Publish) {
                     <Popconfirm Title="Are you sure you want to publish this course?"
-                                OnConfirm="() => HandlePublishCourse(context.Id)"
-                                OkText="Yes"
-                                CancelText="No">
+                    OnConfirm="() => HandlePublishCourse(context.Id)"
+                    OkText="Yes"
+                    CancelText="No">
                         <Button Type="ButtonType.Text" Icon="@IconType.Outline.Upload"></Button>
                     </Popconfirm>
                 }
 
                 @if (context.Status == CourseStatus.Publish) {
                     <Popconfirm Title="Are you sure you want to unpublish this course?"
-                                OnConfirm="() => HandleUnpublishCourse(context.Id)"
-                                OkText="Yes"
-                                CancelText="No">
+                    OnConfirm="() => HandleUnpublishCourse(context.Id)"
+                    OkText="Yes"
+                    CancelText="No">
                         <Button Type="ButtonType.Text" Icon="@IconType.Outline.Download"></Button>
                     </Popconfirm>
                 }
@@ -237,11 +237,37 @@ Width="500"
             <AntDesign.Col Span="24">
                 <Text>Preview Image</Text>
                 <FormItem>
-                    <Input Placeholder="Please enter preview image url" TValue="string" @bind-Value="@context.PreviewImage"></Input>
-                    @if (!string.IsNullOrEmpty(context.PreviewImage)) {
-                        <Image class="mt-2" Src="@(string.IsNullOrEmpty(context.PreviewImage) ? previewImageUrl : context.PreviewImage)"
-                        Fallback="@errorImageUrl" />
-                    }
+                    <div class="preview-image-input">
+                        <Tabs>
+                            <TabPane Key="1" Tab="URL">
+                                <Input Placeholder="Enter image URL"
+                                TValue="string"
+                                @bind-Value="@context.PreviewImage"
+                                OnChange="@(async (e) => await PreviewImageUrlChanged(e.ToString()))" />
+                            </TabPane>
+                            <TabPane Key="2" Tab="Upload">
+                                <Upload Action="https://localhost:7239/api/File/upload"
+                                Accept="image/*"
+                                OnSingleCompleted="OnImageUploadCompleted"
+                                OnRemove="OnImageRemoved"
+                                OnChange="HandleUploadChange"
+                                Multiple="false"
+                                Name="file"
+                                FileList="fileList">
+                                    <Button Icon="@IconType.Outline.Upload">
+                                        Click to Upload
+                                    </Button>
+                                </Upload>
+                            </TabPane>
+                        </Tabs>
+                        @if (!string.IsNullOrEmpty(previewImageSrc)) {
+                            <div class="mt-2">
+                                <Image Src="@previewImageSrc"
+                                Fallback="@errorImageUrl"
+                                PreviewSrc="@previewImageSrc" />
+                            </div>
+                        }
+                    </div>
                 </FormItem>
             </AntDesign.Col>
         </Row>
@@ -505,6 +531,94 @@ Width="500">
     private Form<CategoryModel> _form;
     private string newOutcome = "";
     private string newUpdateOutcome = "";
+    private string previewImageSrc = "";
+    private List<UploadFileItem> fileList = new();
+
+    private async Task PreviewImageUrlChanged(string url) {
+        if (!string.IsNullOrEmpty(url)) {
+            previewImageSrc = url;
+            courseModel.PreviewImage = url;
+        }
+    }
+
+    private async Task OnImageUploadCompleted(UploadInfo fileInfo) {
+        if (fileInfo.File != null && fileInfo.File.State == UploadState.Success) {
+            var response = JsonSerializer.Deserialize<Dictionary<string, string>>(fileInfo.File.Response);
+            if (response != null && response.ContainsKey("fileName")) {
+                var fileName = response["fileName"];
+                // Lấy URL của file đã upload
+                var result = await httpClient.GetAsync($"/api/File/url/{fileName}");
+                if (result.IsSuccessStatusCode) {
+                    var urlResponse = await result.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                    if (urlResponse != null && urlResponse.ContainsKey("url")) {
+                        previewImageSrc = urlResponse["url"];
+                        courseModel.PreviewImage = urlResponse["url"];
+
+                        // Cập nhật fileList sau khi có URL thành công
+                        fileList.Clear();
+                        fileList.Add(fileInfo.File);
+                        StateHasChanged();
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task HandleUploadChange(UploadInfo args) {
+        if (args.File.State == UploadState.Uploading) {
+            // Nếu đang có file cũ, xóa file cũ trước khi thêm file mới
+            if (fileList.Count > 0) {
+                var oldFile = fileList[0];
+                if (oldFile.State == UploadState.Success) {
+                    try {
+                        var response = JsonSerializer.Deserialize<Dictionary<string, string>>(oldFile.Response);
+                        if (response != null && response.ContainsKey("fileName")) {
+                            var fileName = response["fileName"];
+                            // Xóa file cũ khỏi server
+                            await httpClient.DeleteAsync($"/api/File/{fileName}");
+                        }
+                    } catch (Exception ex) {
+                        await _mess.Error($"Error removing old file: {ex.Message}");
+                    }
+                }
+            }
+
+            // Reset các giá trị và cập nhật UI ngay lập tức
+            previewImageSrc = "";
+            courseModel.PreviewImage = "";
+            fileList.Clear();
+
+            // Thêm file mới vào list ngay khi bắt đầu upload
+            fileList.Add(args.File);
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task<bool> OnImageRemoved(UploadFileItem file) {
+        // Reset preview image
+        previewImageSrc = "";
+        courseModel.PreviewImage = "";
+
+        // Nếu file đã được upload thành công, xóa file khỏi server
+        if (file.State == UploadState.Success) {
+            try {
+                var response = JsonSerializer.Deserialize<Dictionary<string, string>>(file.Response);
+                if (response != null && response.ContainsKey("fileName")) {
+                    var fileName = response["fileName"];
+                    await httpClient.DeleteAsync($"/api/File/{fileName}");
+                }
+            } catch (Exception ex) {
+                await _mess.Error($"Error removing file: {ex.Message}");
+            }
+        }
+
+        // Xóa file khỏi list
+        fileList.Clear();
+
+        StateHasChanged();
+        return true;
+    }
 
     private void AddLearningOutcome() {
         if (!string.IsNullOrWhiteSpace(newOutcome)) {
@@ -565,6 +679,7 @@ Width="500">
 
     void open() {
         courseModel = new();
+        previewImageSrc = "";
         this.visibleAddNewCourseDrawer = true;
     }
 
@@ -692,6 +807,8 @@ Width="500">
 
     async void SubmitNewCourse() {
         try {
+            Console.WriteLine($"CHECK: {previewImageSrc}");
+
             var response = await httpClient.PostAsJsonAsync("/api/Course/add", courseModel);
 
             if (response.IsSuccessStatusCode) {
@@ -1003,4 +1120,11 @@ Width="500">
             margin-bottom: 8px;
             border-radius: 4px;
         }
+
+    .preview-image-input {
+        border: 1px dashed #d9d9d9;
+        border-radius: 4px;
+        padding: 16px;
+        text-align: center;
+    }
 </style>
