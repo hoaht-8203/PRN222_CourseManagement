@@ -151,4 +151,9 @@ namespace CourseManagement.Model.DTOs {
     public class GetNotesResponse {
         public List<NoteResponse> Notes { get; set; }
     }
+
+    public class RemoveNoteRequest {
+        [Required]
+        public int NoteId { get; set; }
+    }
 }

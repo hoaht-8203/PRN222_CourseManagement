@@ -391,5 +391,18 @@ namespace CourseManagement.DataAccess.Repositorys {
 
             return new GetNotesResponse { Notes = notes };
         }
+
+        public async Task RemoveNote(RemoveNoteRequest req, string userEmail) {
+            var user = await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.Email == userEmail)
+                ?? throw new ArgumentException("User not found");
+
+            var note = await _context.Notes
+                .FirstOrDefaultAsync(n => n.Id == req.NoteId && n.UserId == user.Id)
+                ?? throw new ArgumentException("Note not found or you don't have permission to delete it");
+
+            _context.Notes.Remove(note);
+            await _context.SaveChangesAsync();
+        }
     }
 }
