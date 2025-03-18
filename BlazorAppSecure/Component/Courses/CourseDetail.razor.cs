@@ -86,6 +86,43 @@ public class CourseDetailBase : ComponentBase {
     protected List<UploadFileItem> CurrentLessonFiles { get; set; } = new();
     protected List<DocumentResponse> LessonDocuments { get; set; } = new();
 
+    private int? deletingDocumentId;
+
+    protected async Task DeleteDocument(DocumentResponse document) {
+        try {
+            deletingDocumentId = document.Id;
+
+            // Delete document from database first
+            var response = await httpClient.PostAsJsonAsync("/api/Document/remove",
+                new RemoveDocumentRequest {
+                    LessonId = document.LessonId,
+                    File = document.File
+                });
+
+            if (!response.IsSuccessStatusCode) {
+                _mess.Error("Failed to delete document from database");
+                return;
+            }
+
+            // If database deletion successful, delete file from MinIO
+            var deleteFileResponse = await httpClient.DeleteAsync($"/api/File/{document.File}");
+            if (!deleteFileResponse.IsSuccessStatusCode) {
+                _mess.Warning("Document removed from database but failed to delete file from storage");
+                // Continue anyway since the document is already removed from DB
+            }
+
+            // Remove document from local list
+            LessonDocuments.RemoveAll(d => d.Id == document.Id);
+            _mess.Success("Document deleted successfully");
+            StateHasChanged();
+        } catch (Exception ex) {
+            _mess.Error($"Error deleting document: {ex.Message}");
+        } finally {
+            deletingDocumentId = null;
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnInitializedAsync() {
         httpClient = HttpClientFactory.CreateClient("Auth");
 

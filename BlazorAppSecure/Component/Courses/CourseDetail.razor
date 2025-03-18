@@ -140,11 +140,26 @@
                                         @context.UploadedAt.ToLocalTime().ToString("g")
                                     </PropertyColumn>
                                     <ActionColumn Title="Action">
-                                        <Button Type="ButtonType.Primary"
-                                                Icon="@IconType.Outline.Download"
-                                                OnClick="() => DownloadDocument(context)">
-                                            Download
-                                        </Button>
+                                        <Space>
+                                            <SpaceItem>
+                                                <Button Type="ButtonType.Primary"
+                                                        Icon="@IconType.Outline.Download"
+                                                        OnClick="() => DownloadDocument(context)">
+                                                    Download
+                                                </Button>
+                                            </SpaceItem>
+                                            <SpaceItem>
+                                                <Popconfirm Title="Are you sure to delete this document?"
+                                                            OnConfirm="() => DeleteDocument(context)"
+                                                            OkText="Yes"
+                                                            CancelText="No">
+                                                    <Button Danger
+                                                            Icon="@IconType.Outline.Delete">
+                                                        Delete
+                                                    </Button>
+                                                </Popconfirm>
+                                            </SpaceItem>
+                                        </Space>
                                     </ActionColumn>
                                 </Table>
                             </div>
