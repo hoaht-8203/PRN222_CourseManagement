@@ -83,19 +83,152 @@ public class CourseDetailBase : ComponentBase {
     protected string[] ActiveModuleKeys { get; set; } = new[] { "1" };
     protected int? LastModuleId { get; set; }
 
-    protected void NavigateToPreviousLesson() {
-        if (PreviousLesson != null) {
-            CurrentLesson = PreviousLesson;
-            UpdateNavigationLessons();
-            EnsureModuleExpanded(PreviousLesson.ModuleId);
+    protected List<UploadFileItem> CurrentLessonFiles { get; set; } = new();
+    protected List<DocumentResponse> LessonDocuments { get; set; } = new();
+
+    protected override async Task OnInitializedAsync() {
+        httpClient = HttpClientFactory.CreateClient("Auth");
+
+        await FetchCourseDetail(Id);
+        if (CourseDetailModel != null) {
+            var firstModule = CourseDetailModel.Modules.SingleOrDefault((m) => m.Order == 1);
+            if (firstModule != null) {
+                var firstLesson = firstModule.Lessons.SingleOrDefault(l => l.Order == 1);
+                if (firstLesson != null) {
+                    CurrentLesson = firstLesson;
+                    UpdateNavigationLessons();
+                }
+            }
+        }
+
+        if (CurrentLesson != null) {
+            await LoadLessonDocuments(CurrentLesson.Id);
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    protected async Task LoadLessonDocuments(int lessonId) {
+        try {
+            // Clear list cũ
+            LessonDocuments = new List<DocumentResponse>();
+            StateHasChanged(); // Cập nhật UI ngay sau khi clear list
+
+            // Kiểm tra CurrentLesson
+            if (CurrentLesson == null) return;
+
+            var response = await httpClient.GetAsync($"/api/Document/get-by-lesson/{lessonId}");
+            if (response.IsSuccessStatusCode) {
+                var documents = await response.Content.ReadFromJsonAsync<List<DocumentResponse>>();
+                LessonDocuments = documents ?? new List<DocumentResponse>();
+            } else {
+                LessonDocuments = new List<DocumentResponse>();
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error loading documents: {ex.Message}");
+            LessonDocuments = new List<DocumentResponse>();
+        } finally {
+            StateHasChanged();
         }
     }
 
-    protected void NavigateToNextLesson() {
-        if (NextLesson != null) {
-            CurrentLesson = NextLesson;
-            UpdateNavigationLessons();
-            EnsureModuleExpanded(NextLesson.ModuleId);
+    protected async Task OnLessonFileUploadCompleted(UploadInfo fileInfo) {
+        if (fileInfo.File != null && fileInfo.File.State == UploadState.Success) {
+            try {
+                var response = JsonSerializer.Deserialize<Dictionary<string, string>>(fileInfo.File.Response);
+                if (response != null && response.ContainsKey("fileName")) {
+                    // Chỉ cập nhật UI, không gọi API document
+                    var existingFile = CurrentLessonFiles.FirstOrDefault(f => f.FileName == fileInfo.File.FileName);
+                    if (existingFile != null && existingFile != fileInfo.File) {
+                        CurrentLessonFiles.Remove(existingFile);
+                    }
+                    _mess.Success("File uploaded successfully");
+                    StateHasChanged();
+                }
+            } catch (Exception ex) {
+                CurrentLessonFiles.Remove(fileInfo.File);
+                _mess.Error($"Error processing uploaded file: {ex.Message}");
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected async Task<bool> OnLessonFileRemoved(UploadFileItem file) {
+        if (file.State == UploadState.Success) {
+            try {
+                var response = JsonSerializer.Deserialize<Dictionary<string, string>>(file.Response);
+                if (response != null && response.ContainsKey("fileName")) {
+                    var fileName = response["fileName"];
+
+                    var deleteResponse = await httpClient.DeleteAsync($"/api/File/{fileName}");
+                    if (!deleteResponse.IsSuccessStatusCode) {
+                        _mess.Error("Failed to remove file");
+                        return false;
+                    }
+
+                    _mess.Success("File removed successfully");
+                    return true;
+                }
+            } catch (Exception ex) {
+                _mess.Error($"Error removing file: {ex.Message}");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected async Task DownloadDocument(DocumentResponse document) {
+        try {
+            var result = await httpClient.GetAsync($"/api/File/url/{document.File}");
+            if (result.IsSuccessStatusCode) {
+                var urlResponse = await result.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (urlResponse != null && urlResponse.ContainsKey("url")) {
+                    await JSRuntime.InvokeVoidAsync("window.open", urlResponse["url"], "_blank");
+                }
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error downloading file: {ex.Message}");
+        }
+    }
+
+    protected async Task HandleLessonFileUploadChange(UploadInfo args) {
+        if (args.File.State == UploadState.Uploading) {
+            // Check if file already exists in the list
+            var existingFile = CurrentLessonFiles.FirstOrDefault(f => f.FileName == args.File.FileName);
+            if (existingFile != null) {
+                // Remove the existing file if it's a duplicate
+                CurrentLessonFiles.Remove(existingFile);
+            }
+
+            // Add the new file
+            CurrentLessonFiles.Add(args.File);
+            StateHasChanged();
+        }
+    }
+
+    protected async Task NavigateToPreviousLesson() {
+        if (PreviousLesson != null) {
+            try {
+                CurrentLesson = PreviousLesson;
+                UpdateNavigationLessons();
+                await LoadLessonDocuments(PreviousLesson.Id);
+                EnsureModuleExpanded(PreviousLesson.ModuleId);
+                StateHasChanged();
+            } catch (Exception) {
+            }
+        }
+    }
+
+    protected async Task NavigateToNextLesson() {
+        try {
+            if (NextLesson != null) {
+                CurrentLesson = NextLesson;
+                UpdateNavigationLessons();
+                await LoadLessonDocuments(CurrentLesson.Id);
+                EnsureModuleExpanded(NextLesson.ModuleId);
+                StateHasChanged();
+            }
+        } catch (Exception) {
         }
     }
 
@@ -219,10 +352,16 @@ public class CourseDetailBase : ComponentBase {
         Console.WriteLine(string.Join(',', keys));
     }
 
-    protected void HandleLessonClick(DetailCourseResponse.Lesson lesson) {
-        CurrentLesson = lesson;
-        UpdateNavigationLessons();
-        EnsureModuleExpanded(lesson.ModuleId);
+    protected async void HandleLessonClick(DetailCourseResponse.Lesson lesson) {
+        try {
+            CurrentLesson = lesson;
+            UpdateNavigationLessons();
+            EnsureModuleExpanded(lesson.ModuleId);
+            await LoadLessonDocuments(lesson.Id);
+            StateHasChanged();
+        } catch (Exception ex) {
+            await _mess.Error($"Error handling lesson click: {ex.Message}");
+        }
     }
 
     protected void EnsureModuleExpanded(int moduleId) {
@@ -354,24 +493,6 @@ public class CourseDetailBase : ComponentBase {
                 ListLessonPreview = null;
             }
         }
-    }
-
-    protected override async Task OnInitializedAsync() {
-        httpClient = HttpClientFactory.CreateClient("Auth");
-
-        await FetchCourseDetail(Id);
-        if (CourseDetailModel != null) {
-            var firstModule = CourseDetailModel.Modules.SingleOrDefault((m) => m.Order == 1);
-            if (firstModule != null) {
-                var firstLesson = firstModule.Lessons.SingleOrDefault(l => l.Order == 1);
-                if (firstLesson != null) {
-                    CurrentLesson = firstLesson;
-                    UpdateNavigationLessons();
-                }
-            }
-        }
-
-        await base.OnInitializedAsync();
     }
 
     protected async Task FetchCourseDetail(string courseId) {
@@ -508,14 +629,37 @@ public class CourseDetailBase : ComponentBase {
         try {
             AddNewLessonModel.Duration = await GetYouTubeDuration(AddNewLessonModel.UrlVideo);
 
+            // Thêm thông tin documents vào request
+            AddNewLessonModel.Documents = CurrentLessonFiles
+                .Where(f => f.State == UploadState.Success)
+                .Select(f => {
+                    var fileResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(f.Response);
+                    return new DocumentInfo {
+                        FileName = f.FileName,
+                        FileType = f.Type,
+                        FileSize = f.Size,
+                        MinIOFileName = fileResponse["fileName"]
+                    };
+                }).ToList();
+
             var response = await httpClient
                 .PostAsJsonAsync("/api/Lesson/add", AddNewLessonModel);
 
             if (response.IsSuccessStatusCode) {
                 CloseAddNewLessonDrawer();
                 await FetchCourseDetail(Id);
+                CurrentLessonFiles.Clear();
                 await _mess.Success("Lesson added successfully");
             } else {
+                // Xóa các files đã upload nếu tạo lesson thất bại
+                foreach (var file in CurrentLessonFiles.Where(f => f.State == UploadState.Success)) {
+                    try {
+                        var fileResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(file.Response);
+                        if (fileResponse != null && fileResponse.ContainsKey("fileName")) {
+                            await httpClient.DeleteAsync($"/api/File/{fileResponse["fileName"]}");
+                        }
+                    } catch { }
+                }
                 await _mess.Error("Failed to add lesson");
             }
         } catch (Exception ex) {
@@ -797,4 +941,17 @@ public class CourseDetailBase : ComponentBase {
         await JSRuntime.InvokeVoidAsync("saveAsFile", fileName, fileBase64);
     }
 
+}
+
+public static class Extensions {
+    public static string ToFileSize(this long bytes) {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1) {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
 }

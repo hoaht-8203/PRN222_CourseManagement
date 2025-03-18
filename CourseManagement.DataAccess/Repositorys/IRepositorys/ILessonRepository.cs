@@ -22,5 +22,6 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys {
         Task UpdateLastViewed(UpdateLastViewedRequest req, string userEmail);
         Task AddNote(AddNoteRequest req, string userEmail);
         Task<GetNotesResponse> GetNotes(GetNotesRequest req, string userEmail);
+        Task RemoveNote(RemoveNoteRequest req, string userEmail);
     }
 }

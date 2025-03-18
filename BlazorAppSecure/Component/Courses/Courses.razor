@@ -190,7 +190,7 @@ class="table-list-course">
             }
         </PropertyColumn>
         <PropertyColumn Property="c=>c.Level" Title="Total Enrolled" Width="150" Align="ColumnAlign.Center">
-            0
+            @context.TotalEnrolled
         </PropertyColumn>
         <ActionColumn Title="Action" Width="140" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
             <CellRender Context="cellData">

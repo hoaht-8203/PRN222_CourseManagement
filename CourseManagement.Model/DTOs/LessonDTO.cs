@@ -1,5 +1,6 @@
 ﻿using CourseManagement.Model.Constant;
 using CourseManagement.Model.Model;
+using Microsoft.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
 
 namespace CourseManagement.Model.DTOs {
@@ -14,6 +15,15 @@ namespace CourseManagement.Model.DTOs {
         [Range(1, int.MaxValue, ErrorMessage = "Module is required")]
         public int ModuleId { get; set; }
         public TimeSpan? Duration { get; set; }
+        // Thêm property mới
+        public List<DocumentInfo> Documents { get; set; } = new();
+    }
+
+    public class DocumentInfo {
+        public string FileName { get; set; }
+        public string FileType { get; set; }
+        public long FileSize { get; set; }
+        public string MinIOFileName { get; set; }
     }
 
     public class SearchLessonRequest {
@@ -140,5 +150,10 @@ namespace CourseManagement.Model.DTOs {
 
     public class GetNotesResponse {
         public List<NoteResponse> Notes { get; set; }
+    }
+
+    public class RemoveNoteRequest {
+        [Required]
+        public int NoteId { get; set; }
     }
 }

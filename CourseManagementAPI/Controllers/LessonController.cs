@@ -213,5 +213,22 @@ namespace CourseManagementAPI.Controllers {
                 return StatusCode(500, new { Error = $"An error occurred: {ex}" });
             }
         }
+
+        [Authorize]
+        [HttpPost("remove-note")]
+        public async Task<IActionResult> RemoveNote([FromBody] RemoveNoteRequest req) {
+            try {
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail is null) {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+                await lessonRepository.RemoveNote(req, userEmail.Value);
+                return Ok(new { Message = "Note removed successfully" });
+            } catch (ArgumentException ex) {
+                return BadRequest(new { Error = ex.Message });
+            } catch (Exception ex) {
+                return StatusCode(500, new { Error = $"An error occurred: {ex}" });
+            }
+        }
     }
 }

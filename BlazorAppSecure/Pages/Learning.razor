@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using CourseManagement.Model.Model
 @using System.Security.Claims;
+@using BlazorAppSecure.Shared
 
 @inject IHttpClientFactory HttpClientFactory
 @inject IMessageService _mess
@@ -46,7 +47,18 @@
                         </div>
                         <div class="lesson-info">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <Title Level="4">@CurrentLesson.Title</Title>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <Button Icon="@IconType.Outline.CaretLeft"
+                                            OnClick="NavigateToPreviousLesson"
+                                            Disabled="@(PreviousLesson == null)">
+                                        Previous lesson
+                                    </Button>
+                                    <Button Icon="@IconType.Outline.CaretRight"
+                                            OnClick="NavigateToNextLesson"
+                                            Disabled="@(NextLesson == null)">
+                                        Next lesson
+                                    </Button>
+                                </div>
                                 <Button Type="@(IsLessonCompleted(CurrentLesson.Id) ? ButtonType.Default : ButtonType.Primary)"
                                         OnClick="@(() => ToggleLessonComplete(CurrentLesson))">
                                     @if (IsLessonCompleted(CurrentLesson.Id)) {
@@ -56,39 +68,44 @@
                                     }
                                 </Button>
                             </div>
+                            <Title Level="4">@CurrentLesson.Title</Title>
                             <Paragraph>@CurrentLesson.Description</Paragraph>
 
-                            @* Thêm phần Notes *@
-                            <div class="notes-section mt-4">
-                                <Title Level="5">My Notes</Title>
-                                <div class="d-flex gap-2 mb-3">
-                                    <TextArea @bind-Value="@newNote" Placeholder="Add a note..." AutoSize="true" />
-                                    <Button Type="ButtonType.Primary" OnClick="AddNote" Loading="@addingNote">Add Note</Button>
+                            @if (LessonDocuments?.Any() == true) {
+                                <Divider />
+                                <div class="lesson-documents">
+                                    <Title Level="5">Lesson Materials</Title>
+                                    <Table DataSource="@LessonDocuments"
+                                           Size="TableSize.Small"
+                                           Bordered>
+                                        <PropertyColumn Property="c=>c.Name" Title="File Name" />
+                                        <PropertyColumn Property="c=>c.FileSize" Title="Size">
+                                            @context.FileSize.ToFileSize()
+                                        </PropertyColumn>
+                                        <PropertyColumn Property="c=>c.UploadedAt" Title="Uploaded">
+                                            @context.UploadedAt.ToLocalTime().ToString("g")
+                                        </PropertyColumn>
+                                        <ActionColumn Title="Action">
+                                            <Button Type="ButtonType.Primary"
+                                                    Icon="@IconType.Outline.Download"
+                                                    OnClick="() => DownloadDocument(context)">
+                                                Download
+                                            </Button>
+                                        </ActionColumn>
+                                    </Table>
                                 </div>
-
-                                @if (loadingNotes) {
-                                    <Spin />
-                                } else if (notes?.Any() == true) {
-                                    <AntList DataSource="@notes" Size="ListSize.Small">
-                                        <ChildContent Context="note">
-                                            <ListItem>
-                                                <div class="note-item">
-                                                    <div class="note-content">@note.Content</div>
-                                                    <div class="note-date">@note.CreatedAt.ToLocalTime().ToString("g")</div>
-                                                </div>
-                                            </ListItem>
-                                        </ChildContent>
-                                    </AntList>
-                                } else {
-                                    <Empty />
-                                }
-                            </div>
+                            }
                         </div>
                     }
                 </div>
                 <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
                     <Button Type="ButtonType.Primary" Class="question-button" OnClick="ShowQnA">
                         <Icon Type="message" /> Comments
+                    </Button>
+                </div>
+                <div style="position: fixed; bottom: 20px; right: 145px; z-index: 1000;">
+                    <Button Type="ButtonType.Primary" Class="notes-button" OnClick="ShowNotes">
+                        <Icon Type="edit" /> Notes
                     </Button>
                 </div>
             </GridCol>
@@ -98,7 +115,10 @@
                         <div>
                             <Title Level="4">Course content</Title>
                             <div class="course-stats">
-                                <Text>@CourseDetail.Modules.Count module • @GetTotalLessons() lesson • @GetTotalDuration()</Text>
+                                <Tag Color="TagColor.Blue">@CourseDetail.Modules.Count module</Tag>
+                                <Tag Color="TagColor.Blue">@GetTotalLessons() lesson</Tag>
+                                <Tag Color="TagColor.Blue">@GetTotalDuration()</Tag>
+                                @* <Text>@CourseDetail.Modules.Count module • @GetTotalLessons() lesson • @GetTotalDuration()</Text> *@
                             </div>
                         </div>
                         <div class="progress-circle">
@@ -144,43 +164,98 @@
         </GridRow>
     }
 </div>
+
 <Drawer Closable="true"
-        @bind-Visible="showDrawer"
-        Placement="DrawerPlacement.Right"
-        Title='("Comments")'
-        Width="500"
-        OnClose="@CloseQnA">
-        <div class="comments-section">
-            <!-- Ô nhập comment -->
+@bind-Visible="showDrawer"
+Placement="DrawerPlacement.Right"
+Title='("Comments")'
+Width="500"
+OnClose="@CloseQnA">
+    <div class="comments-section">
+        <!-- Ô nhập comment -->
         <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
             <Avatar Icon="user" />
             <TextArea @bind-Value="newComment"
-                    Placeholder="Write a comment..."
-                    Style="flex-grow: 1;" />
-            
+            Placeholder="Write a comment..."
+            Style="flex-grow: 1;" />
+
         </div>
         <div style="margin-top: 12px; display:flex ;justify-content:flex-end">
             <Button Type="ButtonType.Primary" OnClick="SubmitComment">Submit</Button>
 
         </div>
-            <Divider />
+        <Divider />
 
-            <!-- Danh sách comment -->
-            <div class="comments-list">
-                @foreach (var comment in comments)
-                {
-                    <div class="comment-item">
-                        <div style="margin-bottom: 8px">
+        <!-- Danh sách comment -->
+        <div class="comments-list">
+            @foreach (var comment in comments)
+            {
+                <div class="comment-item">
+                    <div style="margin-bottom: 8px">
                         <Avatar Icon="user" />
                         <strong>@comment.Username</strong>
+                    </div>
+                    <p>@comment.Content</p>
+                    <Divider />
+                </div>
+            }
+        </div>
+    </div>
+
+</Drawer>
+
+<Drawer Closable="true"
+        @bind-Visible="showNotesDrawer"
+        Placement="DrawerPlacement.Right"
+        Title='("My Notes")'
+        Width="500"
+        OnClose="@CloseNotes">
+    <div class="notes-section">
+        <!-- Notes input -->
+        <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+            <Avatar Icon="user" />
+            <TextArea @bind-Value="newNote"
+                      Placeholder="Write a note..."
+                      Style="flex-grow: 1;" />
+        </div>
+        <div style="margin-top: 12px; display: flex; justify-content: flex-end">
+            <Button Type="ButtonType.Primary"
+                    OnClick="AddNote"
+                    Loading="@addingNote">
+                Add Note
+            </Button>
+        </div>
+        <Divider />
+
+        <!-- Notes list -->
+        <div class="notes-list">
+            @if (loadingNotes) {
+                <Spin />
+            } else if (notes?.Any() == true) {
+                @foreach (var note in notes.OrderByDescending(n => n.CreatedAt)) {
+                    <div class="note-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px">
+                            <div>
+                                <Avatar Icon="user" />
+                                <strong>Me</strong>
+                            </div>
+                            <Button Type="ButtonType.Link"
+                                    Danger
+                                    OnClick="@(() => RemoveNote(note.Id))"
+                                    Loading="@(removingNoteId == note.Id)">
+                                <Icon Type="delete" />
+                            </Button>
                         </div>
-                                                <p>@comment.Content</p>
+                        <p>@note.Content</p>
+                        <div class="note-date">@note.CreatedAt.ToLocalTime().ToString("g")</div>
                         <Divider />
                     </div>
                 }
-            </div>
+            } else {
+                <Empty />
+            }
         </div>
-    
+    </div>
 </Drawer>
 
 @code {
@@ -204,38 +279,254 @@
     private void ShowQnA() => showDrawer = true;
     private void CloseQnA() => showDrawer = false;
 
-    protected override async Task OnInitializedAsync() {
-        httpClient = HttpClientFactory.CreateClient("Auth");
-        await FetchCourseDetail();
-        if (CourseDetail != null)  // Chỉ load completed lessons nếu course detail load thành công
-        {
-            await LoadCompletedLessons();
+    private LearnCourseResponse.Lesson PreviousLesson { get; set; }
+    private LearnCourseResponse.Lesson NextLesson { get; set; }
+    private int? LastModuleId { get; set; }
+
+    private bool showNotesDrawer = false;
+    private int? removingNoteId;
+    private List<DocumentResponse> LessonDocuments { get; set; } = new();
+
+    private async Task LoadLessonDocuments(int lessonId) {
+        try {
+            // Clear existing documents
+            LessonDocuments = new List<DocumentResponse>();
+            StateHasChanged();
+
+            if (CurrentLesson == null) return;
+
+            var response = await httpClient.GetAsync($"/api/Document/get-by-lesson/{lessonId}");
+            if (response.IsSuccessStatusCode) {
+                var documents = await response.Content.ReadFromJsonAsync<List<DocumentResponse>>();
+                LessonDocuments = documents ?? new List<DocumentResponse>();
+            } else {
+                LessonDocuments = new List<DocumentResponse>();
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error loading documents: {ex.Message}");
+            LessonDocuments = new List<DocumentResponse>();
+        } finally {
+            StateHasChanged();
         }
-        await LoadComments();
-        await HubConnection.StartAsync();
-        if (HubConnection.State != HubConnectionState.Connected)
-        {
-            await _mess.Error("SignalR is not connected.");
+    }
+
+    private async Task DownloadDocument(DocumentResponse document) {
+        try {
+            var result = await httpClient.GetAsync($"/api/File/url/{document.File}");
+            if (result.IsSuccessStatusCode) {
+                var urlResponse = await result.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (urlResponse != null && urlResponse.ContainsKey("url")) {
+                    await JS.InvokeVoidAsync("window.open", urlResponse["url"], "_blank");
+                }
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error downloading file: {ex.Message}");
         }
+    }
 
+    private void ShowNotes() {
+        showNotesDrawer = true;
+        // Load notes when drawer opens
+        _ = LoadNotes();
+    }
 
-        HubConnection.On<CommentDTO>("ReceiveComment", async (comment) =>
-        {
-            if(comment.LessonId == CurrentLesson.Id)
-            {
-                comments.Add(new CommentDTO
-                {
-                    Content = comment.Content,
-                    LessonId = comment.LessonId,
-                    Username = comment.Username
+    private void CloseNotes() => showNotesDrawer = false;
 
-                });
+    private async Task AddNote() {
+        if (string.IsNullOrWhiteSpace(newNote) || CurrentLesson == null) return;
+
+        addingNote = true;
+        try {
+            var request = new AddNoteRequest {
+                    LessonId = CurrentLesson.Id,
+                    Content = newNote
+                };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Lesson/add-note", request);
+            if (response.IsSuccessStatusCode) {
+                 _mess.Success("Note added successfully");
+                newNote = "";
+                await LoadNotes();
+            } else {
+                var error = await response.Content.ReadAsStringAsync();
+                 _mess.Error($"Failed to add note: {error}");
+            }
+        } catch (Exception ex) {
+             _mess.Error($"Error adding note: {ex.Message}");
+        } finally {
+            addingNote = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RemoveNote(int noteId) {
+        try {
+            removingNoteId = noteId;
+            var request = new RemoveNoteRequest { NoteId = noteId };
+            var response = await httpClient.PostAsJsonAsync("/api/Lesson/remove-note", request);
+
+            if (response.IsSuccessStatusCode) {
+                _mess.Success("Note removed successfully");
+                await LoadNotes(); // Reload notes after successful deletion
+            } else {
+                var error = await response.Content.ReadAsStringAsync();
+                _mess.Error($"Failed to remove note: {error}");
+            }
+        } catch (Exception ex) {
+            _mess.Error($"Error removing note: {ex.Message}");
+        } finally {
+            removingNoteId = null;
+            StateHasChanged();
+        }
+    }
+
+    private void EnsureModuleExpanded(int moduleId) {
+        if (LastModuleId != moduleId) {
+            var module = CourseDetail?.Modules.FirstOrDefault(m => m.Id == moduleId);
+            if (module != null) {
+                ActivePanelKeys = new[] { module.Order.ToString() };
+                LastModuleId = moduleId;
                 StateHasChanged();
             }
-        });
+        }
+    }
 
+    private async Task NavigateToPreviousLesson() {
+        try {
+            if (PreviousLesson != null) {
+                // Leave current lesson group for SignalR
+                if (HubConnection != null && CurrentLesson != null) {
+                    await HubConnection.SendAsync("LeaveLessonGroup", CurrentLesson.Id.ToString());
+                }
 
-        await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+                CurrentLesson = PreviousLesson;
+                UpdateNavigationLessons();
+                await LoadLessonDocuments(CurrentLesson.Id);
+                await UpdateLastViewedLesson(CurrentLesson);
+                await LoadNotes();
+
+                // Join new lesson group for SignalR
+                if (HubConnection != null) {
+                    await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+                }
+
+                await LoadComments();
+                StateHasChanged();
+            }
+        } catch (Exception) {
+        }
+    }
+
+    private async Task NavigateToNextLesson() {
+        try {
+            if (NextLesson != null) {
+                // Leave current lesson group for SignalR
+                if (HubConnection != null && CurrentLesson != null) {
+                    await HubConnection.SendAsync("LeaveLessonGroup", CurrentLesson.Id.ToString());
+                }
+
+                CurrentLesson = NextLesson;
+                UpdateNavigationLessons();
+                await LoadLessonDocuments(CurrentLesson.Id);
+                await UpdateLastViewedLesson(CurrentLesson);
+                await LoadNotes();
+
+                // Join new lesson group for SignalR
+                if (HubConnection != null) {
+                    await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+                }
+
+                await LoadComments();
+                StateHasChanged();
+            }
+        } catch (Exception) {
+        }
+    }
+
+    private void UpdateNavigationLessons() {
+        if (CourseDetail == null || CurrentLesson == null) return;
+
+        PreviousLesson = null;
+        NextLesson = null;
+
+        // Get ordered modules and lessons
+        var orderedModules = CourseDetail.Modules.OrderBy(m => m.Order).ToList();
+
+        // Find current module
+        var currentModule = orderedModules.FirstOrDefault(m => m.Id == CurrentLesson.ModuleId);
+        if (currentModule == null) return;
+
+        var orderedLessons = currentModule.Lessons.OrderBy(l => l.Order).ToList();
+        var currentLessonIndex = orderedLessons.FindIndex(l => l.Id == CurrentLesson.Id);
+        if (currentLessonIndex == -1) return;
+
+        // Check for previous lesson in the same module
+        if (currentLessonIndex > 0) {
+            PreviousLesson = orderedLessons[currentLessonIndex - 1];
+        }
+        // If no previous lesson in current module, check previous module
+        else {
+            var currentModuleIndex = orderedModules.IndexOf(currentModule);
+            if (currentModuleIndex > 0) {
+                var previousModule = orderedModules[currentModuleIndex - 1];
+                if (previousModule.Lessons.Any()) {
+                    PreviousLesson = previousModule.Lessons
+                        .OrderBy(l => l.Order)
+                        .Last();
+                }
+            }
+        }
+
+        // Check for next lesson in the same module
+        if (currentLessonIndex < orderedLessons.Count - 1) {
+            NextLesson = orderedLessons[currentLessonIndex + 1];
+        }
+        // If no next lesson in current module, check next module
+        else {
+            var currentModuleIndex = orderedModules.IndexOf(currentModule);
+            if (currentModuleIndex < orderedModules.Count - 1) {
+                var nextModule = orderedModules[currentModuleIndex + 1];
+                if (nextModule.Lessons.Any()) {
+                    NextLesson = nextModule.Lessons
+                        .OrderBy(l => l.Order)
+                        .First();
+                }
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync() {
+        try {
+            httpClient = HttpClientFactory.CreateClient("Auth");
+            await FetchCourseDetail();
+            if (CourseDetail != null) {
+                await LoadCompletedLessons();
+                if (CurrentLesson != null) {
+                    await LoadLessonDocuments(CurrentLesson.Id); // Add this line
+                }
+            }
+            await LoadComments();
+            await HubConnection.StartAsync();
+            if (HubConnection.State != HubConnectionState.Connected) {
+                await _mess.Error("SignalR is not connected.");
+            }
+
+            HubConnection.On<CommentDTO>("ReceiveComment", async (comment) => {
+                if (comment.LessonId == CurrentLesson.Id) {
+                    comments.Add(new CommentDTO {
+                            Content = comment.Content,
+                            LessonId = comment.LessonId,
+                            Username = comment.Username
+                        });
+                    StateHasChanged();
+                }
+            });
+
+            if (CurrentLesson != null) {
+                await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
+            }
+        } catch (Exception) {
+        }
     }
 
     private async Task LoadCompletedLessons() {
@@ -329,64 +620,28 @@
         }
     }
 
-    private async Task AddNote() {
-        if (string.IsNullOrWhiteSpace(newNote) || CurrentLesson == null) return;
-
-        addingNote = true;
-        try {
-            var request = new AddNoteRequest {
-                    LessonId = CurrentLesson.Id,
-                    Content = newNote
-                };
-
-            var response = await httpClient.PostAsJsonAsync("/api/Lesson/add-note", request);
-            if (response.IsSuccessStatusCode) {
-                _mess.Success("Note added successfully");
-                newNote = "";
-                await LoadNotes();
-            } else {
-                var error = await response.Content.ReadAsStringAsync();
-                _mess.Error($"Failed to add note: {error}");
-            }
-        } catch (Exception ex) {
-            _mess.Error($"Error adding note: {ex.Message}");
-        } finally {
-            addingNote = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) 
-    {
-        if (HubConnection != null && CurrentLesson != null)
-        {
-            try
-            {
+    private async Task HandleLessonClick(LearnCourseResponse.Lesson lesson) {
+        if (HubConnection != null && CurrentLesson != null) {
+            try {
                 await HubConnection.SendAsync("LeaveLessonGroup", CurrentLesson.Id.ToString());
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 await _mess.Error($"Error leaving lesson group: {ex.Message}");
             }
         }
         CurrentLesson = lesson;
+        UpdateNavigationLessons(); // Add this line
         var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
         ActivePanelKeys = new[] { module.Order.ToString() };
         await UpdateLastViewedLesson(lesson);
         await LoadNotes();
-        if (HubConnection != null)
-        {
-            try
-            {
+        await LoadLessonDocuments(lesson.Id);
+        if (HubConnection != null) {
+            try {
                 await HubConnection.SendAsync("JoinLessonGroup", CurrentLesson.Id.ToString());
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 await _mess.Error($"Error joining lesson group: {ex.Message}");
             }
-        }
-        else
-        {
+        } else {
             _mess.Error("HubConnection is null");
         }
 
@@ -427,17 +682,22 @@
 
                     if (lesson != null) {
                         CurrentLesson = lesson;
+                        UpdateNavigationLessons();
                         var module = CourseDetail.Modules.First(m => m.Id == lesson.ModuleId);
                         ActivePanelKeys = new[] { module.Order.ToString() };
+                        await LoadLessonDocuments(lesson.Id);
                         return;
                     }
                 }
 
+                // If no last viewed lesson, load the first lesson
                 var firstModule = CourseDetail.Modules.OrderBy(m => m.Order).FirstOrDefault();
                 if (firstModule?.Lessons.Any() == true) {
                     var firstLesson = firstModule.Lessons.OrderBy(l => l.Order).First();
                     CurrentLesson = firstLesson;
+                    UpdateNavigationLessons();
                     ActivePanelKeys = new[] { firstModule.Order.ToString() };
+                    await LoadLessonDocuments(firstLesson.Id); // Add this line
                 }
             }
         } catch (Exception ex) {
@@ -551,7 +811,7 @@
     }
 
     .video-section {
-        padding-right: 24px;
+        padding-right: 12px;
     }
 
     .video-container {
@@ -572,7 +832,7 @@
         }
 
     .lesson-info {
-        margin-top: 24px;
+        margin-top: 12px;
         padding: 24px;
         background: #fff;
         border-radius: 8px;
@@ -689,5 +949,25 @@
         font-size: 0.8rem;
         color: #8c8c8c;
         margin-top: 0.5rem;
+    }
+
+    .note-item .ant-btn-link {
+        padding: 4px 8px;
+    }
+
+    .note-item .ant-btn-link:hover {
+        background-color: #fff1f0;
+    }
+
+    .lesson-documents {
+        margin-top: 16px;
+    }
+
+    .lesson-documents :deep(.ant-table-small) {
+        font-size: 14px;
+    }
+
+    .lesson-documents :deep(.ant-table-thead > tr > th) {
+        background-color: #fafafa;
     }
 </style>
