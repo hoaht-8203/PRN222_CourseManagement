@@ -393,12 +393,46 @@ Width="500">
         <Row Gutter="16">
             <AntDesign.Col Span="24">
                 <Text>Preview Image</Text>
-                <FormItem>
+                @* <FormItem>
                     <Input Placeholder="Please enter preview image url" TValue="string" @bind-Value="@context.PreviewImage"></Input>
                     @if (!string.IsNullOrEmpty(context.PreviewImage)) {
                         <Image class="mt-2" Src="@(string.IsNullOrEmpty(context.PreviewImage) ? previewImageUrl : context.PreviewImage)"
                         Fallback="@errorImageUrl" />
                     }
+                </FormItem> *@
+                <FormItem>
+                    <div class="preview-image-input">
+                        <Tabs>
+                            <TabPane Key="1" Tab="URL">
+                                <Input Placeholder="Enter image URL"
+                                       TValue="string"
+                                       @bind-Value="@updateCourseModel.PreviewImage"
+                                       OnChange="@(async (e) => await UpdatePreviewImageUrlChanged(e.ToString()))" />
+                            </TabPane>
+                            <TabPane Key="2" Tab="Upload">
+                                <Upload Action="https://localhost:7239/api/File/upload"
+                                        Accept="image/*"
+                                        OnSingleCompleted="OnUpdateImageUploadCompleted"
+                                        OnRemove="OnUpdateImageRemoved"
+                                        OnChange="HandleUpdateUploadChange"
+                                        Multiple="false"
+                                        Name="file"
+                                        FileList="updateFileList">
+                                    <Button Icon="@IconType.Outline.Upload">
+                                        Click to Upload
+                                    </Button>
+                                </Upload>
+                            </TabPane>
+                        </Tabs>
+                        @if (!string.IsNullOrEmpty(updatePreviewImageSrc))
+                        {
+                            <div class="mt-2">
+                                <Image Src="@updatePreviewImageSrc"
+                                       Fallback="@errorImageUrl"
+                                       PreviewSrc="@updatePreviewImageSrc" />
+                            </div>
+                        }
+                    </div>
                 </FormItem>
             </AntDesign.Col>
         </Row>
@@ -533,6 +567,114 @@ Width="500">
     private string newUpdateOutcome = "";
     private string previewImageSrc = "";
     private List<UploadFileItem> fileList = new();
+    private string updatePreviewImageSrc = "";
+    private List<UploadFileItem> updateFileList = new();
+
+    private async Task UpdatePreviewImageUrlChanged(string url)
+    {
+        if (!string.IsNullOrEmpty(url))
+        {
+            updatePreviewImageSrc = url;
+            updateCourseModel.PreviewImage = url;
+        }
+    }
+
+    private async Task OnUpdateImageUploadCompleted(UploadInfo fileInfo)
+    {
+        if (fileInfo.File != null && fileInfo.File.State == UploadState.Success)
+        {
+            var response = JsonSerializer.Deserialize<Dictionary<string, string>>(fileInfo.File.Response);
+            if (response != null && response.ContainsKey("fileName"))
+            {
+                var fileName = response["fileName"];
+                // Lấy URL của file đã upload
+                var result = await httpClient.GetAsync($"/api/File/url/{fileName}");
+                if (result.IsSuccessStatusCode)
+                {
+                    var urlResponse = await result.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                    if (urlResponse != null && urlResponse.ContainsKey("url"))
+                    {
+                        updatePreviewImageSrc = urlResponse["url"];
+                        updateCourseModel.PreviewImage = urlResponse["url"];
+
+                        // Cập nhật fileList sau khi có URL thành công
+                        updateFileList.Clear();
+                        updateFileList.Add(fileInfo.File);
+                        StateHasChanged();
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task HandleUpdateUploadChange(UploadInfo args)
+    {
+        if (args.File.State == UploadState.Uploading)
+        {
+            // Nếu đang có file cũ, xóa file cũ trước khi thêm file mới
+            if (updateFileList.Count > 0)
+            {
+                var oldFile = updateFileList[0];
+                if (oldFile.State == UploadState.Success)
+                {
+                    try
+                    {
+                        var response = JsonSerializer.Deserialize<Dictionary<string, string>>(oldFile.Response);
+                        if (response != null && response.ContainsKey("fileName"))
+                        {
+                            var fileName = response["fileName"];
+                            // Xóa file cũ khỏi server
+                            await httpClient.DeleteAsync($"/api/File/{fileName}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await _mess.Error($"Error removing old file: {ex.Message}");
+                    }
+                }
+            }
+
+            // Reset các giá trị và cập nhật UI ngay lập tức
+            updatePreviewImageSrc = "";
+            updateCourseModel.PreviewImage = "";
+            updateFileList.Clear();
+
+            // Thêm file mới vào list ngay khi bắt đầu upload
+            updateFileList.Add(args.File);
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> OnUpdateImageRemoved(UploadFileItem file)
+    {
+        // Reset preview image
+        updatePreviewImageSrc = "";
+        updateCourseModel.PreviewImage = "";
+
+        // Nếu file đã được upload thành công, xóa file khỏi server
+        if (file.State == UploadState.Success)
+        {
+            try
+            {
+                var response = JsonSerializer.Deserialize<Dictionary<string, string>>(file.Response);
+                if (response != null && response.ContainsKey("fileName"))
+                {
+                    var fileName = response["fileName"];
+                    await httpClient.DeleteAsync($"/api/File/{fileName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await _mess.Error($"Error removing file: {ex.Message}");
+            }
+        }
+
+        // Xóa file khỏi list
+        updateFileList.Clear();
+
+        StateHasChanged();
+        return true;
+    }
 
     private async Task PreviewImageUrlChanged(string url) {
         if (!string.IsNullOrEmpty(url)) {
@@ -706,6 +848,7 @@ Width="500">
                     IsProCourse = (int)courseDetailRes.CourseType == (int)CourseType.ProCourse,
                     LearningOutcomes = courseDetailRes.LearningOutcomes ?? new List<string>()
                 };
+            updatePreviewImageSrc = courseDetailRes.PreviewImage;
             visibleUpdateCourse = true;
         } else {
             await _mess.Error($"Course with id {courseId} is not existed");
@@ -828,6 +971,10 @@ Width="500">
             var response = await httpClient.PostAsJsonAsync("/api/Course/update", updateCourseModel);
 
             if (response.IsSuccessStatusCode) {
+
+                updateFileList.Clear();
+                updatePreviewImageSrc = "";
+                updateCourseModel.PreviewImage = "";
                 CloseUpdateCourseDrawer();
                 FetchListCourse();
                 await _mess.Success("Course updated successfully");
