@@ -12,6 +12,7 @@ using Swashbuckle.AspNetCore.Filters;
 using CourseManagementAPI.Mappings;
 using CourseManagementAPI.Hubs;
 using Amazon.S3;
+using CourseManagement.Model.Mail;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IBlogService, BlogService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton<MailService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

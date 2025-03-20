@@ -22,14 +22,18 @@ namespace BlazorAppSecure.Sevices
             
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
+                var publicPages = new List<string> { "/forgot-password", "/reset-password", "/confirm-email" };
+
+                // Kiểm tra xem trang hiện tại có phải trang công khai không
                 var currentUri = _navigationManager.Uri;
+                bool isOnPublicPage = publicPages.Any(page => currentUri.Contains(page, StringComparison.OrdinalIgnoreCase));
                 // Chỉ redirect nếu không phải đang ở trang login và register
-                if (!currentUri.Contains("/login") && !currentUri.Contains("/register"))
+                if (!isOnPublicPage && !currentUri.Contains("/login") && !currentUri.Contains("/register"))
                 {
                     _navigationManager.NavigateTo("/login", true);
                 }
             }
-            
+
             return response;
         }
     }

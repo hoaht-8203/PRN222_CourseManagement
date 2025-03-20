@@ -1,0 +1,63 @@
+﻿@page "/confirm-email"
+
+@using AntDesign
+@inject NavigationManager Navigation
+@inject IMessageService _message
+@inject IHttpClientFactory HttpClientFactory
+@layout EmptyLayout
+
+<PageHeader Title="Email Confirmation" SubTitle="Confirming your email address..." />
+
+<Card Style="width: 500px; margin: auto; text-align: center;">
+    <ChildContent>
+        <Spin Spinning="@isLoading">
+            <Result Status="@resultStatus" Title="@resultMessage" />
+            <Button Type="ButtonType.Primary" OnClick="GoToLogin" Style="margin-top: 16px;" Icon="login">
+                Go to Login
+            </Button>
+        </Spin>
+    </ChildContent>
+</Card>
+
+@code {
+    private HttpClient httpClient;
+    private bool isLoading = true;
+    private ResultStatus resultStatus = ResultStatus.Info;
+    private string resultMessage = "Please wait while we confirm your email...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = HttpClientFactory.CreateClient("Auth");
+        var uri = new Uri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("email", out var email) && query.TryGetValue("token", out var token))
+        {
+            var confirmData = new { Email = email.ToString(), Token = token.ToString() };
+
+            var response = await httpClient.PostAsJsonAsync("api/Auth/confirm-email", confirmData);
+            if (response.IsSuccessStatusCode)
+            {
+                resultStatus = ResultStatus.Success;
+                resultMessage = "Your email has been successfully confirmed!";
+            }
+            else
+            {
+                resultStatus = ResultStatus.Error;
+                resultMessage = "Email confirmation failed. The link may be expired or invalid.";
+            }
+        }
+        else
+        {
+            resultStatus = ResultStatus.Warning;
+            resultMessage = "Invalid confirmation link.";
+        }
+
+        isLoading = false;
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}

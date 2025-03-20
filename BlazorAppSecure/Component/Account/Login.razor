@@ -41,6 +41,11 @@
                                 Register
                             </NavLink>
                         </p>
+                        <p>
+                            <Button Type="ButtonType.Link" OnClick="HandleForgotPassword">
+                                Forgot Password?
+                            </Button>
+                        </p>
                     </Form>
                 </ChildContent>
             </Card>
@@ -83,6 +88,10 @@
 
     public void HandleGoToHomepage() {
         Navigation.NavigateTo("/");
+    }
+    public void HandleForgotPassword()
+    {
+        Navigation.NavigateTo("/forgot-password");
     }
 }
 
