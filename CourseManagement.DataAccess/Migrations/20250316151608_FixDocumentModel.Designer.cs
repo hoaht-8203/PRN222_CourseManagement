@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250316151608_FixDocumentModel")]
+    partial class FixDocumentModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,15 +95,6 @@ namespace CourseManagement.DataAccess.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<DateTime?>("VipExpirationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("VipPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("VipStatus")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -118,37 +112,35 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bf29052a-02a1-4094-858b-1fe3d790b06c",
+                            ConcurrencyStamp = "ba8b7478-8d48-4138-92c2-ba0a5a0ac2a6",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             FullName = "Admin",
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN@ADMIN.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJf3XGD3XGJPNOy82YN8eUR8u1OnnFele0nln0mTKLiIVmyBe0Buj12mvNvY+otMbg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA4sEi5fifLNicFmrHv5lW887JwSX5dK0NuBwFL6wqftHy3rOWDtnRtAE+XRhBiWTw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5d3305bf-8c6d-4ddc-a4f6-fa84583f997a",
+                            SecurityStamp = "912c9ac0-8f05-4257-b99f-659c040b5629",
                             TwoFactorEnabled = false,
-                            UserName = "admin@admin.com",
-                            VipStatus = 0
+                            UserName = "admin@admin.com"
                         },
                         new
                         {
                             Id = "e404e498-c930-4a45-9b22-c35d2f333d37",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "976aa71b-dbb2-4d1d-b91d-b4e29742023c",
+                            ConcurrencyStamp = "2a6d761d-d2eb-426f-8aeb-017935f7f8c7",
                             Email = "user@user.com",
                             EmailConfirmed = true,
                             FullName = "User",
                             LockoutEnabled = true,
                             NormalizedEmail = "USER@USER.COM",
                             NormalizedUserName = "USER@USER.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAENZ23dBqvU7tlL6XF29YyCmRTMHWZTjPzwggt838hxMRY6kVxjiDNjbOv/r16CaTkw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELxXvy+UOrQpRmy+GjizsQCdkkRJAbt1OifLo+zbcQYMsFwLD391lQayBnBJD07bPw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "c90be961-a433-4c5e-b63b-4cbcb917c502",
+                            SecurityStamp = "9f0aec79-b071-434d-a10e-91dc5569e21c",
                             TwoFactorEnabled = false,
-                            UserName = "user@user.com",
-                            VipStatus = 0
+                            UserName = "user@user.com"
                         });
                 });
 
@@ -665,43 +657,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Order", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PurchasedPlan")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("VipExpirationDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("VipPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Orders");
-                });
-
             modelBuilder.Entity("BlogCategory", b =>
                 {
                     b.HasOne("CourseManagement.Model.Model.Blog", null)
@@ -934,17 +889,6 @@ namespace CourseManagement.DataAccess.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Order", b =>
-                {
-                    b.HasOne("CourseManagement.Model.Model.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("CourseManagement.Model.Model.AppUser", b =>

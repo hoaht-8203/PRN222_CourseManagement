@@ -11,6 +11,8 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using CourseManagementAPI.Mappings;
 using CourseManagementAPI.Hubs;
+using Amazon.S3;
+using CourseManagement.Model.Mail;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +36,7 @@ builder.Services.AddIdentityApiEndpoints<AppUser>().
     AddRoles<IdentityRole>().
     AddEntityFrameworkStores<CourseManagementDb>();
 
+builder.Services.AddScoped<MinioFileService>();
 builder.Services.AddScoped<IModuleRepository, ModuleRepository>();
 builder.Services.AddScoped<ModuleRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
@@ -42,6 +45,8 @@ builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<CourseRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<CommentRepository>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<DocumentRepository>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -52,6 +57,9 @@ builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton<MailService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -74,6 +82,7 @@ builder.Services.AddCors(option => option.AddPolicy("wasm",
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowCredentials()
+    .WithExposedHeaders("Content-Disposition")
     ));
 
 

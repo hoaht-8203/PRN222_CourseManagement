@@ -124,6 +124,46 @@
                                 </GridCol>
                             </GridRow>
                         </div>
+
+                        @if (CurrentLesson != null && LessonDocuments != null && LessonDocuments.Any()) {
+                            <Divider />
+                            <div class="lesson-documents">
+                                <h5>Lesson Materials</h5>
+                                <Table DataSource="@LessonDocuments"
+                                       Size="TableSize.Small"
+                                       Bordered>
+                                    <PropertyColumn Property="c=>c.Name" Title="File Name" />
+                                    <PropertyColumn Property="c=>c.FileSize" Title="Size">
+                                        @context.FileSize.ToFileSize()
+                                    </PropertyColumn>
+                                    <PropertyColumn Property="c=>c.UploadedAt" Title="Uploaded">
+                                        @context.UploadedAt.ToLocalTime().ToString("g")
+                                    </PropertyColumn>
+                                    <ActionColumn Title="Action">
+                                        <Space>
+                                            <SpaceItem>
+                                                <Button Type="ButtonType.Primary"
+                                                        Icon="@IconType.Outline.Download"
+                                                        OnClick="() => DownloadDocument(context)">
+                                                    Download
+                                                </Button>
+                                            </SpaceItem>
+                                            <SpaceItem>
+                                                <Popconfirm Title="Are you sure to delete this document?"
+                                                            OnConfirm="() => DeleteDocument(context)"
+                                                            OkText="Yes"
+                                                            CancelText="No">
+                                                    <Button Danger
+                                                            Icon="@IconType.Outline.Delete">
+                                                        Delete
+                                                    </Button>
+                                                </Popconfirm>
+                                            </SpaceItem>
+                                        </Space>
+                                    </ActionColumn>
+                                </Table>
+                            </div>
+                        }
                     }
                 </Card>
             </GridCol>
@@ -213,6 +253,23 @@ Width="500">
                             <Button Icon="@IconType.Outline.Reload" @onclick="() => FetchModuleList(Id)" Loading="LoadingModuleList" />
                         </Tooltip>
                     </div>
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="24">
+                <Text>Lesson Materials</Text>
+                <FormItem>
+                    <Upload Action="https://localhost:7239/api/File/upload"
+                            Accept=".pdf,.doc,.docx,.json,.xml"
+                            OnSingleCompleted="OnLessonFileUploadCompleted"
+                            OnRemove="OnLessonFileRemoved"
+                            OnChange="HandleLessonFileUploadChange"
+                            Multiple="true"
+                            Name="file"
+                            FileList="@CurrentLessonFiles">
+                        <Button Icon="@IconType.Outline.Upload">
+                            Upload Materials
+                        </Button>
+                    </Upload>
                 </FormItem>
             </AntDesign.Col>
         </Row>
