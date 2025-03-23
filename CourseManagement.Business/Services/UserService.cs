@@ -92,6 +92,8 @@ namespace CourseManagementAPI.Services
             userIdentity.FullName = user.FullName;
             userIdentity.Email = user.Email;
             userIdentity.PhoneNumber = user.PhoneNumber;
+            userIdentity.VipStatus = user.VipStatus;
+            userIdentity.VipExpirationDate = user.VipExpirationDate;
             // userIdentity.LockoutEnd = user.Status ? null : DateTimeOffset.MaxValue;
 
             var updateResponse = await _userManager.UpdateAsync(userIdentity);

@@ -64,7 +64,7 @@ namespace CourseManagementAPI.Controllers
             };
 
             await _orderService.AddAsync(order);
-            return Ok(new { message = "Tạo đơn hàng thành công" });
+            return Ok(order);
         }
 
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CourseManagement.Business.Services;
+using System.Security.Claims;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -65,30 +66,24 @@ public class PaymentController : ControllerBase
 
             if (responseCode == "00") // Thành công
             {
-                if (!string.IsNullOrEmpty(orderInfo))
-                {
-                    var orderInfoParts = orderInfo.Split('-');
-                    if (orderInfoParts.Length >= 3)
-                    {
-                        string userEmail = orderInfoParts[2];
-
-                        var order = await _orderService.GetByIdAsync(orderId);
-                        if (order != null)
-                        {
-                            order.Status = OrderStatus.Completed;
-                            await _orderService.UpdateAsync(order);
-                        }
-
-                        var user = await _userService.GetUserByEmail(userEmail);
-                        if (user != null)
-                        {
-                            user.VipStatus = VipStatus.Premium;
-                            user.VipPrice = amount;
-                            await _userService.UpdateUser(userEmail, user);
-                        }
-
-                        return Redirect($"/subscription-success?orderId={orderId}");
+                var order = await _orderService.GetByIdAsync(orderId);
+                if (order != null) {
+                    order.Status = OrderStatus.Completed;
+                    await _orderService.UpdateAsync(order);
+                }
+                var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
+                if (userEmail != null) {
+                    var user = await _userService.GetUserByEmail(userEmail.Value);
+                    if (user != null) {
+                        user.VipStatus = VipStatus.Premium;
+                        user.VipPrice = amount;
+                        user.VipExpirationDate = order.VipExpirationDate;
+                        await _userService.UpdateUser(userEmail.Value, user);
                     }
+
+                    return Redirect($"https://localhost:7195/subscription-success?orderId={orderId}");
+                } else {
+                    return BadRequest($"Internal server error");
                 }
             }
             else // Thanh toán thất bại
@@ -100,10 +95,8 @@ public class PaymentController : ControllerBase
                     await _orderService.UpdateAsync(order);
                 }
 
-                return Redirect($"/subscription-error?orderId={orderId}");
+                return Redirect($"https://localhost:7195/subscription-error?orderId={orderId}");
             }
-
-            return BadRequest(new { message = "Invalid payment response" });
         }
         catch (Exception ex)
         {
