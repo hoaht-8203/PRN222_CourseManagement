@@ -1,0 +1,164 @@
+﻿@page "/vip-subscription"
+@using AntDesign
+@using System.Security.Claims
+@using BlazorAppSecure.Model
+@using Microsoft.AspNetCore.Components.Forms
+@using CourseManagement.Model.Constant
+@using CourseManagement.Model.Model
+@using CourseManagement.Model.ViewModel
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMessageService _mess
+
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            Home
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            Subscription
+        </BreadcrumbItem>
+
+    </Breadcrumb>
+</div>
+
+<div class="vip-subscription-container">
+    <h3>Đăng ký gói VIP</h3>
+    <Form Model="@_vipModel" OnFinish="@(async (EditContext context) => await OnFinish(context))">
+        <FormItem Label="Chọn gói VIP">
+            <RadioGroup @bind-Value="@_vipModel.Package">
+                <Radio Value="@("1")">Gói 1 tháng - 100.000 VND</Radio>
+                <Radio Value="@("3")">Gói 3 tháng - 250.000 VND</Radio>
+                <Radio Value="@("6")">Gói 6 tháng - 450.000 VND</Radio>
+                <Radio Value="@("12")">Gói 12 tháng - 800.000 VND</Radio>
+            </RadioGroup>
+        </FormItem>
+        <FormItem>
+            <Button Type="@ButtonType.Primary" HtmlType="submit" Loading="@isProcessing">Đăng ký</Button>
+        </FormItem>
+    </Form>
+</div>
+
+<style>
+    .vip-subscription-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h3 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+@code {
+    HttpClient httpClient;
+    private VipModel _vipModel = new();
+    private bool isProcessing = false;
+
+    private readonly Dictionary<string, (decimal Amount, VipStatus Plan)> packageDetails = new()
+{
+{ "1", (100000, VipStatus.Premium) },
+{ "3", (250000, VipStatus.Premium) },
+{ "6", (450000, VipStatus.Premium) },
+{ "12", (800000, VipStatus.Premium) }
+};
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = HttpClientFactory.CreateClient("Auth");
+    }
+
+    public class VipModel
+    {
+        public string Package { get; set; }
+    }
+
+    private async Task OnFinish(EditContext editContext)
+    {
+        if (_vipModel.Package != null && packageDetails.TryGetValue(_vipModel.Package, out var packageDetail))
+        {
+            try
+            {
+                isProcessing = true;
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+                if (authState?.User == null)
+                {
+                    await _mess.Error("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại!");
+                    Navigation.NavigateTo("/login", forceLoad: true);
+                    return;
+                }
+
+                var userEmail = authState.User.FindFirst(ClaimTypes.Email)?.Value;
+
+
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    await _mess.Error($"Không tìm thấy thông tin người dùng!");
+                    return;
+                }
+
+
+                var order = new OrderCreateVM
+                {
+                    
+                    TotalAmount = packageDetail.Amount,
+                    PurchasedPlan = packageDetail.Plan,
+                    VipPrice = packageDetail.Amount,
+                    VipExpirationDate = DateTime.UtcNow.AddMonths(int.Parse(_vipModel.Package)),
+
+                };
+
+
+                var orderResponse = await httpClient.PostAsJsonAsync("/api/Order/create", order);
+                if (!orderResponse.IsSuccessStatusCode)
+                {
+                    var error = await orderResponse.Content.ReadAsStringAsync();
+                    await _mess.Error($"Lỗi khi tạo đơn hàng: {error}");
+                    return;
+                }
+                var savedOrder = await orderResponse.Content.ReadFromJsonAsync<Order>();
+
+                var paymentRequest = new VnPaymentRequestModel
+                    {
+                    OrderId = savedOrder.Id,
+                    ProductName = $"Gói VIP {_vipModel.Package} tháng",
+                    Amount =(double) packageDetail.Amount,
+                    Description = $"VIP-{packageDetail.Amount}-{userEmail}-{savedOrder.Id}",
+                  
+                };
+
+                var response = await httpClient.PostAsJsonAsync("/api/Payment/create", paymentRequest);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    await _mess.Error($"Lỗi khi tạo thanh toán: {error}");
+                    return;
+                }
+                var paymentUrl = await response.Content.ReadAsStringAsync();
+
+                Navigation.NavigateTo(paymentUrl, forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                await _mess.Error($"Lỗi khi tạo thanh toán: {ex.Message}");
+                Console.WriteLine($"Error details: {ex}");
+            }
+            finally
+            {
+                isProcessing = false;
+            }
+        }
+        else
+        {
+            await _mess.Error("Vui lòng chọn gói VIP!");
+        }
+    }
+}

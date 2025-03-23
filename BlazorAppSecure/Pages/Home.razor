@@ -11,6 +11,8 @@
 
 <PageTitle>Home</PageTitle>
 
+<BlazorAppSecure.Layout.HeaderHome />
+
 <div class="card-homepage">
     <div>
         <Tag Color="TagColor.Blue">1.183+ others learned</Tag>
@@ -34,7 +36,9 @@
                                 <span class="course-type">Pro Course</span>
                                 <div>
                                     <Button Type="ButtonType.Primary"
-                                        OnClick="() => HandleNavigateToPreview(courseItem)">Preview</Button>
+                                            OnClick="() => HandleNavigateToPreview(courseItem)">
+                                        Preview
+                                    </Button>
                                     <Button OnClick="() => HandleNavigateToLearn(courseItem)">Go to learn</Button>
                                 </div>
                             </div>
@@ -79,7 +83,9 @@
                                 <span class="course-type">Free Course</span>
                                 <div>
                                     <Button Type="ButtonType.Primary"
-                                        OnClick="() => HandleNavigateToPreview(courseItem)">Preview</Button>
+                                            OnClick="() => HandleNavigateToPreview(courseItem)">
+                                        Preview
+                                    </Button>
                                     <Button OnClick="() => HandleNavigateToLearn(courseItem)">Go to learn</Button>
                                 </div>
                             </div>
@@ -100,83 +106,16 @@
             }
         }
     </Row>
+
+ 
+   
+  
 </div>
-
-@* <h1>Blazored.TextEditor Usage Examples</h1>
-
-<h3>Basic Example</h3>
-<div>
-    <BlazoredTextEditor @ref="@richEditor">
-        <ToolbarContent>
-            @((MarkupString)toolbar)
-        </ToolbarContent>
-        <EditorContent>
-            @((MarkupString)body)
-        </EditorContent>
-    </BlazoredTextEditor>
-
-    <Button OnClick="HandleSubmit">Submit editor text</Button>
-</div> *@
 
 @code
 {
     bool LoadingCourseProList = false;
     bool LoadingCourseFreeList = false;
-    /*
-    RenderFragment coverTemplate = @<img alt="example"
-    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIK8uoM7XCJ-Od4EQvRQhhwLkXvNy9ZTKQnA&s" />;
-
-    BlazoredTextEditor richEditor = default!;
-    string toolbar = """"...markup here..."""";
-    string body = """"...markup here..."""";
-
-    protected async void HandleSubmit()
-    {
-    // Lấy nội dung HTML từ editor
-    string htmlContent = await richEditor.GetHTML();
-
-    // Tại đây có thể lưu htmlContent vào database
-    Console.WriteLine(htmlContent);
-    }
-    */
-
-
-    /*
-    protected override void OnInitialized() {
-    toolbar = """"
-    <select class="ql-header">
-    <option selected=""></option>
-    <option value="1"></option>
-    <option value="2"></option>
-    <option value="3"></option>
-    <option value="4"></option>
-    <option value="5"></option>
-    </select>
-    <span class="ql-formats">
-    <button class="ql-bold"></button>
-    <button class="ql-italic"></button>
-    <button class="ql-underline"></button>
-    <button class="ql-strike"></button>
-    </span>
-    <span class="ql-formats">
-    <select class="ql-color"></select>
-    <select class="ql-background"></select>
-    </span>
-    <span class="ql-formats">
-    <button class="ql-list" value="ordered"></button>
-    <button class="ql-list" value="bullet"></button>
-    </span>
-    <span class="ql-formats">
-    <button class="ql-link"></button>
-    </span>
-    <span class="ql-formats">
-    <button class="ql-code-block"></button>
-    </span>
-    """";
-
-    body = "<h3>Write something in here</h3>";
-    }
-    */
 
     HttpClient httpClient;
 
@@ -184,9 +123,9 @@
     private IQueryable<SearchCourseResponse>? ListCourseFree;
 
     private readonly JsonSerializerOptions jsonSerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
     protected override async Task OnInitializedAsync()
     {
@@ -197,7 +136,8 @@
 
         var uri = new Uri(_nav.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-        if (queryParameters.TryGetValue("error", out var errorMessage)) {
+        if (queryParameters.TryGetValue("error", out var errorMessage))
+        {
             await _mess.Error(errorMessage.ToString());
             _nav.NavigateTo("/", replace: true);
         }
@@ -289,4 +229,7 @@
         font-weight: bolder;
         font-size: 1.2rem
     }
+
+
+    
 </style>

@@ -3,6 +3,10 @@
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices.Blog
 @using CourseManagement.Model.Constant
+@using Microsoft.AspNetCore.Authorization
+
+
+@attribute [Authorize(Roles = "Admin")]
 @inject IBlogService BlogService
 @inject IMessageService _mess
 @inject NavigationManager NavigationManager

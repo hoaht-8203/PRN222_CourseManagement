@@ -1,4 +1,5 @@
 ﻿
+using CourseManagement.Model.Constant;
 using CourseManagement.Model.Model;
 using System.Text.Json.Serialization;
 
@@ -18,6 +19,11 @@ namespace CourseManagement.Model.ViewModel
         public List<Enrollment>? Enrollments { get; set; }
         [JsonIgnore]
         public List<Comment>? Comments { get; set; }
+
+     
+        public VipStatus VipStatus { get; set; }
+        public DateTime? VipExpirationDate { get; set; }
+        public decimal? VipPrice { get; set; }
     }
 
   

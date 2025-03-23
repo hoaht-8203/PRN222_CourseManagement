@@ -1,8 +1,7 @@
-﻿
-
+﻿using CourseManagement.Model.Constant;
 using CourseManagement.Model.ViewModel;
 
-namespace CourseManagement.Business.Services.IService
+namespace CourseManagement.Business.Services
 {
     public interface IUserService
     {
@@ -14,5 +13,6 @@ namespace CourseManagement.Business.Services.IService
 
         Task<bool> DeleteUserByEmail(string emailId);
         Task<bool> SetUserBanStatus(string emailId, bool isBanned);
+        Task<bool> UpdateUserVipStatus(string emailId, VipStatus vipStatus, decimal vipPrice);
     }
 }

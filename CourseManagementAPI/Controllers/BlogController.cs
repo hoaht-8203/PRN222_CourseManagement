@@ -199,7 +199,7 @@ namespace CourseManagementAPI.Controllers
         }
 
 
-        [HttpPost("delete")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var existingBlog = await _blogService.GetByIdAsync(id);

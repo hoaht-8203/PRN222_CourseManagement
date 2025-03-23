@@ -1,0 +1,220 @@
+﻿@page "/listblogs/detail/{blogId:int}"
+@using AntDesign
+@using BlazorAppSecure.Model
+@using BlazorAppSecure.Sevices.Blog
+@inject NavigationManager NavigationManager
+@inject IBlogService BlogService
+@inject IMessageService _message
+
+<PageTitle>Blog Detail</PageTitle>
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            Home
+        </BreadcrumbItem>
+        <BreadcrumbItem Href="/listBlog">
+            Blog Management
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            @blog?.Title
+        </BreadcrumbItem>
+    </Breadcrumb>
+</div>
+
+@if (loading)
+{
+    <div style="text-align: center;">
+        <Spin />
+    </div>
+}
+else if (blog == null)
+{
+    <div style="text-align: center; color: #888;">Blog not found.</div>
+}
+else
+{
+    <div class="blog-detail-container">
+        <!-- Blog Content -->
+        <div class="blog-content">
+            <h1 class="blog-title">@blog.Title</h1>
+            <!-- Hiển thị hình ảnh nếu có -->
+            @if (!string.IsNullOrEmpty(blog.UrlImage))
+            {
+                <div class="blog-image">
+                    <img src="@blog.UrlImage" alt="@blog.Title" class="cover-image" />
+                </div>
+            }
+            else
+            {
+                <div class="blog-image-placeholder">
+                    <img src="https://placehold.co/800x400?text=No+Image" alt="No Image Available" class="cover-image" />
+                </div>
+            }
+            <div class="author-info">
+                <img src="https://placehold.co/40x40?text=A" alt="Avatar" class="avatar" />
+                <div class="author-details">
+                    <span class="author-name">Admin Team · @blog.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    <span class="reading-time">@CalculateReadingTime(blog.Content) minutes read</span>
+                </div>
+            </div>
+            <div class="metrics">
+                <span><Icon Type="eye" /> @blog.ViewCount</span>
+                <span><Icon Type="message" /> 0</span>
+                <span><Icon Type="share-alt" /> 0</span>
+            </div>
+            <div class="tag-section">
+                @if (blog.Categories != null && blog.Categories.Any())
+                {
+                    foreach (var category in blog.Categories)
+                    {
+                        <span class="tag">@category.Name</span>
+                    }
+                }
+                else
+                {
+                    <span class="tag">No Tag</span>
+                }
+            </div>
+            <div class="blog-body">
+                @((MarkupString)blog.Content)
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int blogId { get; set; }
+
+    private BlogModel? blog;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            loading = true;
+            blog = await BlogService.GetBlogById(blogId);
+
+        }
+        catch (Exception ex)
+        {
+            await _message.Error($"Error loading blog detail: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private int CalculateReadingTime(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return 0;
+        var wordCount = content.Split(new[] { ' ', '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
+        return (int)Math.Ceiling(wordCount / 200.0); // Giả định 200 từ/phút
+    }
+}
+
+<style>
+    .blog-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .blog-content {
+        background-color: #fff;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .blog-title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 2.2em;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .blog-image, .blog-image-placeholder {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .cover-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .avatar {
+        border-radius: 50%;
+        margin-right: 12px;
+    }
+
+    .author-details {
+        flex-grow: 1;
+    }
+
+    .author-name {
+        font-family: 'Roboto', sans-serif;
+        font-size: 0.95em;
+        color: #444;
+        margin-right: 10px;
+    }
+
+    .reading-time {
+        font-family: 'Roboto', sans-serif;
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .metrics {
+        display: flex;
+        gap: 15px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 0.9em;
+        color: #888;
+        margin-bottom: 20px;
+    }
+
+    .metrics span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .tag-section {
+        margin-bottom: 20px;
+    }
+
+    .tag {
+        font-family: 'Roboto', sans-serif;
+        background-color: #e6e6e6;
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        color: #555;
+        margin-right: 10px;
+    }
+
+    .blog-body {
+        font-family: 'Roboto', sans-serif;
+        font-size: 1em;
+        line-height: 1.6;
+        color: #333;
+    }
+
+   
+</style>
