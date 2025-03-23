@@ -7,22 +7,32 @@
 @inject IHttpClientFactory HttpClientFactory
 
 <div class="success-container">
-    <Result Status="ResultStatus.Success" Title="Thanh toán thành công!"
-        SubTitle="Cảm ơn bạn đã đăng ký. Bạn có thể bắt đầu sử dụng các tính năng VIP ngay bây giờ." Extra="extra">
-    </Result>
-</div>
-
-@code {
-    private RenderFragment extra => builder =>
+    @if (_order != null)
     {
-        builder.OpenComponent<Button>(0);
-        builder.AddAttribute(1, "Type", ButtonType.Primary);
-        builder.AddAttribute(2, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, () =>
-    Navigation.NavigateTo("/")));
-        builder.AddContent(3, "Về trang chủ");
-        builder.CloseComponent();
-    };
-}
+        <Result Status="ResultStatus.Success" Title="Thanh toán thành công!"
+            SubTitle="Cảm ơn bạn đã đăng ký. Bạn có thể bắt đầu sử dụng các tính năng VIP ngay bây giờ.">
+            <ResultContent>
+                <div class="order-details">
+                    <h4>Chi tiết đơn hàng</h4>
+                    <p><strong>Mã đơn hàng:</strong> @_order.Id</p>
+                    <p><strong>Số tiền:</strong> @_order.TotalAmount.ToString("N0") VND</p>
+                    <p><strong>Gói VIP:</strong> @_order.PurchasedPlan</p>
+                    <p><strong>Ngày hết hạn:</strong> @_order.VipExpirationDate?.ToString("dd/MM/yyyy")</p>
+                </div>
+                <div class="button-container">
+                    <Button Type="ButtonType.Primary" OnClick="@(() => Navigation.NavigateTo("/"))">
+                        Về trang chủ
+                    </Button>
+                </div>
+            </ResultContent>
+        </Result>
+    }
+    else
+    {
+        <Result Status="ResultStatus.Info" Title="Đang xử lý..." SubTitle="Vui lòng đợi trong giây lát...">
+        </Result>
+    }
+</div>
 
 <style>
     .success-container {
@@ -33,9 +43,33 @@
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+
+    .order-details {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    .order-details h4 {
+        margin-bottom: 15px;
+        color: #52c41a;
+    }
+
+    .order-details p {
+        margin: 8px 0;
+        color: #666;
+    }
+
+    .button-container {
+        margin-top: 20px;
+        text-align: center;
+    }
 </style>
 
 @code {
+    private Order _order;
+
     [Parameter]
     [SupplyParameterFromQuery(Name = "orderId")]
     public string OrderId { get; set; }
@@ -55,16 +89,19 @@
             var response = await httpClient.GetAsync($"/api/Order/{OrderId}");
             if (response.IsSuccessStatusCode)
             {
+                _order = await response.Content.ReadFromJsonAsync<Order>();
                 await _mess.Success("Thanh toán thành công!");
             }
             else
             {
                 await _mess.Error("Có lỗi xảy ra khi xử lý đơn hàng!");
+                Navigation.NavigateTo($"/subscription-error?orderId={OrderId}");
             }
         }
         catch (Exception ex)
         {
             await _mess.Error($"Lỗi: {ex.Message}");
+            Console.WriteLine($"Error details: {ex}");
         }
     }
 }

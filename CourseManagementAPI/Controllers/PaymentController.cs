@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CourseManagement.Business.Services;
 using System.Security.Claims;
+using CourseManagement.DataAccess.Data;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -16,15 +17,18 @@ public class PaymentController : ControllerBase
     private readonly IVnPayService _vnPayService;
     private readonly IOrderService _orderService;
     private readonly IUserService _userService;
+    private readonly CourseManagementDb _db;
 
     public PaymentController(
         IVnPayService vnPayService,
         IOrderService orderService,
-        IUserService userService)
+        IUserService userService,
+        CourseManagementDb db)
     {
         _vnPayService = vnPayService;
         _orderService = orderService;
         _userService = userService;
+        _db = db;
     }
 
     [HttpPost("create")]
@@ -69,7 +73,7 @@ public class PaymentController : ControllerBase
                 var order = await _orderService.GetByIdAsync(orderId);
                 if (order != null) {
                     order.Status = OrderStatus.Completed;
-                    await _orderService.UpdateAsync(order);
+                     _db.Orders.Update(order);
                 }
                 var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email);
                 if (userEmail != null) {
@@ -92,7 +96,7 @@ public class PaymentController : ControllerBase
                 if (order != null)
                 {
                     order.Status = OrderStatus.Cancelled;
-                    await _orderService.UpdateAsync(order);
+                    _db.Orders.Update(order);
                 }
 
                 return Redirect($"https://localhost:7195/subscription-error?orderId={orderId}");
