@@ -2,6 +2,7 @@
 
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices
+@using CourseManagement.Model.Constant
 @using Microsoft.AspNetCore.Authorization
 @using System.ComponentModel
 @using System.ComponentModel.DataAnnotations
@@ -34,15 +35,15 @@
                 <FormItem>
                     <Text>Search</Text>
                     <Input TValue="string" @bind-Value="@filterModel.SearchTerm"
-                        Placeholder="Search by Name, Username, Email, or Phone" Prefix="@searchIcon" />
+                           Placeholder="Search by Name, Username, Email, or Phone" Prefix="@searchIcon" />
                 </FormItem>
                 </Col>
                 <Col Span="5">
                 <FormItem>
                     <Text>Role</Text>
                     <Select Mode="SelectMode.Default" DataSource="@rolesForFilter" Placeholder="Select Role"
-                        @bind-Value="@filterModel.Role" TItemValue="string" TItem="string" Style="width: 100%;"
-                        AllowClear EnableSearch>
+                            @bind-Value="@filterModel.Role" TItemValue="string" TItem="string" Style="width: 100%;"
+                            AllowClear EnableSearch>
                     </Select>
                 </FormItem>
                 </Col>
@@ -51,22 +52,22 @@
                     <div class="d-flex gap-2">
                         <Button Icon="@IconType.Outline.Clear" OnClick="ClearFilters">Clear</Button>
                         <Button Icon="@IconType.Outline.Search" Type="ButtonType.Primary"
-                            OnClick="ApplyFilters">Apply</Button>
+                                OnClick="ApplyFilters">
+                            Apply
+                        </Button>
                     </div>
                 </FormItem>
-
                 </Col>
             </Row>
         </Form>
 
         <div class="table-control">
             <Button Icon="@IconType.Outline.Download" OnClick="ExportToExcel">Export to Excel</Button>
-
             <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadListUser()"
-                Loading="loadingUserList"></Button>
+                    Loading="loadingUserList"></Button>
         </div>
         <Table DataSource="@FilteredUsers" PageSize="12" ScrollX="1000" ScrollY="400" Loading="loadingUserList"
-            Bordered>
+               Bordered>
             <PropertyColumn Property="u => u.Email" Width="200" Fixed="ColumnFixPlacement.Left" />
             <PropertyColumn Property="u => u.FullName" Width="200" Title="FullName">
                 @if (context.FullName != null)
@@ -109,21 +110,51 @@
             </PropertyColumn>
             <PropertyColumn Property="c => c.PhoneNumberConfirmed" Width="230" Title="Phone Number Confirmed">
                 <Switch Checked="@context.PhoneNumberConfirmed" Disabled />
+
+            
+            </PropertyColumn>
+            <PropertyColumn Property="b => b.VipStatus" Title="VIP Status" Width="150">
+                @if (context.VipStatus == VipStatus.Free)
+                {
+                    <Tag Color="TagColor.Green">Free</Tag>
+                }
+                else if (context.VipStatus == VipStatus.Premium)
+                {
+                    <Tag Color="TagColor.Yellow">Premium</Tag>
+                }
+            </PropertyColumn>
+            <PropertyColumn Property="u => u.VipExpirationDate" Width="200" Title="VIP Expiration Date">
+                @if (context.VipExpirationDate.HasValue)
+                {
+                    @context.VipExpirationDate.Value.ToString("dd/MM/yyyy")
+                }
+                else
+                {
+                    <Tag Color="TagColor.Orange">N/A</Tag>
+                }
+            </PropertyColumn>
+          
+            <PropertyColumn Property="u => u.VipPrice" Width="200" Title="VIP Price">
+                @if (context.VipPrice.HasValue)
+                {
+                    @($"{context.VipPrice.Value:N0} VND")
+                }
+                else
+                {
+                    <Tag Color="TagColor.Orange">N/A</Tag>
+                }
             </PropertyColumn>
             <ActionColumn Title="Action" Width="120" Align="ColumnAlign.Center" Fixed="ColumnFixPlacement.Right">
-
-                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => Edit(context))"
-                    Class="ant-btn-edit"></Button>
+                <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="@(() => OpenEditUserDrawer(context))"
+                        Class="ant-btn-edit"></Button>
             </ActionColumn>
         </Table>
     </GridCol>
 
     <GridCol Span="6">
         <div class="table-control">
-            <Button Icon="@IconType.Outline.Plus" Type="ButtonType.Primary" @onclick="_ => OpenAddRoleDrawer()">Add
-                Role</Button>
-            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadRoles()"
-                Loading="loadingRoleList"></Button>
+            <Button Icon="@IconType.Outline.Plus" Type="ButtonType.Primary" @onclick="_ => OpenAddRoleDrawer()">Add Role</Button>
+            <Button Icon="@IconType.Outline.Reload" OnClick="() => HandleReloadRoles()" Loading="loadingRoleList"></Button>
         </div>
         <Table DataSource="roleList" HidePagination Loading="loadingRoleList" ScrollY="400" Bordered>
             <ColumnDefinitions>
@@ -132,22 +163,21 @@
                     <Space>
                         <SpaceItem>
                             <Button Type="ButtonType.Text" Icon="@IconType.Outline.Edit"
-                                @onclick="@(() => OpenEditRoleDrawer(context))" Class="ant-btn-edit"></Button>
+                                    @onclick="@(() => OpenEditRoleDrawer(context))" Class="ant-btn-edit"></Button>
                         </SpaceItem>
                         <SpaceItem>
                             <Button Type="ButtonType.Text" Icon="@IconType.Outline.Delete"
-                                @onclick="@(() => DeleteRole(context))" Danger></Button>
+                                    @onclick="@(() => DeleteRole(context))" Danger></Button>
                         </SpaceItem>
                     </Space>
                 </ActionColumn>
             </ColumnDefinitions>
         </Table>
     </GridCol>
-
 </GridRow>
 
 <Drawer Closable="true" Width="400" Visible="addRoleVisiable" Title='("Add new role")'
-    OnClose="_ => CloseAddRoleDrawer()">
+        OnClose="_ => CloseAddRoleDrawer()">
     <Template style="height:90%">
         <Form Model="@addNewRoleModel" OnFinish="SubmitNewRole">
             <Row Gutter="16">
@@ -155,7 +185,7 @@
                     <Text>Role name</Text>
                     <FormItem>
                         <Input Placeholder="Please enter role name" TValue="string"
-                            @bind-Value="@context.RoleName"></Input>
+                               @bind-Value="@context.RoleName"></Input>
                     </FormItem>
                 </AntDesign.Col>
             </Row>
@@ -170,7 +200,7 @@
 </Drawer>
 
 <Drawer Closable="true" Width="400" Visible="editRoleVisible" Title='("Edit role")'
-    OnClose="_ => CloseEditRoleDrawer()">
+        OnClose="_ => CloseEditRoleDrawer()">
     <Template style="height:90%">
         <Form Model="@editRoleModel" OnFinish="SubmitUpdateRole">
             <Row Gutter="16">
@@ -178,7 +208,7 @@
                     <Text>Role name</Text>
                     <FormItem>
                         <Input Placeholder="Please enter role name" TValue="string"
-                            @bind-Value="@context.RoleName"></Input>
+                               @bind-Value="@context.RoleName"></Input>
                     </FormItem>
                 </AntDesign.Col>
             </Row>
@@ -192,373 +222,422 @@
     </Template>
 </Drawer>
 
+<Drawer Closable="true" Width="400" Visible="editUserVisible" Title='("Edit User")'
+        OnClose="_ => CloseEditUserDrawer()">
+    <Template style="height:90%">
+        <Form Model="@editUserModel" OnFinish="SubmitUpdateUser">
+            <FormItem Label="User Name">
+                <Input @bind-Value="@editUserModel.UserName" />
+            </FormItem>
+            <FormItem Label="Email">
+                <Input @bind-Value="@editUserModel.Email" />
+            </FormItem>
+            <FormItem Label="Phone Number">
+                <Input @bind-Value="@editUserModel.PhoneNumber" />
+            </FormItem>
+            <FormItem Label="Roles">
+                <Select Mode="SelectMode.Multiple"
+                        DataSource="@editUserModel.Roles"
+                        Placeholder="Select roles"
+                        @bind-Values="@_selectedValues1"
+                        TItemValue="string"
+                        TItem="string"
+                        Style="width: 100%;"
+                        EnableSearch>
+                </Select>
+            </FormItem>
+            <FormItem>
+                <Button Type="ButtonType.Primary" HtmlType="submit">Update</Button>
+                <Button Type="ButtonType.Default" OnClick="CloseEditUserDrawer">Cancel</Button>
+            </FormItem>
+        </Form>
+    </Template>
+</Drawer>
+
 @code {
-    private IQueryable<UserViewModel> userList;
-    private IQueryable<Role> roleList;
-    private List<string> rolesForFilter = new List<string>();
-    private bool loadingUserList = false;
-    private bool loadingRoleList = false;
-    private bool addRoleVisiable = false;
-    private bool editRoleVisible = false;
+        private IQueryable<BlazorAppSecure.Model.UserViewModel> userList;
+        private IQueryable<Role> roleList;
+        private List<string> rolesForFilter = new List<string>();
+        private bool loadingUserList = false;
+        private bool loadingRoleList = false;
+        private bool addRoleVisiable = false;
+        private bool editRoleVisible = false;
+        private bool editUserVisible = false;
 
-    private AddNewRoleModel addNewRoleModel = new();
-    private EditRoleModel editRoleModel = new();
-    private FilterUserModel filterModel = new();
+        private AddNewRoleModel addNewRoleModel = new();
+        private EditRoleModel editRoleModel = new();
+        private FilterUserModel filterModel = new();
+        private BlazorAppSecure.Model.UserViewModel editUserModel = new BlazorAppSecure.Model.UserViewModel();
+        private string originalEmail;
+        private IEnumerable<string> _selectedValues1;
 
-    private RenderFragment searchIcon = @<Icon Type="search" />;
+        private RenderFragment searchIcon = @<Icon Type="search" />;
 
-    public class FilterUserModel
-    {
-        public string SearchTerm { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
-
-    public class UserViewModel
-    {
-        public string Id { get; set; }
-        public string Email { get; set; }
-        public string FullName { get; set; }
-        public string UserName { get; set; }
-        public List<string> Roles { get; set; }
-        public bool EmailConfirmed { get; set; }
-        public string PhoneNumber { get; set; }
-        public bool PhoneNumberConfirmed { get; set; }
-        public DateTimeOffset? LockoutEnd { get; set; }
-    }
-
-    public class AddNewRoleModel
-    {
-        [Required(ErrorMessage = "Role name is required")]
-        public string RoleName { get; set; }
-    }
-
-    public class EditRoleModel
-    {
-        public string Id { get; set; }
-
-        [Required(ErrorMessage = "Role name is required")]
-        public string RoleName { get; set; }
-
-        public string OriginalName { get; set; }
-    }
-
-    public class Role
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-    }
-
-    private IQueryable<UserViewModel> FilteredUsers => userList?.Where(u =>
-    (string.IsNullOrEmpty(filterModel.SearchTerm) ||
-    (u.FullName != null && u.FullName.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
-    (u.UserName != null && u.UserName.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
-    (u.Email != null && u.Email.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
-    (u.PhoneNumber != null && u.PhoneNumber.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase))) &&
-    (string.IsNullOrEmpty(filterModel.Role) || (u.Roles != null && u.Roles.Contains(filterModel.Role))))
-    ?? Enumerable.Empty<UserViewModel>().AsQueryable();
-
-    void OpenAddRoleDrawer()
-    {
-        addNewRoleModel = new();
-        addRoleVisiable = true;
-    }
-
-    void CloseAddRoleDrawer()
-    {
-        addRoleVisiable = false;
-    }
-
-    void OpenEditRoleDrawer(Role role)
-    {
-        editRoleModel = new EditRoleModel
+        public class FilterUserModel
         {
-            Id = role.Id,
-            RoleName = role.Name,
-            OriginalName = role.Name
-        };
-        editRoleVisible = true;
-    }
-
-    void CloseEditRoleDrawer()
-    {
-        editRoleVisible = false;
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        loadingUserList = true;
-        loadingRoleList = true;
-        var usersRes = await Acct.GetUsers();
-        var rolesRes = await Acct.GetRoles();
-        userList = usersRes.Select(u => new UserViewModel
-        {
-            Email = u.Email,
-            FullName = u.FullName,
-            UserName = u.UserName,
-            Roles = u.Roles,
-            EmailConfirmed = u.EmailConfirmed,
-            PhoneNumber = u.PhoneNumber,
-            PhoneNumberConfirmed = u.PhoneNumberConfirmed
-        }).AsQueryable();
-        roleList = rolesRes.Select(r => new Role
-        {
-            Id = r.Id,
-            Name = r.Name
-        }).AsQueryable();
-        rolesForFilter = roleList.Select(r => r.Name).ToList();
-        loadingUserList = false;
-        loadingRoleList = false;
-        await base.OnInitializedAsync();
-    }
-
-    void Edit(UserViewModel p)
-    {
-        Navigation.NavigateTo($"editupdateuser/{p.Email}");
-    }
-
-
-    bool IsUserBanned(UserViewModel user)
-    {
-        return user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow;
-    }
-
-    async Task ToggleBanUser(UserViewModel user, bool checkedValue)
-    {
-        bool newBanStatus = checkedValue;
-        var response = await Acct.SetUserBanStatus(user.Email, newBanStatus);
-        if (response)
-        {
-            await HandleReloadListUser();
-            await _mess.Success(newBanStatus ? $"User {user.Email} banned." : $"User {user.Email} unbanned.");
+            public string SearchTerm { get; set; } = string.Empty;
+            public string Role { get; set; } = string.Empty;
         }
-        else
-        {
-            await _mess.Error("Failed to update user ban status.");
-        }
-    }
 
-    async void Delete(UserViewModel p)
-    {
-        if (await ModelService.ConfirmAsync(new() { Content = $"Are you sure you want to delete user {p.Email}?" }))
+        public class UserViewModel
         {
-            if (await Acct.Delete(p.Id.ToString()))
+            public string Id { get; set; }
+            public string Email { get; set; }
+            public string FullName { get; set; }
+            public string UserName { get; set; }
+            public List<string> Roles { get; set; }
+            public bool EmailConfirmed { get; set; }
+            public string PhoneNumber { get; set; }
+            public bool PhoneNumberConfirmed { get; set; }
+            public DateTimeOffset? LockoutEnd { get; set; }
+        }
+
+        public class AddNewRoleModel
+        {
+            [Required(ErrorMessage = "Role name is required")]
+            public string RoleName { get; set; }
+        }
+
+        public class EditRoleModel
+        {
+            public string Id { get; set; }
+            [Required(ErrorMessage = "Role name is required")]
+            public string RoleName { get; set; }
+            public string OriginalName { get; set; }
+        }
+
+        public class Role
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        private IQueryable<BlazorAppSecure.Model.UserViewModel> FilteredUsers => userList?.Where(u =>
+            (string.IsNullOrEmpty(filterModel.SearchTerm) ||
+             (u.FullName != null && u.FullName.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+             (u.UserName != null && u.UserName.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+             (u.Email != null && u.Email.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase)) ||
+             (u.PhoneNumber != null && u.PhoneNumber.Contains(filterModel.SearchTerm, StringComparison.OrdinalIgnoreCase))) &&
+            (string.IsNullOrEmpty(filterModel.Role) || (u.Roles != null && u.Roles.Contains(filterModel.Role))))
+            ?? Enumerable.Empty<BlazorAppSecure.Model.UserViewModel>().AsQueryable();
+
+        void OpenAddRoleDrawer()
+        {
+            addNewRoleModel = new();
+            addRoleVisiable = true;
+        }
+
+        void CloseAddRoleDrawer()
+        {
+            addRoleVisiable = false;
+        }
+
+        void OpenEditRoleDrawer(Role role)
+        {
+            editRoleModel = new EditRoleModel
             {
-                await _mess.Success($"User {p.Email} has been deleted.");
+                Id = role.Id,
+                RoleName = role.Name,
+                OriginalName = role.Name
+            };
+            editRoleVisible = true;
+        }
+
+        void CloseEditRoleDrawer()
+        {
+            editRoleVisible = false;
+        }
+
+        void OpenEditUserDrawer(BlazorAppSecure.Model.UserViewModel user)
+        {
+            originalEmail = user.Email;
+            editUserModel = new BlazorAppSecure.Model.UserViewModel
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
+            };
+            _selectedValues1 = user.Roles.ToArray();
+            editUserModel.Roles = roleList.Select(r => r.Name).ToList();
+            editUserVisible = true;
+        }
+
+        async Task SubmitUpdateUser()
+        {
+            editUserModel.Roles = _selectedValues1.ToList();
+            var success = await Acct.UserUpdate(originalEmail, editUserModel);
+            if (success)
+            {
                 await HandleReloadListUser();
+                editUserVisible = false;
+                await _mess.Success("User updated successfully");
             }
             else
             {
-                await _mess.Error("Failed to delete user.");
+                await _mess.Error("Failed to update user");
             }
         }
-    }
 
-    async void DeleteRole(Role role)
-    {
-
-        bool isRoleInUse = userList.Any(u => u.Roles != null && u.Roles.Contains(role.Name));
-
-        if (isRoleInUse)
+        void CloseEditUserDrawer()
         {
-            await _mess.Error($"Cannot delete role '{role.Name}' because it is currently assigned to users.");
-            return;
+            editUserVisible = false;
         }
 
-        if (await ModelService.ConfirmAsync(new() { Content = $"Are you sure you want to delete role '{role.Name}'?" }))
+        protected override async Task OnInitializedAsync()
         {
-            try
+            loadingUserList = true;
+            loadingRoleList = true;
+            var usersRes = await Acct.GetUsers();
+            var rolesRes = await Acct.GetRoles();
+            userList = usersRes.Select(u => new BlazorAppSecure.Model.UserViewModel
             {
-                var response = await Acct.DeleteRoleAsync(role.Name);
-                if (response.Succeeded)
-                {
-                    await _mess.Success($"Role '{role.Name}' has been deleted.");
-                    await HandleReloadRoles();
+                Email = u.Email,
+                FullName = u.FullName,
+                UserName = u.UserName,
+                Roles = u.Roles,
+                EmailConfirmed = u.EmailConfirmed,
+                PhoneNumber = u.PhoneNumber,
+                PhoneNumberConfirmed = u.PhoneNumberConfirmed
+            }).AsQueryable();
+            roleList = rolesRes.Select(r => new Role
+            {
+                Id = r.Id,
+                Name = r.Name
+            }).AsQueryable();
+            rolesForFilter = roleList.Select(r => r.Name).ToList();
+            loadingUserList = false;
+            loadingRoleList = false;
+            await base.OnInitializedAsync();
+        }
 
+      
+
+        async Task ToggleBanUser(BlazorAppSecure.Model.UserViewModel user, bool checkedValue)
+        {
+            bool newBanStatus = checkedValue;
+            var response = await Acct.SetUserBanStatus(user.Email, newBanStatus);
+            if (response)
+            {
+                await HandleReloadListUser();
+                await _mess.Success(newBanStatus ? $"User {user.Email} banned." : $"User {user.Email} unbanned.");
+            }
+            else
+            {
+                await _mess.Error("Failed to update user ban status.");
+            }
+        }
+
+        async void Delete(BlazorAppSecure.Model.UserViewModel p)
+        {
+            if (await ModelService.ConfirmAsync(new() { Content = $"Are you sure you want to delete user {p.Email}?" }))
+            {
+                if (await Acct.Delete(p.Id.ToString()))
+                {
+                    await _mess.Success($"User {p.Email} has been deleted.");
                     await HandleReloadListUser();
                 }
                 else
                 {
-                    response.ErrorList.ForEach(err => _mess.Error(err));
+                    await _mess.Error("Failed to delete user.");
+                }
+            }
+        }
+
+        async void DeleteRole(Role role)
+        {
+            bool isRoleInUse = userList.Any(u => u.Roles != null && u.Roles.Contains(role.Name));
+            if (isRoleInUse)
+            {
+                await _mess.Error($"Cannot delete role '{role.Name}' because it is currently assigned to users.");
+                return;
+            }
+
+            if (await ModelService.ConfirmAsync(new() { Content = $"Are you sure you want to delete role '{role.Name}'?" }))
+            {
+                try
+                {
+                    var response = await Acct.DeleteRoleAsync(role.Name);
+                    if (response.Succeeded)
+                    {
+                        await _mess.Success($"Role '{role.Name}' has been deleted.");
+                        await HandleReloadRoles();
+                        await HandleReloadListUser();
+                    }
+                    else
+                    {
+                        response.ErrorList.ForEach(err => _mess.Error(err));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await _mess.Error($"Failed to delete role: {ex.Message}");
+                }
+            }
+        }
+
+        async Task HandleReloadListUser()
+        {
+            loadingUserList = true;
+            var usersRes = await Acct.GetUsers();
+            userList = usersRes.Select(u => new BlazorAppSecure.Model.UserViewModel
+            {
+                Email = u.Email,
+                FullName = u.FullName,
+                UserName = u.UserName,
+                Roles = u.Roles,
+                EmailConfirmed = u.EmailConfirmed,
+                PhoneNumber = u.PhoneNumber,
+                PhoneNumberConfirmed = u.PhoneNumberConfirmed
+            }).AsQueryable();
+            loadingUserList = false;
+            StateHasChanged();
+        }
+
+        async Task HandleReloadRoles()
+        {
+            loadingRoleList = true;
+            var rolesRes = await Acct.GetRoles();
+            roleList = rolesRes.Select(r => new Role
+            {
+                Id = r.Id,
+                Name = r.Name
+            }).AsQueryable();
+            rolesForFilter = roleList.Select(r => r.Name).ToList();
+            loadingRoleList = false;
+            StateHasChanged();
+        }
+
+        async void SubmitNewRole()
+        {
+            var response = await Acct.AddRole(addNewRoleModel.RoleName);
+            if (response.Succeeded)
+            {
+                addRoleVisiable = false;
+                await HandleReloadRoles();
+                await _mess.Success("Add new role success");
+            }
+            else
+            {
+                response.ErrorList.ForEach(err => _mess.Error(err));
+            }
+        }
+
+        async Task SubmitUpdateRole()
+        {
+            if (string.IsNullOrEmpty(editRoleModel.RoleName))
+            {
+                await _mess.Error("Role name cannot be empty");
+                return;
+            }
+
+            if (editRoleModel.RoleName == editRoleModel.OriginalName)
+            {
+                editRoleVisible = false;
+                return;
+            }
+
+            try
+            {
+                var response = await Acct.UpdateRoleAsync(editRoleModel.OriginalName, editRoleModel.RoleName);
+                if (response.Succeeded)
+                {
+                    editRoleVisible = false;
+                    await HandleReloadRoles();
+                    await HandleReloadListUser();
+                    await _mess.Success($"Role updated successfully from '{editRoleModel.OriginalName}' to '{editRoleModel.RoleName}'");
+                }
+                else
+                {
+                    foreach (var err in response.ErrorList)
+                    {
+                        await _mess.Error(err);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                await _mess.Error($"Failed to delete role: {ex.Message}");
+                await _mess.Error($"Error updating role: {ex.Message}");
             }
         }
-    }
 
-    async Task HandleReloadListUser()
-    {
-        loadingUserList = true;
-        var usersRes = await Acct.GetUsers();
-        userList = usersRes.Select(u => new UserViewModel
+        void ClearFilters()
         {
-
-            Email = u.Email,
-            FullName = u.FullName,
-            UserName = u.UserName,
-            Roles = u.Roles,
-            EmailConfirmed = u.EmailConfirmed,
-            PhoneNumber = u.PhoneNumber,
-            PhoneNumberConfirmed = u.PhoneNumberConfirmed
-        }).AsQueryable();
-        loadingUserList = false;
-        StateHasChanged();
-    }
-
-    async Task HandleReloadRoles()
-    {
-        loadingRoleList = true;
-        var rolesRes = await Acct.GetRoles();
-        roleList = rolesRes.Select(r => new Role
-        {
-            Id = r.Id,
-            Name = r.Name
-        }).AsQueryable();
-        rolesForFilter = roleList.Select(r => r.Name).ToList();
-        loadingRoleList = false;
-        StateHasChanged();
-    }
-
-    async void SubmitNewRole()
-    {
-        var response = await Acct.AddRole(addNewRoleModel.RoleName);
-        if (response.Succeeded)
-        {
-            addRoleVisiable = false;
-            await HandleReloadRoles();
-            await _mess.Success("Add new role success");
-        }
-        else
-        {
-            response.ErrorList.ForEach(err => _mess.Error(err));
-        }
-    }
-
-    async Task SubmitUpdateRole()
-    {
-        if (string.IsNullOrEmpty(editRoleModel.RoleName))
-        {
-            await _mess.Error("Role name cannot be empty");
-            return;
+            filterModel.SearchTerm = string.Empty;
+            filterModel.Role = string.Empty;
+            StateHasChanged();
         }
 
-        if (editRoleModel.RoleName == editRoleModel.OriginalName)
+        void ApplyFilters()
         {
-            editRoleVisible = false;
-            return;
+            StateHasChanged();
         }
 
-        try
+        async void ExportToExcel()
         {
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Users");
 
-            var response = await Acct.UpdateRoleAsync(editRoleModel.OriginalName, editRoleModel.RoleName);
-            if (response.Succeeded)
+            using (var headerRange = worksheet.Cells["A1:G1"])
             {
-                editRoleVisible = false;
-                await HandleReloadRoles();
-                await HandleReloadListUser();
-                await _mess.Success($"Role updated successfully from '{editRoleModel.OriginalName}' to '{editRoleModel.RoleName}'");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+                headerRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                headerRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                headerRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Medium);
             }
-            else
+
+            worksheet.Cells[1, 1].Value = "Email";
+            worksheet.Cells[1, 2].Value = "Full Name";
+            worksheet.Cells[1, 3].Value = "User Name";
+            worksheet.Cells[1, 4].Value = "Roles";
+            worksheet.Cells[1, 5].Value = "Email Confirmed";
+            worksheet.Cells[1, 6].Value = "Phone Number";
+            worksheet.Cells[1, 7].Value = "Phone Confirmed";
+
+            int row = 2;
+            foreach (var user in userList)
             {
-                foreach (var err in response.ErrorList)
+                worksheet.Cells[row, 1].Value = user.Email;
+                worksheet.Cells[row, 2].Value = user.FullName ?? "N/A";
+                worksheet.Cells[row, 3].Value = user.UserName;
+                worksheet.Cells[row, 4].Value = user.Roles != null ? string.Join(", ", user.Roles) : "N/A";
+                worksheet.Cells[row, 5].Value = user.EmailConfirmed ? "Yes" : "No";
+                worksheet.Cells[row, 6].Value = user.PhoneNumber ?? "N/A";
+                worksheet.Cells[row, 7].Value = user.PhoneNumberConfirmed ? "Yes" : "No";
+
+                if (row % 2 == 0)
                 {
-                    await _mess.Error(err);
+                    using (var rowRange = worksheet.Cells[$"A{row}:G{row}"])
+                    {
+                        rowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        rowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    }
                 }
-            }
-        }
-        catch (Exception ex)
-        {
-            await _mess.Error($"Error updating role: {ex.Message}");
-        }
-    }
 
-    void ClearFilters()
-    {
-        filterModel.SearchTerm = string.Empty;
-        filterModel.Role = string.Empty;
-        StateHasChanged();
-    }
-
-    void ApplyFilters()
-    {
-        StateHasChanged();
-    }
-    async void ExportToExcel()
-    {
-        using var package = new OfficeOpenXml.ExcelPackage();
-        var worksheet = package.Workbook.Worksheets.Add("Users");
-
-        // Header Row Styling
-        using (var headerRange = worksheet.Cells["A1:G1"])
-        {
-            headerRange.Style.Font.Bold = true;
-            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
-            headerRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-            headerRange.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
-            headerRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Medium);
-        }
-
-        // Thêm tiêu đề cột
-        worksheet.Cells[1, 1].Value = "Email";
-        worksheet.Cells[1, 2].Value = "Full Name";
-        worksheet.Cells[1, 3].Value = "User Name";
-        worksheet.Cells[1, 4].Value = "Roles";
-        worksheet.Cells[1, 5].Value = "Email Confirmed";
-        worksheet.Cells[1, 6].Value = "Phone Number";
-        worksheet.Cells[1, 7].Value = "Phone Confirmed";
-
-        // Thêm dữ liệu từ danh sách userList
-        int row = 2;
-        foreach (var user in userList)
-        {
-            worksheet.Cells[row, 1].Value = user.Email;
-            worksheet.Cells[row, 2].Value = user.FullName ?? "N/A";
-            worksheet.Cells[row, 3].Value = user.UserName;
-            worksheet.Cells[row, 4].Value = user.Roles != null ? string.Join(", ", user.Roles) : "N/A";
-            worksheet.Cells[row, 5].Value = user.EmailConfirmed ? "Yes" : "No";
-            worksheet.Cells[row, 6].Value = user.PhoneNumber ?? "N/A";
-            worksheet.Cells[row, 7].Value = user.PhoneNumberConfirmed ? "Yes" : "No";
-
-            // Alternating row colors for readability
-            if (row % 2 == 0)
-            {
-                using (var rowRange = worksheet.Cells[$"A{row}:G{row}"])
+                using (var cellRange = worksheet.Cells[$"A{row}:G{row}"])
                 {
-                    rowRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    rowRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    cellRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
                 }
+
+                row++;
             }
 
-            // Add borders to each cell
-            using (var cellRange = worksheet.Cells[$"A{row}:G{row}"])
+            worksheet.Cells.AutoFitColumns();
+
+            var fileContent = package.GetAsByteArray();
+            var fileName = "UsersList.xlsx";
+            if (fileContent == null || fileContent.Length == 0)
             {
-                cellRange.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                await _mess.Error("File generation failed!");
+                return;
             }
 
-            row++;
+            var base64 = Convert.ToBase64String(fileContent);
+            await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
         }
-
-        // AutoFit Columns
-        worksheet.Cells.AutoFitColumns();
-
-        // Xuất file
-        var fileContent = package.GetAsByteArray();
-        var fileName = "UsersList.xlsx";
-        if (fileContent == null || fileContent.Length == 0)
-        {
-            await _mess.Error("File generation failed!");
-            return;
-        }
-
-        var base64 = Convert.ToBase64String(fileContent);
-
-        // Convert byte[] thành Base64 để tải về
-        await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
-    }
 }
 
 <style>

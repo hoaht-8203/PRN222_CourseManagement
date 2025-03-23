@@ -1,0 +1,69 @@
+@page "/subscription-error"
+@using AntDesign
+@using CourseManagement.Model.Model
+@using CourseManagement.Model.Constant
+@inject NavigationManager Navigation
+@inject IMessageService _mess
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="error-container">
+    <Result Status="ResultStatus.Error" Title="Thanh toán thất bại!" SubTitle="Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại sau." Extra="extra">
+    </Result>
+</div>
+
+@code {
+    private RenderFragment extra => builder =>
+    {
+        builder.OpenComponent<Button>(0);
+        builder.AddAttribute(1, "Type", ButtonType.Primary);
+        builder.AddAttribute(2, "OnClick", EventCallback.Factory.Create<MouseEventArgs>(this, () =>
+            Navigation.NavigateTo("/subscription")));
+        builder.AddContent(3, "Quay lại trang đăng ký");
+        builder.CloseComponent();
+    };
+}
+
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "orderId")]
+    public string OrderId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(OrderId))
+        {
+            await _mess.Error("Không tìm thấy thông tin đơn hàng!");
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("Auth");
+            var response = await httpClient.GetAsync($"/api/Order/{OrderId}");
+            if (response.IsSuccessStatusCode)
+            {
+                await _mess.Error("Thanh toán thất bại!");
+            }
+            else
+            {
+                await _mess.Error("Có lỗi xảy ra khi xử lý đơn hàng!");
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Lỗi: {ex.Message}");
+        }
+    }
+}

@@ -1,6 +1,7 @@
 ﻿using CourseManagement.Business.Services.IService;
 using CourseManagement.DataAccess.Data;
 using CourseManagement.Model.Constant;
+using CourseManagement.Model.DTOs;
 using CourseManagement.Model.Model;
 using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Identity;
@@ -27,9 +28,21 @@ namespace CourseManagementAPI.Controllers
 
 
         [HttpGet("list")]
-        public async Task<IActionResult> GetAll()
-        {
+        public async Task<IActionResult> GetAll([FromQuery] string? sortBy = "newest", [FromQuery] int? categoryId = null) {
             var blogs = await _blogService.GetAllAsync(includeProperties: "User,Categories");
+
+            // Filter by category if specified
+            if (categoryId.HasValue) {
+                blogs = blogs.Where(b => b.Categories.Any(c => c.Id == categoryId));
+            }
+
+            // Apply sorting
+            blogs = sortBy?.ToLower() switch {
+                "oldest" => blogs.OrderBy(b => b.CreatedAt),
+                "most_viewed" => blogs.OrderByDescending(b => b.ViewCount),
+                "least_viewed" => blogs.OrderBy(b => b.ViewCount),
+                _ => blogs.OrderByDescending(b => b.CreatedAt)
+            };
 
             var blogList = blogs.Select(blog => new
             {
@@ -40,7 +53,7 @@ namespace CourseManagementAPI.Controllers
                 blog.CreatedAt,
                 blog.ViewCount,
                 blog.UserId,
-                blog.Status, 
+                blog.Status,
                 Categories = blog.Categories.Select(c => new { c.Id, c.Name, c.Description })
             }).ToList();
 
@@ -199,7 +212,7 @@ namespace CourseManagementAPI.Controllers
         }
 
 
-        [HttpPost("delete")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var existingBlog = await _blogService.GetByIdAsync(id);
@@ -210,6 +223,18 @@ namespace CourseManagementAPI.Controllers
 
             await _blogService.DeleteAsync(id);
             return Ok(new { message = "Deleted blog successfully" });
+        }
+
+        [HttpPost("increment-view/{id}")]
+        public async Task<IActionResult> IncrementViewCount(int id) {
+            var blog = await _blogService.GetByIdAsync(id);
+            if (blog == null)
+                return NotFound(new { error = $"Blog with id {id} not found" });
+
+            blog.ViewCount += 1;
+            await _blogService.UpdateAsync(blog);
+
+            return Ok(new ViewCountResponse { ViewCount = blog.ViewCount });
         }
     }
 }

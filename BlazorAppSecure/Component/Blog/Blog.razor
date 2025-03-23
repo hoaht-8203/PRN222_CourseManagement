@@ -2,11 +2,14 @@
 @using AntDesign
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Services.Blog
+@using Microsoft.AspNetCore.Authorization
 @using BlazorAppSecure.Sevices.Blog
 @using BlazorAppSecure.Sevices.Category
 @using CourseManagement.Model.ViewModel
 @using CourseManagement.Model.Constant
 
+
+@attribute [Authorize(Roles = "Admin")]
 @inject NavigationManager NavigationManager
 @inject IBlogService BlogService
 @inject ICategoryService CategoryService
@@ -125,7 +128,7 @@
             <CellRender Context="cellData">
                 <Button Type="@ButtonType.Text" Icon="@IconType.Outline.Edit" @onclick="e => ShowEditModal(context.Id)" Class="ant-btn-edit"></Button>
                 <Button Type="@ButtonType.Text" Icon="@IconType.Outline.Eye" @onclick="e => NavigateToBlogDetail(context.Id, e)" Class="ant-btn-eye"></Button>
-                <Button Type="@ButtonType.Text" Icon="@IconType.Outline.Delete" Class="ant-btn-delete"></Button>
+                <Button Type="@ButtonType.Text" Icon="@IconType.Outline.Delete" @onclick="() => HandleDelete(context.Id)" Class="ant-btn-delete"></Button>
             </CellRender>
         </ActionColumn>
     </ColumnDefinitions>
@@ -388,6 +391,29 @@ OnClose="@CloseEditModal">
             loadingBlogs = false;
             StateHasChanged();
         }
+    }
+
+    private async Task HandleDelete(int blogId)
+    {
+        var confirmed = await ModelService.ConfirmAsync(new() { Content = "Are you sure you want to delete this blog?" });
+        if (confirmed)
+        {
+            try
+            {
+                await BlogService.DeleteBlog(blogId);
+                blogList.RemoveAll(b => b.Id == blogId);
+                await _mess.Success("Blog deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                await _mess.Error($"Error deleting blog: {ex.Message}");
+            }
+        }
+    }
+
+    private void NavigateToBlogDetail(int blogId)
+    {
+        NavigationManager.NavigateTo($"/blogs/detail/{blogId}");
     }
 
     private async Task LoadCategories()

@@ -1,0 +1,327 @@
+﻿@page "/listBlog"
+@using AntDesign
+@using BlazorAppSecure.Model
+@using BlazorAppSecure.Sevices.Blog
+
+@inject NavigationManager NavigationManager
+@inject IBlogService BlogService
+@inject IMessageService _message
+
+<BlazorAppSecure.Layout.HeaderHome />
+<PageTitle>Danh Sách Blog</PageTitle>
+
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            <Icon Type="@IconType.Outline.Home" /> Home
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            List Blog
+        </BreadcrumbItem>
+    </Breadcrumb>
+</div>
+
+<div class="mb-2">
+    <h3>Bài viết nổi bật</h3>
+    <span>Tổng hợp các bài viết chia sẻ về kinh nghiệm tự học lập trình online và các kỹ thuật lập trình web.</span>
+</div>
+
+<div class="filter-section mb-4">
+    <Row>
+        <Col Span="4">
+        <Select TItem="string"
+                TItemValue="string"
+                DefaultValue="@sortBy"
+                OnSelectedItemChanged="OnSortChanged"
+                Style="width: 200px;">
+            <SelectOptions>
+                <SelectOption TItem="string" TItemValue="string" Value="@("newest")" Label="Mới nhất" />
+                <SelectOption TItem="string" TItemValue="string" Value="@("oldest")" Label="Cũ nhất" />
+                <SelectOption TItem="string" TItemValue="string" Value="@("most_viewed")" Label="Xem nhiều nhất" />
+                <SelectOption TItem="string" TItemValue="string" Value="@("least_viewed")" Label="Xem ít nhất" />
+            </SelectOptions>
+        </Select>
+        </Col>
+        <Col Span="4">
+        <Select TItem="int?"
+                TItemValue="int?"
+                DefaultValue="@selectedCategoryId"
+                OnSelectedItemChanged="OnCategoryChanged"
+                Style="width: 200px;"
+                AllowClear
+                Placeholder="Chọn chủ đề">
+            <SelectOptions>
+                    @foreach (var category in categories) {
+                    <SelectOption TItem="int?"
+                                  TItemValue="int?"
+                                  Value="@category.Id"
+                                  Label="@category.Name" />
+                    }
+            </SelectOptions>
+        </Select>
+        </Col>
+    </Row>
+</div>
+
+@if (loading)
+{
+    <div style="text-align: center;">
+        <Spin />
+    </div>
+}
+else
+{
+    <div class="blog-list">
+        @if (blogList.Any())
+        {
+            @foreach (var blog in blogList) {
+                <div class="blog-card">
+                    <div class="author-info">
+                        <img src="https://placehold.co/40x40?text=A" alt="Avatar" class="avatar" />
+                        <span class="author-text">Admin Team · @blog.CreatedAt.ToString("dd/MM/yyyy HH:mm") · @CalculateReadingTime(blog.Content) phút đọc</span>
+                    </div>
+                    <h3 @onclick="() => NavigateToDetail(blog.Id)" class="blog-title">
+                        @blog.Title
+                    </h3>
+                    <div class="mb-2">
+                        @if (blog.Categories != null && blog.Categories.Any()) {
+                            @foreach (var category in blog.Categories) {
+                                <span class="tag">@category.Name</span>
+                            }
+                        } else {
+                            <span class="tag">No Tag</span>
+                        }
+                    </div>
+                    <div class="metrics">
+                        <span><Icon Type="eye" /> @blog.ViewCount</span>
+                        <span><Icon Type="message" /> 0</span>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-message">Không có bài viết nào để hiển thị.</div>
+        }
+    </div>
+}
+
+@code {
+    private List<CategoiesModel> categories = new List<CategoiesModel>();
+    private List<BlogModel> blogList = new List<BlogModel>();
+    private string filter = "latest";
+    private bool loading = true;
+    private string sortBy = "newest";
+    private int? selectedCategoryId;
+
+    protected override async Task OnInitializedAsync() {
+        try {
+            loading = true;
+            await LoadBlogs();
+            // Thêm phương thức để load categories
+            categories = await BlogService.GetCategories();
+        } catch (Exception ex) {
+            await _message.Error($"Lỗi khi tải dữ liệu: {ex.Message}");
+        } finally {
+            loading = false;
+        }
+    }
+
+    private async Task LoadBlogs() {
+        blogList = await BlogService.GetBlogList(sortBy, selectedCategoryId) ?? new List<BlogModel>();
+    }
+
+    private async Task OnSortChanged(string value) {
+        sortBy = value;
+        await LoadBlogs();
+    }
+
+    private async Task OnCategoryChanged(int? value) {
+        selectedCategoryId = value;
+        await LoadBlogs();
+    }
+
+    private async Task NavigateToDetail(int blogId) {
+        try {
+            // Tăng lượt xem trước khi chuyển trang
+            // await BlogService.IncrementViewCount(blogId);
+
+            // Sau đó chuyển đến trang chi tiết
+            NavigationManager.NavigateTo($"/listblogs/detail/{blogId}");
+        } catch (Exception ex) {
+            await _message.Error("Không thể cập nhật lượt xem");
+        }
+    }
+
+    private int CalculateReadingTime(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return 0;
+        var wordCount = content.Split(new[] { ' ', '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
+        return (int)Math.Ceiling(wordCount / 200.0); // Giả định 200 từ/phút
+    }
+}
+
+<style>
+ 
+    :root {
+        --primary-font: 'Roboto', sans-serif;
+        --secondary-font: 'Montserrat', sans-serif;
+    }
+
+    
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .header-title {
+        font-family: var(--secondary-font);
+        font-size: 2.5em;
+        font-weight: 700;
+        color: #0fb6a5; 
+        margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+        font-family: var(--primary-font);
+        font-size: 1.1em;
+        font-weight: 400;
+        color: #1e90ff; 
+    }
+
+   
+    .filter-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .filter-button {
+        font-family: var(--primary-font);
+        font-size: 1em;
+        font-weight: 500;
+        padding: 8px 20px;
+        border-radius: 20px;
+        border: none;
+        background-color: #f0f0f0;
+        color: #333;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+        .filter-button.active {
+            background-color: #0fb6a5;
+            color: white;
+        }
+
+        .filter-button.active-following,
+        .filter-button.active-bookmarked {
+            background-color: #1e90ff;
+            color: white;
+        }
+
+   
+    .blog-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-width: 800px;
+    }
+
+    .blog-card {
+        background-color: #fff5f5;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .avatar {
+        border-radius: 50%;
+        margin-right: 12px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .author-text {
+        font-family: var(--primary-font);
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .blog-title {
+        font-family: var(--secondary-font);
+        font-size: 1.4em;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+        .blog-title:hover {
+            color: #0fb6a5;
+        }
+
+    .tag {
+        background-color: #e6e6e6;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.85em;
+        font-family: var(--primary-font);
+        color: #555;
+    }
+
+    .metrics {
+        display: flex;
+        gap: 15px;
+        font-family: var(--primary-font);
+        font-size: 0.9em;
+        color: #888;
+    }
+
+        .metrics span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+    .empty-message {
+        font-family: var(--primary-font);
+        font-size: 1.1em;
+        color: #888;
+        text-align: center;
+        margin: 40px 0;
+    }
+
+    .filter-section {
+        background-color: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .tag {
+        background-color: #e6e6e6;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.85em;
+        font-family: var(--primary-font);
+        color: #555;
+        margin-right: 8px; /* Thêm khoảng cách giữa các tags */
+        display: inline-block; /* Để các tags nằm cùng một hàng */
+        margin-bottom: 5px; /* Thêm khoảng cách dưới mỗi tag khi wrap */
+    }
+</style>

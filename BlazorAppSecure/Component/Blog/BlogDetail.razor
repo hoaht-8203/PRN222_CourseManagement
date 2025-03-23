@@ -3,6 +3,10 @@
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices.Blog
 @using CourseManagement.Model.Constant
+@using Microsoft.AspNetCore.Authorization
+
+
+@attribute [Authorize(Roles = "Admin")]
 @inject IBlogService BlogService
 @inject IMessageService _mess
 @inject NavigationManager NavigationManager
@@ -103,7 +107,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadBlogDetail();
+        try {
+            await LoadBlogDetail();
+            await BlogService.IncrementViewCount(Id);
+        } catch (Exception ex) {
+            await _mess.Error("Có lỗi xảy ra khi tải dữ liệu");
+        }
     }
 
     private async Task LoadBlogDetail()

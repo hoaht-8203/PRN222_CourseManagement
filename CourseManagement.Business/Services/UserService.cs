@@ -1,4 +1,6 @@
-﻿using CourseManagement.Business.Services.IService;
+﻿using CourseManagement.Business.Services;
+using CourseManagement.Business.Services.IService;
+using CourseManagement.Model.Constant;
 using CourseManagement.Model.Model;
 using CourseManagement.Model.ViewModel;
 using Microsoft.AspNetCore.Identity;
@@ -16,6 +18,7 @@ namespace CourseManagementAPI.Services
             _userManager = userManager;
             _roleService = roleService;
         }
+
 
         public async Task<List<AppUserVm>> GetAllUsers()
         {
@@ -35,12 +38,14 @@ namespace CourseManagementAPI.Services
                 Status = user.LockoutEnd == null,
                 EmailConfirmed = user.EmailConfirmed,
                 PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-                //Enrollments = (List<Enrollment>)user.Enrollments,
-                //Comments = (List<Comment>)user.Comments
+                VipStatus = user.VipStatus,
+                VipExpirationDate = user.VipExpirationDate,
+                VipPrice = user.VipPrice
             }).ToList();
 
             return response;
         }
+
 
         public async Task<AppUserVm> GetUserByEmail(string emailId)
         {
@@ -60,10 +65,14 @@ namespace CourseManagementAPI.Services
                 PhoneNumber = user.PhoneNumber,
                 Roles = (await _userManager.GetRolesAsync(user)).ToList(),
                 Status = user.LockoutEnd == null,
-                //Enrollments = (List<Enrollment>)user.Enrollments,
-                //Comments = (List<Comment>)user.Comments
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                VipStatus = user.VipStatus,
+                VipExpirationDate = user.VipExpirationDate,
+                VipPrice = user.VipPrice
             };
         }
+
 
         public async Task<bool> DeleteUserByEmail(string emailId)
         {
@@ -112,5 +121,24 @@ namespace CourseManagementAPI.Services
             return result.Succeeded;
         }
 
+        public async Task<bool> UpdateUserVipStatus(string emailId, VipStatus vipStatus, decimal vipPrice)
+        {
+            var user = await _userManager.FindByEmailAsync(emailId);
+            if (user == null)
+                return false;
+
+            user.VipStatus = vipStatus;
+            user.VipPrice = vipPrice;
+            user.VipExpirationDate = DateTime.UtcNow.AddMonths(1); 
+
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
+
+
+
+
     }
+
+
 }

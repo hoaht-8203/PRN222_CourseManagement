@@ -7,10 +7,12 @@ namespace CourseManagement.DataAccess.Repositorys
     {
         private readonly CourseManagementDb _db;
         public IBlog Blog { get; private set; }
+              public IOrder Order { get; private set; }
         public UnitOfWork(CourseManagementDb db)
         {
             _db = db;
             Blog = new BlogRepository(_db);
+            Order = new OrderRepository(_db);
         }
         public async Task SaveAsync()
         {

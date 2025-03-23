@@ -1,4 +1,4 @@
-﻿using CourseManagement.Business.Services.IService;
+﻿using CourseManagement.Business.Services;
 using CourseManagement.Model.Constant;
 using CourseManagement.Model.Model;
 using CourseManagement.Model.ViewModel;
@@ -110,6 +110,29 @@ namespace CourseManagementAPI.Controllers
             return Ok(new { Message = isBanned ? "User banned successfully." : "User unbanned successfully." });
         }
 
+        [HttpPut("update-vip-status")]
+        public async Task<IActionResult> UpdateVipStatus([FromBody] VipStatusUpdateModel model)
+        {
+            if (model == null)
+            {
+                return BadRequest("Invalid request data");
+            }
+
+            var result = await _userService.UpdateUserVipStatus(model.Email, model.VipStatus, model.VipPrice);
+            if (!result)
+            {
+                return BadRequest("Failed to update VIP status");
+            }
+
+            return Ok(new { message = "VIP status updated successfully" });
+        }
+    }
+
+    public class VipStatusUpdateModel
+    {
+        public string Email { get; set; }
+        public VipStatus VipStatus { get; set; }
+        public decimal VipPrice { get; set; }
     }
 }
 
