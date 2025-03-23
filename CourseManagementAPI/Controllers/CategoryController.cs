@@ -31,7 +31,6 @@ namespace CourseManagementAPI.Controllers {
             return Ok(new { Message = "Add new category success" });
         }
 
-        [Authorize(Roles = Role.Role_User_Admin)]
         [HttpGet("list")]
         public IActionResult List() {
             var res = _db.Categories.ToList();

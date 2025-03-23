@@ -7,7 +7,7 @@
         <span>ELearning</span>
     </div>
     <Menu Mode="MenuMode.Horizontal" Theme="MenuTheme.Light">
-        <MenuItem >
+        <MenuItem OnClick="NavigateToCourse">
             <Icon Type="graduation-cap" />
             Khóa học
             <Icon Type="down" />
@@ -68,6 +68,10 @@
 </style>
 
 @code {
+    private void NavigateToCourse() {
+        Navigation.NavigateTo("/");
+    }
+
     private void NavigateToBlog()
     {
         Navigation.NavigateTo("/listBlog");

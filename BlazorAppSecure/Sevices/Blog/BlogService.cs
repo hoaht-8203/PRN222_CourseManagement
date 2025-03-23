@@ -1,5 +1,7 @@
 ﻿
+using BlazorAppSecure.Model;
 using BlazorAppSecure.Sevices.Blog;
+using CourseManagement.Model.DTOs;
 using CourseManagement.Model.ViewModel;
 using System.Net.Http.Json;
 
@@ -13,7 +15,40 @@ namespace BlazorAppSecure.Services.Blog
         {
             _httpClient = httpClient.CreateClient("Auth");
         }
-        
+
+        public async Task<int> IncrementViewCount(int blogId) {
+            try {
+                var response = await _httpClient.PostAsync($"api/Blog/increment-view/{blogId}", null);
+                if (response.IsSuccessStatusCode) {
+                    var result = await response.Content.ReadFromJsonAsync<ViewCountResponse>();
+                    return result?.ViewCount ?? 0;
+                }
+                return 0;
+            } catch (Exception) {
+                return 0;
+            }
+        }
+
+        public async Task<List<BlogModel>> GetBlogList(string sortBy = "newest", int? categoryId = null) {
+            var queryString = $"api/Blog/list?sortBy={sortBy}";
+            if (categoryId.HasValue) {
+                queryString += $"&categoryId={categoryId}";
+            }
+
+            var response = await _httpClient.GetAsync(queryString);
+            if (response.IsSuccessStatusCode) {
+                return await response.Content.ReadFromJsonAsync<List<BlogModel>>();
+            }
+            return null;
+        }
+
+        public async Task<List<CategoiesModel>> GetCategories() {
+            var response = await _httpClient.GetAsync("api/Category/list");
+            if (response.IsSuccessStatusCode) {
+                return await response.Content.ReadFromJsonAsync<List<CategoiesModel>>();
+            }
+            return new List<CategoiesModel>();
+        }
 
         public async Task<List<BlogModel>> GetBlogList()
         {

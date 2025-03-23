@@ -107,7 +107,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadBlogDetail();
+        try {
+            await LoadBlogDetail();
+            await BlogService.IncrementViewCount(Id);
+        } catch (Exception ex) {
+            await _mess.Error("Có lỗi xảy ra khi tải dữ liệu");
+        }
     }
 
     private async Task LoadBlogDetail()

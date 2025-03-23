@@ -89,23 +89,50 @@ else
 
     private BlogModel? blog;
     private bool loading = true;
+    private bool hasIncrementedView = false;
+    private System.Timers.Timer? readingTimer;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
+    protected override async Task OnInitializedAsync() {
+        try {
             loading = true;
             blog = await BlogService.GetBlogById(blogId);
 
-        }
-        catch (Exception ex)
-        {
+            if (blog != null) {
+                // Tạo timer với thời gian đọc được tính toán
+                var readingTimeInMilliseconds = CalculateReadingTime(blog.Content) * 60 * 1000; // Chuyển phút thành milliseconds
+                readingTimer = new System.Timers.Timer(readingTimeInMilliseconds);
+                readingTimer.Elapsed += async (sender, e) => await OnReadingTimeCompleted();
+                readingTimer.AutoReset = false; // Chỉ chạy một lần
+                readingTimer.Start();
+            }
+        } catch (Exception ex) {
             await _message.Error($"Error loading blog detail: {ex.Message}");
-        }
-        finally
-        {
+        } finally {
             loading = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task OnReadingTimeCompleted() {
+        // Đảm bảo chỉ tăng view một lần
+        if (!hasIncrementedView && blog != null) {
+            try {
+                var newViewCount = await BlogService.IncrementViewCount(blogId);
+                await InvokeAsync(() => {
+                    blog.ViewCount = newViewCount;
+                    hasIncrementedView = true;
+                    StateHasChanged();
+                });
+            } catch (Exception ex) {
+                await InvokeAsync(() => _message.Error("Không thể cập nhật lượt xem"));
+            }
+        }
+    }
+
+    public void Dispose() {
+        // Cleanup timer khi component bị dispose
+        if (readingTimer != null) {
+            readingTimer.Dispose();
         }
     }
 
