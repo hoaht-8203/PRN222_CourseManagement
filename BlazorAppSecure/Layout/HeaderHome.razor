@@ -8,26 +8,22 @@
     </div>
 
     <div class="menu-container">
-        <Menu Mode="MenuMode.Horizontal" Theme="MenuTheme.Light">
+        <Menu Mode="MenuMode.Horizontal" Theme="MenuTheme.Light" Class="main-menu">
             <MenuItem OnClick="NavigateToCourse">
-                <Icon Type="graduation-cap" />
+                <Icon Type="graduation-cap" Theme="IconThemeType.Outline" />
                 Khóa học
-                <Icon Type="down" />
             </MenuItem>
             <MenuItem OnClick="NavigateToBlog">
-                <Icon Type="cube" />
+                <Icon Type="read" Theme="IconThemeType.Outline" />
                 Thế giới lập trình
-                <Icon Type="down" />
             </MenuItem>
             <MenuItem OnClick="NavigateToVipSubscription">
-                <Icon Type="cube" />
+                <Icon Type="crown" Theme="IconThemeType.Outline" />
                 Gói đăng ký
-                <Icon Type="down" />
             </MenuItem>
             <MenuItem>
-                <Icon Type="cube" />
+                <Icon Type="phone" Theme="IconThemeType.Outline" />
                 Liên hệ
-                <Icon Type="down" />
             </MenuItem>
         </Menu>
     </div>
@@ -38,9 +34,13 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 20px;
+        padding: 15px 40px;
         background-color: #fff;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 0;
+        height: 50px;
+        z-index: 1000;
     }
 
     .logo {
@@ -49,27 +49,48 @@
     }
 
         .logo img {
-            height: 40px;
-            margin-right: 10px;
+            height: 45px;
+            margin-right: 12px;
+            transition: transform 0.3s ease;
         }
+
+            .logo img:hover {
+                transform: scale(1.05);
+            }
 
         .logo span {
             font-weight: bold;
-            font-size: 1.5rem;
-            color: #001529;
+            font-size: 1.6rem;
+            color: #1890ff;
+            letter-spacing: 0.5px;
         }
 
-    .search {
-        display: flex;
-        align-items: center;
-
-
+    .main-menu {
+        font-size: 1.1rem;
     }
 
     .menu-container {
         flex-grow: 1;
         display: flex;
         justify-content: center;
+    }
+
+    :deep(.ant-menu-horizontal) {
+        border-bottom: none;
+    }
+
+    :deep(.ant-menu-item) {
+        padding: 0 25px;
+        margin: 0 5px;
+    }
+
+    :deep(.ant-menu-item:hover) {
+        color: #1890ff;
+    }
+
+    :deep(.anticon) {
+        margin-right: 8px;
+        font-size: 1.2rem;
     }
 </style>
 

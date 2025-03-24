@@ -229,6 +229,10 @@ namespace CourseManagement.DataAccess.Repositorys {
             var userFound = await _context.AppUsers.SingleOrDefaultAsync(u => u.Email == request.UserEmail)
                  ?? throw new ArgumentException($"Internal server error when user enroll course");
 
+            if (courseFounded.CourseType == CourseType.ProCourse && userFound.VipExpirationDate <= DateTime.Now) {
+                throw new ArgumentException($"You must has pro account status to learn this course");
+            }
+
             Enrollment enrollment = new Enrollment() {
                 CourseId = courseFounded.Id,
                 UserId = userFound.Id,
