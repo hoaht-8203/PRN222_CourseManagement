@@ -402,11 +402,11 @@ OnClose="@CloseEditModal">
             {
                 await BlogService.DeleteBlog(blogId);
                 blogList.RemoveAll(b => b.Id == blogId);
-                await _mess.Success("Blog deleted successfully!");
+                _mess.Success("Blog deleted successfully!");
             }
             catch (Exception ex)
             {
-                await _mess.Error($"Error deleting blog: {ex.Message}");
+                _mess.Error($"Error deleting blog: {ex.Message}");
             }
         }
     }
@@ -425,7 +425,7 @@ OnClose="@CloseEditModal">
         }
         catch (Exception ex)
         {
-            await _mess.Error($"Error loading categories: {ex.Message}");
+            _mess.Error($"Error loading categories: {ex.Message}");
         }
         finally
         {
@@ -456,14 +456,14 @@ OnClose="@CloseEditModal">
     {
         if (string.IsNullOrWhiteSpace(newBlog.Title))
         {
-            await _mess.Error("Title is required!");
+            _mess.Error("Title is required!");
             return;
         }
 
         string htmlContent = await richEditor.GetHTML();
 
         if (string.IsNullOrWhiteSpace(htmlContent)) {
-            await _mess.Error("Content is required!");
+            _mess.Error("Content is required!");
             return;
         }
 
@@ -478,16 +478,16 @@ OnClose="@CloseEditModal">
             {
                 await LoadBlogs();
                 await CloseCreateModal();
-                await _mess.Success("Blog created successfully!");
+                _mess.Success("Blog created successfully!");
             }
             else
             {
-                await _mess.Error("Failed to create blog.");
+                _mess.Error("Failed to create blog.");
             }
         }
         catch (Exception ex)
         {
-            await _mess.Error($"Error creating blog: {ex.Message}");
+            _mess.Error($"Error creating blog: {ex.Message}");
         }
         finally
         {
@@ -504,16 +504,16 @@ OnClose="@CloseEditModal">
             if (success)
             {
                 await LoadCategories();
-                await _mess.Success("Category added successfully");
+                _mess.Success("Category added successfully");
             }
             else
             {
-                await _mess.Error("Failed to add category");
+                _mess.Error("Failed to add category");
             }
         }
         catch (Exception ex)
         {
-            await _mess.Error($"Error: {ex.Message}");
+            _mess.Error($"Error: {ex.Message}");
         }
         finally
         {
@@ -545,12 +545,12 @@ OnClose="@CloseEditModal">
             }
             else
             {
-                await _mess.Error("Blog not found!");
+                _mess.Error("Blog not found!");
             }
         }
         catch (Exception ex)
         {
-            await _mess.Error($"Error loading blog: {ex.Message}");
+            _mess.Error($"Error loading blog: {ex.Message}");
         }
     }
 
@@ -564,14 +564,14 @@ OnClose="@CloseEditModal">
     {
         if (string.IsNullOrWhiteSpace(editBlog.Title))
         {
-            await _mess.Error("Title is required!");
+            _mess.Error("Title is required!");
             return;
         }
 
         string htmlContent = await richEditor.GetHTML();
 
         if (string.IsNullOrWhiteSpace(htmlContent)) {
-            await _mess.Error("Content is required!");
+            _mess.Error("Content is required!");
             return;
         }
 
@@ -582,7 +582,7 @@ OnClose="@CloseEditModal">
             await BlogService.UpdateBlog(editBlog.Id, editBlog);
             await LoadBlogs();
             await CloseEditModal();
-            await _mess.Success("Blog updated successfully!");
+            _mess.Success("Blog updated successfully!");
         }
         catch (Exception ex)
         {
@@ -704,7 +704,7 @@ OnClose="@CloseEditModal">
         var fileName = "BlogsList.xlsx";
         if (fileContent == null || fileContent.Length == 0)
         {
-            await _mess.Error("File generation failed!");
+            _mess.Error("File generation failed!");
             return;
         }
 

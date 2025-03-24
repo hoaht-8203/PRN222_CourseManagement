@@ -1,0 +1,291 @@
+﻿@page "/orders"
+@using System.ComponentModel.DataAnnotations
+@using BlazorAppSecure.Model
+@using CourseManagement.Model.Constant
+@using CourseManagement.Model.DTOs
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IMessageService _mess
+@inject NavigationManager _nav
+@inject IJSRuntime JS
+
+<div class="mb-2">
+    <Breadcrumb>
+        <BreadcrumbItem Href="">
+            Home
+        </BreadcrumbItem>
+        <BreadcrumbItem>
+            Orders Management
+        </BreadcrumbItem>
+    </Breadcrumb>
+</div>
+
+<div>
+    <Form Model="@searchModel" OnFinish="HandleSearch">
+        <Row Gutter="16">
+            <AntDesign.Col Span="6">
+                <Text>User Email</Text>
+                <FormItem>
+                    <Input Placeholder="Search by email" @bind-Value="@context.UserEmail" />
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="6">
+                <Text>Status</Text>
+                <FormItem>
+                    <Select DataSource="@statusList"
+                            @bind-Value="@context.Status"
+                            ValueName="@nameof(StatusOption.Value)"
+                            LabelName="@nameof(StatusOption.Label)"
+                            Placeholder="Select status"
+                            AllowClear>
+                    </Select>
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="12">
+                <Text>Date Range</Text>
+                <FormItem>
+                    <Space>
+                        <SpaceItem>
+                            <DatePicker TValue="DateTime?"
+                                        @bind-Value="@searchModel.FromDate" />
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Text>to</Text>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <DatePicker TValue="DateTime?"
+                                        @bind-Value="@searchModel.ToDate" />
+                        </SpaceItem>
+                    </Space>
+                </FormItem>
+            </AntDesign.Col>
+            <AntDesign.Col Span="6">
+                <div style="margin-top: 22px">
+                    <Button Icon="@IconType.Outline.Clear" OnClick="HandleReset">Clear</Button>
+                    <Button Type="ButtonType.Primary" Icon="@IconType.Outline.Search" HtmlType="submit">Search</Button>
+                </div>
+            </AntDesign.Col>
+        </Row>
+    </Form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h6>Total Orders: @(orders?.Count() ?? 0)</h6>
+    </div>
+    <div>
+        <Button Icon="@IconType.Outline.Download" OnClick="ExportToExcel">Export to Excel</Button>
+        <Button Icon="@IconType.Outline.Reload" OnClick="FetchOrders">Refresh</Button>
+    </div>
+</div>
+
+<Table TItem="SearchOrderResponse"
+       DataSource="@orders"
+       Loading="loading"
+       Bordered>
+    <PropertyColumn Property="c=>c.Id" Title="Order ID" />
+    <PropertyColumn Property="c=>c.UserEmail" Title="User Email" />
+    <PropertyColumn Property="c=>c.UserName" Title="User Name" />
+    <PropertyColumn Property="c=>c.Status" Title="Status">
+        @{
+            var color = context.Status switch {
+                OrderStatus.Pending => "warning",
+                OrderStatus.Completed => "success",
+                OrderStatus.Cancelled => "error",
+                _ => "default"
+            };
+        }
+        <Tag Color="@color">@context.StatusName</Tag>
+    </PropertyColumn>
+    <PropertyColumn Property="c=>c.TotalAmount" Title="Amount">
+        $@context.TotalAmount.ToString("N2")
+    </PropertyColumn>
+    <PropertyColumn Property="c=>c.PurchasedPlan" Title="Plan">
+        <Tag Color="TagColor.Purple">@context.PlanName</Tag>
+    </PropertyColumn>
+    <PropertyColumn Property="c=>c.OrderDate" Title="Order Date">
+        @context.OrderDate.ToString("dd/MM/yyyy HH:mm")
+    </PropertyColumn>
+    <PropertyColumn Property="c=>c.VipExpirationDate" Title="Expiration Date">
+        @(context.VipExpirationDate?.ToString("dd/MM/yyyy") ?? "N/A")
+    </PropertyColumn>
+    <ActionColumn Title="Action">
+        @if (context.Status == OrderStatus.Pending) {
+            <Space>
+                <SpaceItem>
+                    <Popconfirm Title="Are you sure to complete this order?"
+                                OnConfirm="() => UpdateOrderStatus(context.Id, OrderStatus.Completed)">
+                        <Button Type="ButtonType.Primary">Complete</Button>
+                    </Popconfirm>
+                </SpaceItem>
+                <SpaceItem>
+                    <Popconfirm Title="Are you sure to cancel this order?"
+                                OnConfirm="() => UpdateOrderStatus(context.Id, OrderStatus.Cancelled)">
+                        <Button Danger>Cancel</Button>
+                    </Popconfirm>
+                </SpaceItem>
+            </Space>
+        }
+    </ActionColumn>
+</Table>
+
+@code {
+    private class StatusOption {
+        public OrderStatus? Value { get; set; }
+        public string Label { get; set; }
+    }
+
+    private List<StatusOption> statusList = new()
+        {
+        new StatusOption { Value = null, Label = "All" },
+        new StatusOption { Value = OrderStatus.Pending, Label = "Pending" },
+        new StatusOption { Value = OrderStatus.Completed, Label = "Completed" },
+        new StatusOption { Value = OrderStatus.Cancelled, Label = "Cancelled" }
+    };
+
+    private HttpClient httpClient;
+    private List<SearchOrderResponse> orders;
+    private SearchOrderRequest searchModel = new();
+    private bool loading = false;
+
+    protected override void OnInitialized() {
+        httpClient = HttpClientFactory.CreateClient("Auth");
+        FetchOrders();
+    }
+
+    private void HandleReset() {
+        searchModel = new();
+        StateHasChanged();
+        FetchOrders();
+    }
+
+    private async Task FetchOrders() {
+        loading = true;
+        try {
+            var response = await httpClient.GetAsync("/api/Order/search");
+            if (response.IsSuccessStatusCode) {
+                orders = await response.Content.ReadFromJsonAsync<List<SearchOrderResponse>>();
+            } else {
+                await _mess.Error("Failed to load orders");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        } finally {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnDateRangeChange(DateRangeChangedEventArgs<DateTime?[]> args) {
+        if (args.Dates != null && args.Dates.Length == 2 && args.Dates[0].HasValue && args.Dates[1].HasValue) {
+            searchModel.FromDate = args.Dates[0].Value.Date;
+            searchModel.ToDate = args.Dates[1].Value.Date.AddDays(1).AddTicks(-1);
+        } else {
+            searchModel.FromDate = null;
+            searchModel.ToDate = null;
+        }
+    }
+
+    private async Task HandleSearch() {
+        loading = true;
+        try {
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrEmpty(searchModel.UserEmail))
+                queryParams.Add($"UserEmail={Uri.EscapeDataString(searchModel.UserEmail)}");
+
+            if (searchModel.Status.HasValue)
+                queryParams.Add($"Status={searchModel.Status.Value}");
+
+            if (searchModel.FromDate.HasValue)
+                queryParams.Add($"FromDate={searchModel.FromDate.Value:yyyy-MM-dd}");
+
+            if (searchModel.ToDate.HasValue)
+                queryParams.Add($"ToDate={searchModel.ToDate.Value:yyyy-MM-dd}");
+
+            var url = $"/api/Order/search{(queryParams.Any() ? "?" + string.Join("&", queryParams) : "")}";
+            var response = await httpClient.GetAsync(url);
+
+            if (response.IsSuccessStatusCode) {
+                orders = await response.Content.ReadFromJsonAsync<List<SearchOrderResponse>>();
+            } else {
+                await _mess.Error("Failed to search orders");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        } finally {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateOrderStatus(int orderId, OrderStatus newStatus) {
+        try {
+            var request = new UpdateOrderStatusRequest {
+                    OrderId = orderId,
+                    NewStatus = newStatus
+                };
+
+            var response = await httpClient.PostAsJsonAsync("/api/Order/update-status", request);
+            if (response.IsSuccessStatusCode) {
+                await _mess.Success("Order status updated successfully");
+                await FetchOrders();
+            } else {
+                await _mess.Error("Failed to update order status");
+            }
+        } catch (Exception ex) {
+            await _mess.Error($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task ExportToExcel() {
+        using var package = new OfficeOpenXml.ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Orders");
+
+        // Headers
+        worksheet.Cells[1, 1].Value = "Order ID";
+        worksheet.Cells[1, 2].Value = "User Email";
+        worksheet.Cells[1, 3].Value = "User Name";
+        worksheet.Cells[1, 4].Value = "Status";
+        worksheet.Cells[1, 5].Value = "Amount";
+        worksheet.Cells[1, 6].Value = "Plan";
+        worksheet.Cells[1, 7].Value = "Order Date";
+        worksheet.Cells[1, 8].Value = "Expiration Date";
+
+        // Style headers
+        using (var headerRange = worksheet.Cells[1, 1, 1, 8]) {
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+        }
+
+        // Data
+        int row = 2;
+        foreach (var order in orders) {
+            worksheet.Cells[row, 1].Value = order.Id;
+            worksheet.Cells[row, 2].Value = order.UserEmail;
+            worksheet.Cells[row, 3].Value = order.UserName;
+            worksheet.Cells[row, 4].Value = order.StatusName;
+            worksheet.Cells[row, 5].Value = order.TotalAmount;
+            worksheet.Cells[row, 6].Value = order.PlanName;
+            worksheet.Cells[row, 7].Value = order.OrderDate.ToString("dd/MM/yyyy HH:mm");
+            worksheet.Cells[row, 8].Value = order.VipExpirationDate?.ToString("dd/MM/yyyy") ?? "N/A";
+
+            row++;
+        }
+
+        worksheet.Cells.AutoFitColumns();
+
+        var fileContent = package.GetAsByteArray();
+        var fileName = $"Orders_{DateTime.Now:yyyyMMdd}.xlsx";
+        var base64 = Convert.ToBase64String(fileContent);
+
+        await JS.InvokeVoidAsync("saveAsFile", fileName, base64);
+    }
+}
+
+<style>
+    .ant-table-row .ant-tag {
+        margin-right: 0;
+    }
+</style>

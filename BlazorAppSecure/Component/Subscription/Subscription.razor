@@ -14,54 +14,207 @@
 <BlazorAppSecure.Layout.HeaderHome />
 <PageTitle>Vip Subcription</PageTitle>
 
-<div class="mb-2">
-    <Breadcrumb>
-        <BreadcrumbItem Href="">
-            Home
-        </BreadcrumbItem>
-        <BreadcrumbItem>
-            Subscription
-        </BreadcrumbItem>
+<div class="subscription-page">
+    <div class="subscription-header">
+        <Breadcrumb>
+            <BreadcrumbItem Href="">
+                Home
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+                Subscription
+            </BreadcrumbItem>
+        </Breadcrumb>
+        <h1>Đăng ký gói VIP</h1>
+        <p class="subtitle">Chọn gói VIP phù hợp với nhu cầu của bạn</p>
+    </div>
 
-    </Breadcrumb>
-</div>
+    <div class="subscription-container">
+        <div class="subscription-packages">
+            <div class="package-card @(_vipModel.Package == "1" ? "selected" : "")"
+                @onclick="@(() => _vipModel.Package = "1")">
+                <div class="package-header">
+                    <h3>Gói 1 tháng</h3>
+                    <div class="price">100.000 VND</div>
+                </div>
+                <div class="package-features">
+                    <ul>
+                        <li>Truy cập không giới hạn</li>
+                        <li>Hỗ trợ 24/7</li>
+                        <li>Ưu tiên xử lý</li>
+                    </ul>
+                </div>
+            </div>
 
-<div class="vip-subscription-container">
-    <h3>Đăng ký gói VIP</h3>
-    <Form Model="@_vipModel" OnFinish="@(async (EditContext context) => await OnFinish(context))">
-        <FormItem Label="Chọn gói VIP">
-            <RadioGroup @bind-Value="@_vipModel.Package">
-                <Radio Value="@("1")">Gói 1 tháng - 100.000 VND</Radio>
-                <Radio Value="@("3")">Gói 3 tháng - 250.000 VND</Radio>
-                <Radio Value="@("6")">Gói 6 tháng - 450.000 VND</Radio>
-                <Radio Value="@("12")">Gói 12 tháng - 800.000 VND</Radio>
-            </RadioGroup>
-        </FormItem>
-        <FormItem>
-            <Button Type="@ButtonType.Primary" HtmlType="submit" Loading="@isProcessing">Đăng ký</Button>
-        </FormItem>
-    </Form>
+            <div class="package-card @(_vipModel.Package == "3" ? "selected" : "")"
+                @onclick="@(() => _vipModel.Package = "3")">
+                <div class="package-header">
+                    <h3>Gói 3 tháng</h3>
+                    <div class="price">250.000 VND</div>
+                </div>
+                <div class="package-features">
+                    <ul>
+                        <li>Truy cập không giới hạn</li>
+                        <li>Hỗ trợ 24/7</li>
+                        <li>Ưu tiên xử lý</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="package-card @(_vipModel.Package == "6" ? "selected" : "")"
+                @onclick="@(() => _vipModel.Package = "6")">
+                <div class="package-header">
+                    <h3>Gói 6 tháng</h3>
+                    <div class="price">450.000 VND</div>
+                </div>
+                <div class="package-features">
+                    <ul>
+                        <li>Truy cập không giới hạn</li>
+                        <li>Hỗ trợ 24/7</li>
+                        <li>Ưu tiên xử lý</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="package-card @(_vipModel.Package == "12" ? "selected" : "")"
+                @onclick="@(() => _vipModel.Package = "12")">
+                <div class="package-header">
+                    <h3>Gói 12 tháng</h3>
+                    <div class="price">800.000 VND</div>
+                </div>
+                <div class="package-features">
+                    <ul>
+                        <li>Truy cập không giới hạn</li>
+                        <li>Hỗ trợ 24/7</li>
+                        <li>Ưu tiên xử lý</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <Button Type="@ButtonType.Primary" Size="ButtonSize.Large" Loading="@isProcessing"
+                OnClick="@(async () => await OnFinish(new EditContext(_vipModel)))">
+                Đăng ký ngay
+            </Button>
+        </div>
+    </div>
 </div>
 
 <style>
-    .vip-subscription-container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    .subscription-page {
+        padding: 2rem;
+        background-color: #f5f7fa;
+        min-height: 100vh;
     }
 
-    h3 {
+    .subscription-header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 3rem;
     }
 
-    .header {
-        margin-bottom: 30px;
+    .subscription-header h1 {
+        font-size: 2.5rem;
+        color: #1a1a1a;
+        margin: 1rem 0;
     }
-</style>
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+
+    .subscription-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .subscription-packages {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .package-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+
+    .package-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .package-card.selected {
+        border-color: #1890ff;
+        background-color: #f0f7ff;
+    }
+
+    .package-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .package-header h3 {
+        font-size: 1.5rem;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+
+    .price {
+        font-size: 1.8rem;
+        color: #1890ff;
+        font-weight: bold;
+    }
+
+    .package-features ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .package-features li {
+        padding: 0.5rem 0;
+        color: #666;
+        display: flex;
+        align-items: center;
+    }
+
+    .package-features li::before {
+        content: "✓";
+        color: #52c41a;
+        margin-right: 0.5rem;
+    }
+
+    .subscription-action {
+        text-align: center;
+    }
+
+    .subscription-action button {
+        padding: 1rem 3rem;
+        font-size: 1.1rem;
+    }
+
+        @@media(max - width: 768px) {
+        .subscription-page {
+            padding: 1rem;
+        }
+
+            .subscription-header h1 {
+                font-size: 2rem;
+            }
+
+            .subscription-packages {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 
 @code {
     HttpClient httpClient;
@@ -114,7 +267,7 @@
 
                 var order = new OrderCreateVM
                 {
-                    
+
                     TotalAmount = packageDetail.Amount,
                     PurchasedPlan = packageDetail.Plan,
                     VipPrice = packageDetail.Amount,
@@ -133,12 +286,12 @@
                 var savedOrder = await orderResponse.Content.ReadFromJsonAsync<Order>();
 
                 var paymentRequest = new VnPaymentRequestModel
-                    {
+                {
                     OrderId = savedOrder.Id,
                     ProductName = $"Gói VIP {_vipModel.Package} tháng",
-                    Amount =(double) packageDetail.Amount,
+                    Amount = (double)packageDetail.Amount,
                     Description = $"VIP-{packageDetail.Amount}-{userEmail}-{savedOrder.Id}",
-                  
+
                 };
 
                 var response = await httpClient.PostAsJsonAsync("/api/Payment/create", paymentRequest);
