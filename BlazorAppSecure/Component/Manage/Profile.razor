@@ -1,9 +1,11 @@
 ﻿@using AntDesign
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices.Profile
+@using System.Timers
 
 @inject IAccountService ProfileService
 @inject IMessageService _mess
+@inject NavigationManager Navigation
 
 <div class="space-y-6">
     <div class="shrink-0 bg-border h-[1px] w-full"></div>
@@ -31,15 +33,41 @@
             <Button Type="ButtonType.Primary" HtmlType="submit">Update Account</Button>
         </FormItem>
     </Form>
+    <AuthorizeView Roles="User">
+    <div style="text-align: center">
+        @if(userModel.VipStatus == 0)
+        {
+                <h3>Your account has not activated the VIP plan</h3>
+               <div>
+
+            <img src="HEHE.png" alt="img" style="height: 400px; margin: 40px"/>
+               </div>
+            <Button @onclick="goVIP">Activate Now !</Button>
+        }
+        else
+        {
+            <h3>Your account is on VIP plan</h3>
+            <p>Time remaining:</p>
+            <h2 style="color:yellowgreen">@countdown</h2>
+        }
+
+    </div>
+    </AuthorizeView>
+
 </div>
 
 @code {
     private UserViewModel userModel = new UserViewModel();
-
+    private string countdown = "";
+    private System.Timers.Timer timer;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadProfile();
+        if (userModel.VipStatus != 0 && userModel.VipExpirationDate != null)
+        {
+            StartCountdown();
+        }
     }
     private async Task LoadProfile(){
         try
@@ -64,5 +92,44 @@
             await _mess.Error($"Error updating profile: {ex.Message}");
         }
     }
-    
+    private void goVIP()
+    {
+        Navigation.NavigateTo("/vip-subscription");
+    }
+    private void StartCountdown()
+    {
+        if (userModel.VipExpirationDate <= DateTime.Now)
+        {
+            countdown = "VIP expired!";
+            StateHasChanged();
+            return;
+        }
+
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += UpdateCountdown;
+        timer.AutoReset = true;
+        timer.Enabled = true;
+    }
+
+    private void UpdateCountdown(object source, ElapsedEventArgs e)
+    {
+        var timeRemaining = userModel.VipExpirationDate.Value - DateTime.Now;
+        if (timeRemaining.TotalSeconds <= 0)
+        {
+            InvokeAsync(() =>
+            {
+                countdown = "VIP expired!";
+                timer?.Stop();
+                StateHasChanged();
+            });
+        }
+        else
+        {
+            InvokeAsync(() =>
+            {
+                countdown = $"{timeRemaining.Days} days {timeRemaining.Hours} hours {timeRemaining.Minutes} minutes {timeRemaining.Seconds} seconds";
+                StateHasChanged();
+            });
+        }
+    }
 }

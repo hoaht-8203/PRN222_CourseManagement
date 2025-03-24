@@ -17,9 +17,11 @@
                 <MenuItem Key="2" Icon="lock">
                     <NavLink href="/manage/change-password">Change Password</NavLink>
                 </MenuItem>
-                <MenuItem Key="3" Icon="book">
-                    <NavLink href="/manage/courses">Courses</NavLink>
-                </MenuItem>
+                <AuthorizeView Roles="User">
+                    <MenuItem Key="3" Icon="book">
+                        <NavLink href="/manage/courses">Courses</NavLink>
+                    </MenuItem>
+            </AuthorizeView>
             </Menu>
         </Col>
 
