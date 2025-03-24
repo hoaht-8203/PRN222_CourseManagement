@@ -2,9 +2,16 @@
 @using AntDesign
 @using BlazorAppSecure.Model
 @using BlazorAppSecure.Sevices.Blog
+@using CourseManagement.Model.DTOs
+@using Microsoft.AspNetCore.SignalR.Client
+
 @inject NavigationManager NavigationManager
 @inject IBlogService BlogService
 @inject IMessageService _message
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthState
+@inject IMessageService _mess
+@inject HubConnection HubConnection
 
 <PageTitle>Blog Detail</PageTitle>
 
@@ -79,6 +86,36 @@ else
             <div class="blog-body">
                 @((MarkupString)blog.Content)
             </div>
+            <div class="comments-section">
+                <!-- Ô nhập comment -->
+                <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <Avatar Icon="user" />
+                    <TextArea @bind-Value="newComment"
+                              Placeholder="Write a comment..."
+                              Style="flex-grow: 1;" />
+
+                </div>
+                <div style="margin-top: 12px; display:flex ;justify-content:flex-end">
+                    <Button Type="ButtonType.Primary" OnClick="SubmitComment">Submit</Button>
+
+                </div>
+                <Divider />
+
+                <!-- Danh sách comment -->
+                <div class="comments-list">
+                    @foreach (var comment in comments)
+                    {
+                        <div class="comment-item">
+                            <div style="margin-bottom: 8px">
+                                <Avatar Icon="user" />
+                                <strong>@comment.Username</strong>
+                            </div>
+                            <p>@comment.Content</p>
+                            <Divider />
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 }
@@ -86,14 +123,17 @@ else
 @code {
     [Parameter]
     public int blogId { get; set; }
-
     private BlogModel? blog;
     private bool loading = true;
     private bool hasIncrementedView = false;
     private System.Timers.Timer? readingTimer;
+    private string newComment = "";
+    private List<CourseManagement.Model.DTOs.CommentDTO> comments = new();
+    private HttpClient httpClient;
 
     protected override async Task OnInitializedAsync() {
         try {
+            httpClient = HttpClientFactory.CreateClient("Auth");
             loading = true;
             blog = await BlogService.GetBlogById(blogId);
 
@@ -105,6 +145,47 @@ else
                 readingTimer.AutoReset = false; // Chỉ chạy một lần
                 readingTimer.Start();
             }
+            await LoadComments();
+
+            await HubConnection.StartAsync();
+            await _mess.Error(HubConnection.State.ToString());
+
+            if (HubConnection.State != HubConnectionState.Connected)
+            {
+                await _mess.Error("SignalR is not connected.");
+
+            }
+            if (HubConnection != null)
+            {
+                try
+                {
+                    await HubConnection.SendAsync("JoinBlogGroup", blogId.ToString());
+                }
+                catch (Exception ex)
+                {
+                    await _mess.Error($"Error joining blog group: {ex.Message}");
+                }
+            }
+            else
+            {
+                _mess.Error("HubConnection is null");
+            }
+            HubConnection.On<CommentDTO>("ReceiveBlogComment", async (comment) =>
+            {
+                if (comment.BlogId == blogId)
+                {
+                    comments.Add(new CommentDTO
+                        {
+                            Content = comment.Content,
+                            BlogId = comment.BlogId,
+                            Username = comment.Username
+                        });
+                    StateHasChanged();
+                }
+
+            });
+
+            
         } catch (Exception ex) {
             await _message.Error($"Error loading blog detail: {ex.Message}");
         } finally {
@@ -112,6 +193,28 @@ else
             StateHasChanged();
         }
     }
+
+    private async Task LoadComments()
+    {
+        try
+        {
+            var response = await httpClient.GetAsync($"/api/Comment/blog?blogID={blogId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var commentsFetched = await response.Content.ReadFromJsonAsync<List<CourseManagement.Model.Model.Comment>>();
+                foreach (var comment in commentsFetched)
+                {
+                    comments.Add(new CourseManagement.Model.DTOs.CommentDTO { Content = comment.Content, BlogId = comment.BlogId, Username = comment.User.UserName });
+                }
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await _mess.Error($"Error loading comments: {ex.Message}");
+        }
+    }
+
 
     private async Task OnReadingTimeCompleted() {
         // Đảm bảo chỉ tăng view một lần
@@ -141,6 +244,19 @@ else
         if (string.IsNullOrEmpty(content)) return 0;
         var wordCount = content.Split(new[] { ' ', '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
         return (int)Math.Ceiling(wordCount / 200.0); // Giả định 200 từ/phút
+    }
+    private async Task SubmitComment()
+    {
+        if (string.IsNullOrWhiteSpace(newComment)) return;
+
+        var Username = (await AuthState.GetAuthenticationStateAsync()).User.Identity.Name;
+        var comment = new CourseManagement.Model.DTOs.CommentDTO { BlogId = blogId, Content = newComment, Username = Username ?? "Anonymous" };
+        var jsonComment = System.Text.Json.JsonSerializer.Serialize(comment);
+        await httpClient.PostAsJsonAsync("/api/Comment", comment);
+        newComment = "";
+        StateHasChanged();
+        await HubConnection.SendAsync("SendBlogComment", comment);
+
     }
 }
 

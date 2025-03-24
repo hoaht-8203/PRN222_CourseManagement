@@ -6,32 +6,30 @@
         <img src="https://media.istockphoto.com/id/607929972/vi/vec-to/logo-e-learning-vector.jpg?s=612x612&w=0&k=20&c=8IDWTGo2MIYYTyoUAXE6BugCPLhUamMlQT64R-39bEw=" alt="ELearning" />
         <span>ELearning</span>
     </div>
-    <Menu Mode="MenuMode.Horizontal" Theme="MenuTheme.Light">
-        <MenuItem OnClick="NavigateToCourse">
-            <Icon Type="graduation-cap" />
-            Khóa học
-            <Icon Type="down" />
-        </MenuItem>
-        <MenuItem  OnClick="NavigateToBlog">
-            <Icon Type="cube" />
-            Thế giới lập trình
-            <Icon Type="down" />
-        </MenuItem>
-        <MenuItem OnClick="NavigateToVipSubscription">
-            <Icon Type="cube" />
-            Gói đăng ký
-            <Icon Type="down" />
-        </MenuItem>
-        <MenuItem >
-            <Icon Type="cube" />
-            Liên hệ
-            <Icon Type="down" />
-        </MenuItem>
-    </Menu>
-    <div class="search">
-        <Search Placeholder="Tìm kiếm">
-            <Icon Slot="prefix" Type="search" />
-        </Search>
+
+    <div class="menu-container">
+        <Menu Mode="MenuMode.Horizontal" Theme="MenuTheme.Light">
+            <MenuItem OnClick="NavigateToCourse">
+                <Icon Type="graduation-cap" />
+                Khóa học
+                <Icon Type="down" />
+            </MenuItem>
+            <MenuItem OnClick="NavigateToBlog">
+                <Icon Type="cube" />
+                Thế giới lập trình
+                <Icon Type="down" />
+            </MenuItem>
+            <MenuItem OnClick="NavigateToVipSubscription">
+                <Icon Type="cube" />
+                Gói đăng ký
+                <Icon Type="down" />
+            </MenuItem>
+            <MenuItem>
+                <Icon Type="cube" />
+                Liên hệ
+                <Icon Type="down" />
+            </MenuItem>
+        </Menu>
     </div>
 </header>
 
@@ -64,6 +62,14 @@
     .search {
         display: flex;
         align-items: center;
+
+
+    }
+
+    .menu-container {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
     }
 </style>
 

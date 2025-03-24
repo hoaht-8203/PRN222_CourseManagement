@@ -4,6 +4,7 @@ using CourseManagement.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.DataAccess.Migrations
 {
     [DbContext(typeof(CourseManagementDb))]
-    partial class CourseManagementDbModelSnapshot : ModelSnapshot
+    [Migration("20250323165945_add-comment-for-blog")]
+    partial class addcommentforblog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,16 +121,16 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "679d2483-e7ed-4db9-8a2c-fa8fe84e06e2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6a2dab35-b442-4fce-9f0e-977a36716ca0",
+                            ConcurrencyStamp = "44c67e94-1716-430e-9ef9-a75cf29619b8",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             FullName = "Admin",
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN@ADMIN.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELXQisTm6RTLylnKFIAwX+MG7mwAmnkgIyXfUUVYsbrzqupqClHuAVCFmOcZ1REMGQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECQ6drxF5gnK1H7OWHN94wmvI2yfTmXwvi8xTT/kmjT/veE0UMl0VbCw+dUm/niAXg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "72f3d7d0-217e-422f-b2ca-d8b0bad112b2",
+                            SecurityStamp = "c1d13a49-4f0a-4096-9056-acbb28725c6c",
                             TwoFactorEnabled = false,
                             UserName = "admin@admin.com",
                             VipStatus = 0
@@ -136,16 +139,16 @@ namespace CourseManagement.DataAccess.Migrations
                         {
                             Id = "e404e498-c930-4a45-9b22-c35d2f333d37",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4b4348b7-2191-4390-bf2a-d361ed4c6b66",
+                            ConcurrencyStamp = "06149b26-9056-46fe-9534-09c89e8324fb",
                             Email = "user@user.com",
                             EmailConfirmed = true,
                             FullName = "User",
                             LockoutEnabled = true,
                             NormalizedEmail = "USER@USER.COM",
                             NormalizedUserName = "USER@USER.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMATJX52LLlJduA1lcKlHdIePQIK193yxwt64N5yEVmQU/sou2xuddzXtNVxqnOk1A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKKhmohv6N61XF/zrvkttwMwac1AZDE3EGPMbprWmVLCjfxqL6w3ETD/ZQz67urAqg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "e76f384f-10d5-4a43-b793-65ff8e8b696e",
+                            SecurityStamp = "055eab15-dc02-460d-8baa-5d84e7fcf438",
                             TwoFactorEnabled = false,
                             UserName = "user@user.com",
                             VipStatus = 0
@@ -234,9 +237,6 @@ namespace CourseManagement.DataAccess.Migrations
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("isDisabled")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -741,7 +741,7 @@ namespace CourseManagement.DataAccess.Migrations
                     b.HasOne("CourseManagement.Model.Model.Blog", "Blog")
                         .WithMany("Comments")
                         .HasForeignKey("BlogId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CourseManagement.Model.Model.Lesson", "Lesson")
                         .WithMany("Comments")

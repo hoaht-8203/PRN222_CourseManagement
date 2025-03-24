@@ -36,6 +36,6 @@ namespace CourseManagement.Model.Model
 
         public virtual ICollection<Category> Categories { get; set; }
 
-
+        public virtual ICollection<Comment> Comments { get; set; }
     }
 }

@@ -27,13 +27,21 @@ namespace CourseManagement.DataAccess.Repositorys
 
         public async Task<List<Comment>> GetComments(int lessonId)
         {
-            var comments = await _context.Comments.Where(c => c.LessonId == lessonId).Include(c => c.User).ToListAsync();
+            var comments = await _context.Comments.Where(c => c.LessonId == lessonId && !c.isDisabled).Include(c => c.User).ToListAsync();
+            return comments;
+        }
+        public async Task<List<Comment>> GetCommentsByBlog(int blogId)
+        {
+            var comments = await _context.Comments.Where(c => c.BlogId == blogId && !c.isDisabled).Include(c => c.User).ToListAsync();
             return comments;
         }
 
-        public Task UpdateComment(Comment comment)
+        public async Task UpdateComment(Comment comment)
         {
-            throw new NotImplementedException();
+            var commentFromDb = await _context.Comments.FirstOrDefaultAsync(c => c.Id == comment.Id);
+
+            await _context.SaveChangesAsync();
+
         }
     }
 }
