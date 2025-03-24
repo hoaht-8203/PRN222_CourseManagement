@@ -1,9 +1,35 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
 <Layout Class="layout">
     <Header>
         <div class="app-header">
             <div class="d-flex align-items-center">
-                <h5 class="m-0">ELearning</h5>
+                <div class="logo">
+                    <img src="https://media.istockphoto.com/id/607929972/vi/vec-to/logo-e-learning-vector.jpg?s=612x612&w=0&k=20&c=8IDWTGo2MIYYTyoUAXE6BugCPLhUamMlQT64R-39bEw=" alt="ELearning" />
+                    <span>ELearning</span>
+                </div>
+            </div>
+
+            <div class="menu-container">
+                <Menu Mode="MenuMode.Horizontal" Theme="MenuTheme.Light" Class="main-menu">
+                    <MenuItem OnClick="@(() => Navigation.NavigateTo("/"))">
+                        <Icon Type="graduation-cap" Theme="IconThemeType.Outline" />
+                        Khóa học
+                    </MenuItem>
+                    <MenuItem OnClick="@(() => Navigation.NavigateTo("/listBlog"))">
+                        <Icon Type="read" Theme="IconThemeType.Outline" />
+                        Thế giới lập trình
+                    </MenuItem>
+                    <MenuItem OnClick="@(() => Navigation.NavigateTo("/vip-subscription"))">
+                        <Icon Type="crown" Theme="IconThemeType.Outline" />
+                        Gói đăng ký
+                    </MenuItem>
+                    <MenuItem>
+                        <Icon Type="phone" Theme="IconThemeType.Outline" />
+                        Liên hệ
+                    </MenuItem>
+                </Menu>
             </div>
 
             <AuthorizeView>
@@ -97,6 +123,82 @@
 </Layout>
 
 <style>
+    .menu-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        height: 50px; /* Thêm chiều cao cố định */
+        overflow: hidden; /* Thêm overflow hidden */
+        align-items: center;
+    }
+
+    .main-menu {
+        font-size: 1.1rem;
+        line-height: 50px;
+    }
+
+    :deep(.ant-menu-horizontal) {
+        border-bottom: none;
+        line-height: 48px; /* Giảm line-height một chút */
+        height: 50px; /* Thêm chiều cao cố định */
+    }
+
+    :deep(.ant-menu-item) {
+        padding: 0 25px;
+        margin: 0 5px !important;
+        height: 50px; /* Thêm chiều cao cố định */
+        line-height: 50px;
+    }
+
+    :deep(.ant-menu-item:hover) {
+        color: #1890ff;
+        border-bottom: 2px solid #1890ff !important;
+    }
+
+    :deep(.ant-menu-item::after) {
+        display: none !important; /* Loại bỏ border mặc định */
+    }
+
+    :deep(.anticon) {
+        margin-right: 8px;
+        font-size: 1.2rem;
+        vertical-align: middle; /* Căn chỉnh icon */
+    }
+
+    .ant-layout-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        height: 50px;
+        background: white;
+        padding: 0;
+        overflow: hidden; /* Thêm overflow hidden */
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+    }
+
+    .logo img {
+        height: 45px;
+        margin-right: 12px;
+        transition: transform 0.3s ease;
+    }
+
+        .logo img:hover {
+            transform: scale(1.05);
+        }
+
+    .logo span {
+        font-weight: bold;
+        font-size: 1.6rem;
+        color: #1890ff;
+        letter-spacing: 0.5px;
+    }
+
     .ant-layout-has-sider {
         padding-top: 50px;
         min-height: 100vh
