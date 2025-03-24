@@ -118,7 +118,7 @@
                     TotalAmount = packageDetail.Amount,
                     PurchasedPlan = packageDetail.Plan,
                     VipPrice = packageDetail.Amount,
-                    VipExpirationDate = DateTime.UtcNow.AddMonths(int.Parse(_vipModel.Package)),
+                    VipExpirationDate = DateTime.Now.AddMonths(int.Parse(_vipModel.Package)),
 
                 };
 
