@@ -9,7 +9,7 @@ public class Order
 
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public decimal TotalAmount { get; set; }
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+    public DateTime OrderDate { get; set; } = DateTime.Now;
 
     public VipStatus PurchasedPlan { get; set; } = VipStatus.Premium;
     public decimal VipPrice { get; set; } 
