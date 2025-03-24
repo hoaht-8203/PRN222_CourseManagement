@@ -13,5 +13,7 @@ namespace CourseManagement.DataAccess.Repositorys.IRepositorys
         public Task CreateComment(Comment comment);
         public Task UpdateComment(Comment comment);
         public Task<List<Comment>> GetComments(int lessonId);
+        public Task<List<Comment>> GetCommentsByBlog(int blogId);
+
     }
 }

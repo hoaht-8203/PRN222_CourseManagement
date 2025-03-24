@@ -778,7 +778,11 @@ OnClose="@CloseQnA">
             var response = await httpClient.GetAsync($"/api/Comment?lessonId={CurrentLesson.Id}");
             if (response.IsSuccessStatusCode)
             {
-                comments = await response.Content.ReadFromJsonAsync<List<CommentDTO>>();
+                var commentsFetched = await response.Content.ReadFromJsonAsync<List<CourseManagement.Model.Model.Comment>>();
+                foreach (var comment in commentsFetched)
+                {
+                    comments.Add(new CommentDTO { Content = comment.Content, LessonId = comment.LessonId, Username = comment.User.UserName });
+                }
                 StateHasChanged();
             }
         }

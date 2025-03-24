@@ -37,6 +37,13 @@ namespace CourseManagement.DataAccess.Data
                 .WithMany(l => l.Comments)
                 .HasForeignKey(c => c.LessonId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Blog)
+                .WithMany(l => l.Comments)
+                .HasForeignKey(c => c.BlogId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            
 
             modelBuilder.Entity<Enrollment>()
                 .HasKey(e => new { e.UserId, e.CourseId });
