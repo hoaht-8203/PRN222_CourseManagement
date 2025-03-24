@@ -1,0 +1,99 @@
+@startuml api-endpoints
+!theme plain
+skinparam componentStyle uml2
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+title Course Management API Endpoints
+
+package "Authentication" {
+    [AuthController] as auth
+    note right of auth
+        POST /api/auth/register
+        POST /api/auth/login
+        POST /api/auth/changePassword
+        POST /api/auth/forgotPassword
+        POST /api/auth/resetPassword
+        POST /api/auth/confirmEmail
+    end note
+}
+
+package "Course Management" {
+    [CourseController] as course
+    note right of course
+        GET /api/courses
+        GET /api/courses/{id}
+        POST /api/courses
+        PUT /api/courses/{id}
+        DELETE /api/courses/{id}
+    end note
+
+    [ModuleController] as module
+    note right of module
+        GET /api/modules
+        GET /api/modules/{id}
+        POST /api/modules
+        PUT /api/modules/{id}
+        DELETE /api/modules/{id}
+    end note
+
+    [LessonController] as lesson
+    note right of lesson
+        GET /api/lessons
+        GET /api/lessons/{id}
+        POST /api/lessons
+        PUT /api/lessons/{id}
+        DELETE /api/lessons/{id}
+    end note
+}
+
+package "Content Management" {
+    [DocumentController] as doc
+    note right of doc
+        GET /api/documents
+        POST /api/documents/upload
+        DELETE /api/documents/{id}
+    end note
+
+    [BlogController] as blog
+    note right of blog
+        GET /api/blogs
+        POST /api/blogs
+        PUT /api/blogs/{id}
+        DELETE /api/blogs/{id}
+    end note
+
+    [CommentController] as comment
+    note right of comment
+        GET /api/comments
+        POST /api/comments
+        PUT /api/comments/{id}
+        DELETE /api/comments/{id}
+    end note
+}
+
+package "Payment" {
+    [OrderController] as order
+    note right of order
+        GET /api/orders
+        POST /api/orders
+        PUT /api/orders/{id}
+    end note
+
+    [PaymentController] as payment
+    note right of payment
+        POST /api/payments/process
+        GET /api/payments/history
+        POST /api/payments/refund
+    end note
+}
+
+auth --> course
+course --> module
+module --> lesson
+lesson --> doc
+blog --> comment
+order --> payment
+
+@enduml 

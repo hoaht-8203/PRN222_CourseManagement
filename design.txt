@@ -1,0 +1,362 @@
+@startuml "Course Management System Design"
+
+' Style and Theme
+skinparam componentStyle uml2
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+' Title
+title Course Management System Design
+
+' Main Components
+package "Frontend Layer" {
+    [Web Client] as web
+    [Mobile Client] as mobile
+    [Admin Dashboard] as admin
+}
+
+package "API Gateway Layer" {
+    [API Gateway] as gateway
+    [Load Balancer] as lb
+    [Rate Limiter] as rate
+}
+
+package "Application Layer" {
+    [Authentication Service] as auth
+    [Course Service] as course
+    [Payment Service] as payment
+    [File Service] as file
+    [Notification Service] as notify
+}
+
+package "Data Layer" {
+    database "SQL Server" as db
+    database "MinIO Storage" as storage
+    database "Redis Cache" as cache
+}
+
+package "External Services" {
+    [VNPay Gateway] as vnpay
+    [Email Service] as email
+    [SignalR Hub] as signalr
+}
+
+' Relationships
+web --> gateway
+mobile --> gateway
+admin --> gateway
+
+gateway --> lb
+lb --> rate
+
+rate --> auth
+rate --> course
+rate --> payment
+rate --> file
+rate --> notify
+
+auth --> db
+course --> db
+payment --> db
+file --> storage
+notify --> cache
+
+course --> signalr
+notify --> signalr
+
+payment --> vnpay
+notify --> email
+
+' Component Details
+note right of auth
+  - JWT Authentication
+  - Role-based Access
+  - User Management
+end note
+
+note right of course
+  - Course CRUD
+  - Module Management
+  - Lesson Management
+  - Progress Tracking
+end note
+
+note right of payment
+  - Order Processing
+  - Payment Integration
+  - Transaction Management
+end note
+
+note right of file
+  - File Upload/Download
+  - Document Management
+  - Media Storage
+end note
+
+note right of notify
+  - Real-time Updates
+  - Email Notifications
+  - System Alerts
+end note
+
+' Security Layer
+package "Security Layer" {
+    [JWT Authentication] as jwt
+    [CORS Policy] as cors
+    [Rate Limiting] as rl
+    [Input Validation] as iv
+}
+
+gateway --> jwt
+gateway --> cors
+gateway --> rl
+gateway --> iv
+
+' Monitoring Layer
+package "Monitoring Layer" {
+    [Logging Service] as log
+    [Metrics Service] as metrics
+    [Alert Service] as alert
+}
+
+auth --> log
+course --> log
+payment --> log
+file --> log
+notify --> log
+
+log --> metrics
+metrics --> alert
+
+@enduml
+
+@startuml "Course Management Database Schema"
+
+' Style
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' Entities
+entity "User" as user {
+    * id : string
+    --
+    * fullName : string
+    * email : string
+    * passwordHash : string
+    phoneNumber : string
+    vipStatus : int
+    vipExpirationDate : datetime
+}
+
+entity "Role" as role {
+    * id : string
+    --
+    * name : string
+    * normalizedName : string
+}
+
+entity "Course" as course {
+    * id : guid
+    --
+    * title : string
+    description : string
+    previewImage : string
+    previewVideoUrl : string
+    level : int
+    status : int
+    courseType : int
+    * categoryId : int
+}
+
+entity "Module" as module {
+    * id : int
+    --
+    * title : string
+    * order : int
+    status : int
+    * courseId : guid
+}
+
+entity "Lesson" as lesson {
+    * id : int
+    --
+    * title : string
+    description : string
+    urlVideo : string
+    * order : int
+    status : int
+    * moduleId : int
+    videoDuration : time
+}
+
+entity "Category" as category {
+    * id : int
+    --
+    * name : string
+    description : string
+}
+
+entity "Document" as document {
+    * id : int
+    --
+    * name : string
+    * type : string
+    * file : string
+    * lessonId : int
+    fileSize : long
+    uploadedAt : datetime
+}
+
+entity "Blog" as blog {
+    * id : int
+    --
+    * title : string
+    * content : string
+    urlImage : string
+    createdAt : datetime
+    viewCount : int
+    * userId : string
+    status : int
+}
+
+entity "Order" as order {
+    * id : int
+    --
+    * userId : string
+    status : int
+    * totalAmount : decimal
+    * orderDate : datetime
+    purchasedPlan : int
+    vipPrice : decimal
+    vipExpirationDate : datetime
+}
+
+entity "Enrollment" as enrollment {
+    * userId : string
+    * courseId : guid
+    --
+    * enrollmentDate : datetime
+}
+
+' Relationships
+user ||--o{ order : places
+user ||--o{ enrollment : has
+user ||--o{ blog : writes
+user }o--o{ role : has
+
+course ||--o{ module : contains
+course ||--o{ enrollment : has
+category ||--o{ course : categorizes
+
+module ||--o{ lesson : contains
+lesson ||--o{ document : has
+
+@enduml
+
+@startuml "Course Management API Endpoints"
+
+' Style and Theme
+skinparam componentStyle uml2
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+' Title
+title Course Management API Endpoints
+
+' API Controllers
+package "Authentication" {
+    [AuthController] as auth
+    note right
+        POST /api/auth/register
+        POST /api/auth/login
+        POST /api/auth/changePassword
+        POST /api/auth/forgotPassword
+        POST /api/auth/resetPassword
+        POST /api/auth/confirmEmail
+    end note
+}
+
+package "Course Management" {
+    [CourseController] as course
+    note right
+        GET /api/courses
+        GET /api/courses/{id}
+        POST /api/courses
+        PUT /api/courses/{id}
+        DELETE /api/courses/{id}
+    end note
+
+    [ModuleController] as module
+    note right
+        GET /api/modules
+        GET /api/modules/{id}
+        POST /api/modules
+        PUT /api/modules/{id}
+        DELETE /api/modules/{id}
+    end note
+
+    [LessonController] as lesson
+    note right
+        GET /api/lessons
+        GET /api/lessons/{id}
+        POST /api/lessons
+        PUT /api/lessons/{id}
+        DELETE /api/lessons/{id}
+    end note
+}
+
+package "Content Management" {
+    [DocumentController] as doc
+    note right
+        GET /api/documents
+        POST /api/documents/upload
+        DELETE /api/documents/{id}
+    end note
+
+    [BlogController] as blog
+    note right
+        GET /api/blogs
+        POST /api/blogs
+        PUT /api/blogs/{id}
+        DELETE /api/blogs/{id}
+    end note
+
+    [CommentController] as comment
+    note right
+        GET /api/comments
+        POST /api/comments
+        PUT /api/comments/{id}
+        DELETE /api/comments/{id}
+    end note
+}
+
+package "Payment" {
+    [OrderController] as order
+    note right
+        GET /api/orders
+        POST /api/orders
+        PUT /api/orders/{id}
+    end note
+
+    [PaymentController] as payment
+    note right
+        POST /api/payments/process
+        GET /api/payments/history
+        POST /api/payments/refund
+    end note
+}
+
+' Relationships
+auth --> course
+course --> module
+module --> lesson
+lesson --> doc
+blog --> comment
+order --> payment
+
+@enduml

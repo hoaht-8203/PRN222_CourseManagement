@@ -1,0 +1,100 @@
+@startuml system-design
+!theme plain
+skinparam componentStyle uml2
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+title Course Management System Design
+
+package "Frontend Layer" {
+    [Web Client] as web
+    [Mobile Client] as mobile
+    [Admin Dashboard] as admin
+}
+
+package "API Gateway Layer" {
+    [API Gateway] as gateway
+    [Load Balancer] as lb
+    [Rate Limiter] as rate
+}
+
+package "Application Layer" {
+    [Authentication Service] as auth
+    [Course Service] as course
+    [Payment Service] as payment
+    [File Service] as file
+    [Notification Service] as notify
+}
+
+package "Data Layer" {
+    database "SQL Server" as db
+    database "MinIO Storage" as storage
+    database "Redis Cache" as cache
+}
+
+package "External Services" {
+    [VNPay Gateway] as vnpay
+    [Email Service] as email
+    [SignalR Hub] as signalr
+}
+
+web --> gateway
+mobile --> gateway
+admin --> gateway
+
+gateway --> lb
+lb --> rate
+
+rate --> auth
+rate --> course
+rate --> payment
+rate --> file
+rate --> notify
+
+auth --> db
+course --> db
+payment --> db
+file --> storage
+notify --> cache
+
+course --> signalr
+notify --> signalr
+
+payment --> vnpay
+notify --> email
+
+note right of auth : JWT Authentication\nRole-based Access\nUser Management
+note right of course : Course CRUD\nModule Management\nLesson Management\nProgress Tracking
+note right of payment : Order Processing\nPayment Integration\nTransaction Management
+note right of file : File Upload/Download\nDocument Management\nMedia Storage
+note right of notify : Real-time Updates\nEmail Notifications\nSystem Alerts
+
+package "Security Layer" {
+    [JWT Authentication] as jwt
+    [CORS Policy] as cors
+    [Rate Limiting] as rl
+    [Input Validation] as iv
+}
+
+gateway --> jwt
+gateway --> cors
+gateway --> rl
+gateway --> iv
+
+package "Monitoring Layer" {
+    [Logging Service] as log
+    [Metrics Service] as metrics
+    [Alert Service] as alert
+}
+
+auth --> log
+course --> log
+payment --> log
+file --> log
+notify --> log
+
+log --> metrics
+metrics --> alert
+
+@enduml 

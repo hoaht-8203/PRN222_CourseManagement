@@ -1,0 +1,118 @@
+@startuml database-schema
+!theme plain
+skinparam linetype ortho
+
+entity User {
+  * id : string
+  --
+  * fullName : string
+  * email : string
+  * passwordHash : string
+  phoneNumber : string
+  vipStatus : int
+  vipExpirationDate : datetime
+}
+
+entity Role {
+  * id : string
+  --
+  * name : string
+  * normalizedName : string
+}
+
+entity Course {
+  * id : guid
+  --
+  * title : string
+  description : string
+  previewImage : string
+  previewVideoUrl : string
+  level : int
+  status : int
+  courseType : int
+  * categoryId : int
+}
+
+entity Module {
+  * id : int
+  --
+  * title : string
+  * order : int
+  status : int
+  * courseId : guid
+}
+
+entity Lesson {
+  * id : int
+  --
+  * title : string
+  description : string
+  urlVideo : string
+  * order : int
+  status : int
+  * moduleId : int
+  videoDuration : time
+}
+
+entity Category {
+  * id : int
+  --
+  * name : string
+  description : string
+}
+
+entity Document {
+  * id : int
+  --
+  * name : string
+  * type : string
+  * file : string
+  * lessonId : int
+  fileSize : long
+  uploadedAt : datetime
+}
+
+entity Blog {
+  * id : int
+  --
+  * title : string
+  * content : string
+  urlImage : string
+  createdAt : datetime
+  viewCount : int
+  * userId : string
+  status : int
+}
+
+entity Order {
+  * id : int
+  --
+  * userId : string
+  status : int
+  * totalAmount : decimal
+  * orderDate : datetime
+  purchasedPlan : int
+  vipPrice : decimal
+  vipExpirationDate : datetime
+}
+
+entity Enrollment {
+  * userId : string
+  * courseId : guid
+  --
+  * enrollmentDate : datetime
+}
+
+User ||--o{ Order : places
+User ||--o{ Enrollment : has
+User ||--o{ Blog : writes
+User }o--o{ Role : has
+
+Course ||--o{ Module : contains
+Course ||--o{ Enrollment : has
+Category ||--o{ Course : categorizes
+
+Module ||--o{ Lesson : contains
+Lesson ||--o{ Document : has
+
+@enduml 
