@@ -29,6 +29,7 @@ namespace CourseManagementAPI.Controllers
             {
                 UserId = user.Id.ToString(),
                 LessonId = commentDTO.LessonId,
+                BlogId = commentDTO.BlogId,
                 Content = commentDTO.Content
             };
             try
@@ -51,6 +52,19 @@ namespace CourseManagementAPI.Controllers
             try
             {
                 var comments = await _commentRepository.GetComments(lessonId);
+                return Ok(comments);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"An error occurred while getting comments: {ex}" });
+            }
+        }
+        [HttpGet("blog")]
+        public async Task<IActionResult> GetCommentsByBlog(int blogId)
+        {
+            try
+            {
+                var comments = await _commentRepository.GetCommentsByBlog(blogId);
                 return Ok(comments);
             }
             catch (Exception ex)

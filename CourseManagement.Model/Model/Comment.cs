@@ -14,9 +14,15 @@ namespace CourseManagement.Model.Model
         [ForeignKey("UserId")]
         public AppUser User { get; set; }
 
-        public int LessonId { get; set; }
+        public int? LessonId { get; set; }
         [JsonIgnore]
         [ForeignKey("LessonId")]
-        public Lesson Lesson { get; set; }
+        public Lesson? Lesson { get; set; }
+
+        public int? BlogId { get; set; }
+        [JsonIgnore]
+        [ForeignKey("BlogId")]
+        public virtual Blog? Blog { get; set; }
+        public bool isDisabled { get; set; } = false;
     }
 }

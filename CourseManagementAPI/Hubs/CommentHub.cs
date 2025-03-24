@@ -25,5 +25,27 @@ namespace CourseManagementAPI.Hubs
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, lessonId);
         }
+
+        //for blog
+        public async Task SendBlogComment(CommentDTO comment)
+        {
+            try
+            {
+                await Clients.Group(comment.BlogId.ToString()).SendAsync("ReceiveBlogComment", comment);
+            }
+            catch (Exception ex)
+            {
+                await Clients.Caller.SendAsync("ReceiveError", ex.Message);
+            }
+        }
+        public async Task JoinBlogGroup(string blogId)
+        {
+            await Console.Out.WriteLineAsync("");
+            await Groups.AddToGroupAsync(Context.ConnectionId, blogId);
+        }
+        public async Task LeaveBlogGroup(string blogId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, blogId);
+        }
     }
 }
